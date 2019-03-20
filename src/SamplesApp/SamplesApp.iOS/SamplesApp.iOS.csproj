@@ -103,6 +103,7 @@
     <BundleResource Include="Resources\Fonts\winjs-symbols.ttf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </BundleResource>
+    <BundleResource Include="Resources\Fonts\Muli-ExtraBold.ttf" />
     <None Include="Resources\LaunchScreen.xib" />
   </ItemGroup>
   <ItemGroup>
