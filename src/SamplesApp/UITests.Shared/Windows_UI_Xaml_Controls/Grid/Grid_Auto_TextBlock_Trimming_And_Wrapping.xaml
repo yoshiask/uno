@@ -6,7 +6,107 @@
 	  xmlns:controls="using:Uno.UI.Samples.Controls"
 	  mc:Ignorable="d">
 	<Page.Resources>
+		<!-- FontFamilies -->
+		<FontFamily x:Key="RegularFontFamily01">ms-appx:///Assets/Fonts/Muli-Regular.ttf#Muli</FontFamily>
 		<FontFamily x:Key="ExtraBoldFontFamily01">ms-appx:///Assets/Fonts/Muli-ExtraBold.ttf#Muli</FontFamily>
+
+		<!-- Colors -->
+		<Color x:Key="Color01">#FF000000</Color>
+		<Color x:Key="Color03">#FF0C8672</Color>
+		<Color x:Key="Color11">#FFFAFAFA</Color>
+
+		<SolidColorBrush x:Key="Color01Brush"
+						 Color="{StaticResource Color01}" />
+		<SolidColorBrush x:Key="Color03Brush"
+						 Color="{StaticResource Color03}" />
+		<SolidColorBrush x:Key="Color11Brush"
+						 Color="{StaticResource Color11}" />
+
+		<!-- Shadow -->
+		<LinearGradientBrush x:Key="DropShadowGradient"
+							 EndPoint="0,1"
+							 StartPoint="0,0">
+			<GradientStop Color="Transparent"
+						  Offset="0" />
+			<GradientStop Color="#0C000000"
+						  Offset="1" />
+		</LinearGradientBrush>
+
+		<!-- Typo -->
+		<Style x:Key="DefaultTypo"
+			   TargetType="TextBlock">
+			<Setter Property="LineStackingStrategy"
+					Value="BlockLineHeight" />
+			<Setter Property="TextTrimming"
+					Value="CharacterEllipsis" />
+			<Setter Property="Foreground"
+					Value="{StaticResource Color01Brush}" />
+			<Setter Property="FontFamily"
+					Value="{StaticResource RegularFontFamily01}" />
+			<Setter Property="FontStyle"
+					Value="Normal" />
+			<Setter Property="FontWeight"
+					Value="Normal" />
+		</Style>
+
+		<Style x:Key="Typo02"
+			   TargetType="TextBlock"
+			   BasedOn="{StaticResource DefaultTypo}">
+			<Setter Property="FontFamily"
+					Value="{StaticResource ExtraBoldFontFamily01}" />
+			<Setter Property="FontSize"
+					Value="22" />
+			<Setter Property="FontWeight"
+					Value="ExtraBold" />
+		</Style>
+
+		<Style x:Key="Typo31"
+			   TargetType="TextBlock"
+			   BasedOn="{StaticResource DefaultTypo}">
+			<Setter Property="FontFamily"
+					Value="{StaticResource ExtraBoldFontFamily01}" />
+			<Setter Property="FontSize"
+					Value="22" />
+			<Setter Property="FontWeight"
+					Value="ExtraBold" />
+			<Setter Property="Foreground"
+					Value="{StaticResource Color03Brush}" />
+		</Style>
+
+		<!-- Header Template -->
+		<DataTemplate x:Key="HeaderTemplate">
+			<Grid x:Uid="MyGrid"
+				  Margin="0,0,0,20"
+				  Background="{StaticResource Color11Brush}">
+
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="Auto" />
+					<ColumnDefinition Width="*" />
+				</Grid.ColumnDefinitions>
+
+				<TextBlock HorizontalAlignment="Center"
+						   VerticalAlignment="Center"
+						   Margin="4,20,16,20"
+						   MinWidth="80"
+						   TextAlignment="Center"
+						   TextWrapping="Wrap"
+						   Style="{StaticResource Typo31}">
+					<Run Text="{Binding [Month]}" /><LineBreak /><Run Text="{Binding [Day]}" /><LineBreak /><Run Text="{Binding [Year]}" />
+				</TextBlock>
+
+				<TextBlock Text="{Binding [Title]}"
+						   Style="{StaticResource Typo02}"
+						   TextWrapping="Wrap"
+						   Grid.Column="1"
+						   VerticalAlignment="Center"
+						   Margin="0,20,18,20" />
+
+				<Border Background="{StaticResource DropShadowGradient}"
+						Height="12"
+						VerticalAlignment="Bottom"
+						Grid.ColumnSpan="2" />
+			</Grid>
+		</DataTemplate>
 	</Page.Resources>
 
 	<controls:SampleControl SampleDescription="Grid_Auto_TextBlock_Trimming_And_Wrapping"
@@ -14,51 +114,22 @@
 							x:Name="MySampleControl">
 		<controls:SampleControl.SampleContent>
 			<DataTemplate>
-				<ListView ItemsSource="{Binding NewsItems}"
-						  Grid.Row="1"
-						  Padding="0,0,0,48"
-						  IsItemClickEnabled="False"
-						  SelectionMode="None"
-						  Header="{Binding}">
-					<ListView.HeaderTemplate>
-						<DataTemplate>
-							<Grid x:Uid="MyGrid"
-								  Margin="0,0,0,20"
-								  Background="#FFFF0000">
+				<Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
-								<Grid.ColumnDefinitions>
-									<ColumnDefinition Width="Auto" />
-									<ColumnDefinition Width="*" />
-								</Grid.ColumnDefinitions>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="Auto" />
+						<RowDefinition Height="*" />
+					</Grid.RowDefinitions>
 
-								<TextBlock HorizontalAlignment="Center"
-										   VerticalAlignment="Center"
-										   Margin="4,20,16,20"
-										   MinWidth="80"
-										   FontSize="22"
-										   FontStyle="Normal"
-										   FontWeight="ExtraBold"
-										   FontFamily="{StaticResource ExtraBoldFontFamily01}"
-										   LineStackingStrategy="BlockLineHeight"
-										   TextTrimming="CharacterEllipsis"
-										   TextWrapping="Wrap">
-									<Run Text="{Binding [Month]}" /><LineBreak /><Run Text="{Binding [Day]}" /><LineBreak /><Run Text="{Binding [Year]}" />
-								</TextBlock>
-								<TextBlock Text="{Binding [Title]}"
-										   TextTrimming="CharacterEllipsis"
-										   TextWrapping="Wrap"
-										   FontFamily="Helvetica"
-										   FontSize="30"
-										   Grid.Column="1" />
+					<CommandBar Content="" />
 
-								<Border Background="Blue"
-										Height="12"
-										VerticalAlignment="Bottom"
-										Grid.ColumnSpan="2" />
-							</Grid>
-						</DataTemplate>
-					</ListView.HeaderTemplate>
-				</ListView>
+					<ListView Grid.Row="1"
+							  Padding="0,0,0,48"
+							  IsItemClickEnabled="False"
+							  SelectionMode="None"
+							  HeaderTemplate="{StaticResource HeaderTemplate}"
+							  Header="{Binding}" />
+				</Grid>
 			</DataTemplate>
 		</controls:SampleControl.SampleContent>
 	</controls:SampleControl>

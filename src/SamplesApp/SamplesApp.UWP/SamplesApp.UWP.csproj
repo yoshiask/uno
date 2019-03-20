@@ -118,6 +118,7 @@
       <SubType>Designer</SubType>
     </AppxManifest>
     <Content Include="Assets\Fonts\Muli-ExtraBold.ttf" />
+    <Content Include="Assets\Fonts\Muli-Regular.ttf" />
     <None Include="SamplesApp.UWP_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>

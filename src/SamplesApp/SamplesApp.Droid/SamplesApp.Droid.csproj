@@ -99,6 +99,7 @@
   <ItemGroup>
     <AndroidAsset Include="Assets\Fonts\winjs-symbols.ttf" />
     <AndroidAsset Include="Assets\Fonts\Muli-ExtraBold.ttf" />
+    <AndroidAsset Include="Assets\Fonts\Muli-Regular.ttf" />
     <None Include="Resources\AboutResources.txt" />
     <None Include="Assets\AboutAssets.txt" />
   </ItemGroup>

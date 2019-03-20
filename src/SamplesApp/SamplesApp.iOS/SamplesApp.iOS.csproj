@@ -104,6 +104,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </BundleResource>
     <BundleResource Include="Resources\Fonts\Muli-ExtraBold.ttf" />
+    <BundleResource Include="Resources\Fonts\Muli-Regular.ttf" />
     <None Include="Resources\LaunchScreen.xib" />
   </ItemGroup>
   <ItemGroup>
