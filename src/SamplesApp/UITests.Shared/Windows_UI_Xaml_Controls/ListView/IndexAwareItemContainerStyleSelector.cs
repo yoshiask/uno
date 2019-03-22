@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.Linq;
-using System.Text;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
@@ -16,7 +13,7 @@ namespace SamplesApp.Windows_UI_Xaml_Controls.ListView
 
 		protected override Style SelectStyleCore(object item, DependencyObject container)
 		{
-			var itemsControl = ItemsControl.ItemsControlFromItemContainer(container);
+			var itemsControl = Windows.UI.Xaml.Controls.ItemsControl.ItemsControlFromItemContainer(container);
 			var index = itemsControl.IndexFromContainer(container);
 			
 			if (index == 0)
