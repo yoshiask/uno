@@ -88,7 +88,7 @@ namespace Windows.UI.Xaml
 		{
 			var list = _pooledInstances.FindOrCreate(pageType, () => new List<PagePoolEntry>());
 
-			FrameworkTemplatePool.PropagateOnTemplateReused(pageInstance);
+			FrameworkTemplatePool.PropagateOnTemplateReused(pageInstance, null);
 
 			list.Add(new PagePoolEntry(_watch.Elapsed, pageInstance));
 		}

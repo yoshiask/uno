@@ -59,7 +59,7 @@ namespace Windows.UI.Xaml.Controls
 
 		public ScrollViewer() { }
 
-		void IFrameworkTemplatePoolAware.OnTemplateRecycled()
+		void IFrameworkTemplatePoolAware.OnTemplateRecycled(DependencyObjectParentChangedEventArgs args)
 		{
 			if (VerticalOffset != 0 || HorizontalOffset != 0 || ZoomFactor != 1)
 			{

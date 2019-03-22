@@ -14,6 +14,6 @@ namespace Windows.UI.Xaml
 		/// <summary>
 		/// A call in which to execute any logic that should take place when template is recycled.
 		/// </summary>
-		void OnTemplateRecycled();
+		void OnTemplateRecycled(DependencyObjectParentChangedEventArgs args);
 	}
 }

@@ -324,9 +324,12 @@ namespace Windows.UI.Xaml.Controls
 			}
 		}
 
-		public void OnTemplateRecycled()
+		public void OnTemplateRecycled(DependencyObjectParentChangedEventArgs args)
 		{
-			IsOn = false;
+			if(args.NewParent == null)
+			{
+				IsOn = false;
+			}
 		}
 
 		protected override AutomationPeer OnCreateAutomationPeer()

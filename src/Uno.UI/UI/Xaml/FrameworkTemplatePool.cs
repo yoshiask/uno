@@ -218,7 +218,7 @@ namespace Windows.UI.Xaml
 					_trace.WriteEventActivity(TraceProvider.RecycleTemplate, EventOpcode.Send, new[] { instance.GetType().ToString() });
 				}
 
-				PropagateOnTemplateReused(instance);
+				PropagateOnTemplateReused(instance, args);
 
 				list.Add(new TemplateEntry(_watch.Elapsed, instance as View));
 
@@ -238,11 +238,11 @@ namespace Windows.UI.Xaml
 			}
 		}
 
-		internal static void PropagateOnTemplateReused(object instance)
+		internal static void PropagateOnTemplateReused(object instance, DependencyObjectParentChangedEventArgs args)
 		{
 			if (instance is IFrameworkTemplatePoolAware a)
 			{
-				a.OnTemplateRecycled();
+				a.OnTemplateRecycled(args);
 			}
 
 			//Try Panel.Children before ViewGroup.GetChildren - this results in fewer allocations
@@ -250,14 +250,14 @@ namespace Windows.UI.Xaml
 			{
 				foreach (object o in p.Children)
 				{
-					PropagateOnTemplateReused(o);
+					PropagateOnTemplateReused(o, args);
 				}
 			}
 			else if (instance is ViewGroup g)
 			{
 				foreach (object o in g.GetChildren())
 				{
-					PropagateOnTemplateReused(o);
+					PropagateOnTemplateReused(o, args);
 				}
 			}
 		}

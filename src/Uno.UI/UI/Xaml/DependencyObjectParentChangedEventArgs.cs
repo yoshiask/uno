@@ -7,7 +7,7 @@ namespace Windows.UI.Xaml
 	/// <summary>
 	/// A event arg used when the parent of a DependencyObject changes.
 	/// </summary>
-    internal class DependencyObjectParentChangedEventArgs : EventArgs
+    public class DependencyObjectParentChangedEventArgs : EventArgs
     {
 		public DependencyObjectParentChangedEventArgs(object previousParent, object newParent)
 		{

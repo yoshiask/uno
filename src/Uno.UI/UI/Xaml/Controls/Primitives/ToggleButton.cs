@@ -60,9 +60,13 @@ namespace Windows.UI.Xaml.Controls.Primitives
 			}
 		}
 
-		public void OnTemplateRecycled()
+		public void OnTemplateRecycled(DependencyObjectParentChangedEventArgs args)
 		{
-			IsChecked = false;
+			// Need to be cleaned
+			if(args.NewParent == null)
+			{
+				IsChecked = false;
+			}
 		}
 
 		protected virtual void OnToggle()

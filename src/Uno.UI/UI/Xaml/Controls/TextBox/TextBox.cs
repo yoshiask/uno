@@ -597,9 +597,12 @@ namespace Windows.UI.Xaml.Controls
 			SelectionChanged?.Invoke(this, new RoutedEventArgs());
 		}
 
-		public void OnTemplateRecycled()
+		public void OnTemplateRecycled(DependencyObjectParentChangedEventArgs args)
 		{
-			DeleteText();
+			if(args.NewParent == null)
+			{
+				DeleteText();
+			}
 		}
 
 		protected override AutomationPeer OnCreateAutomationPeer()
