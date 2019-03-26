@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows.Input;
 using Uno.UI.Samples.UITests.Helpers;
 using Windows.UI.Core;
@@ -8,32 +9,25 @@ namespace SamplesApp.Windows_UI_Xaml_Controls.ItemsControl
 {
 	public class ItemsControlRecycledTemplateViewModel : ViewModelBase
 	{
-		private List<ViewModelBase> _items;
+		private RecycledTemplateViewModel[] _items;
 
 		public ItemsControlRecycledTemplateViewModel(CoreDispatcher dispatcher) : base(dispatcher)
 		{
-#if HAS_UNO
-			Windows.UI.Xaml.FrameworkTemplatePool.IsPoolingEnabled = true;
-#endif
-			RefreshItemsCommand = CreateCommand(RefreshItems);
-			Items = new List<ViewModelBase>()
+			AddNewItemCommand = CreateCommand(AddNewItem);
+			RefreshCommand = CreateCommand(RefreshItems);
+
+			Items = new RecycledTemplateViewModel[]
 			{
-				new CheckBoxViewModel(dispatcher),
-				new CheckBoxViewModel(dispatcher),
-				new CheckBoxViewModel(dispatcher),
-				new CheckBoxViewModel(dispatcher),
-				new CheckBoxViewModel(dispatcher),
-				new CheckBoxViewModel(dispatcher)
+				new RecycledTemplateViewModel(dispatcher),
+				new RecycledTemplateViewModel(dispatcher),
+				new RecycledTemplateViewModel(dispatcher)
 			};
 		}
 
-		private void RefreshItems(object obj)
-		{
-			// Act as a refresh
-			Items = Items;
-		}
+		public ICommand RefreshCommand { get; }
+		public ICommand AddNewItemCommand { get; }
 
-		public List<ViewModelBase> Items
+		public RecycledTemplateViewModel[] Items
 		{
 			get => _items;
 			set
@@ -43,6 +37,17 @@ namespace SamplesApp.Windows_UI_Xaml_Controls.ItemsControl
 			}
 		}
 
-		public ICommand RefreshItemsCommand { get; } 
+		private void RefreshItems()
+		{
+			// Act as a refresh
+			Items = Items;
+		}
+
+		private void AddNewItem()
+		{
+			var list = Items.ToList();
+			list.Add(new RecycledTemplateViewModel(Dispatcher));
+			Items = list.ToArray();
+		}
 	}
 }
