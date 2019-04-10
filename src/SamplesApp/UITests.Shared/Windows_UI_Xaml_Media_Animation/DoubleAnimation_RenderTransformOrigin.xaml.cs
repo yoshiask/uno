@@ -16,18 +16,18 @@ namespace GenericApp.Views.Content.UITests.Animations
 			this.InitializeComponent();
 		}
 
-		private void BeginAnimation(object sender, RoutedEventArgs e)
-		{
-			if (sender is FrameworkElement elt
-				&& elt.Resources.TryGetValue("Storyboard", out var res)
-				&& res is Storyboard storyboard)
-			{
-				Storyboard.SetTarget(storyboard, elt);
-				storyboard.Begin();
-			}
-		}
+		//private void BeginAnimation(object sender, RoutedEventArgs e)
+		//{
+		//	if (sender is FrameworkElement elt
+		//		&& elt.Resources.TryGetValue("Storyboard", out var res)
+		//		&& res is Storyboard storyboard)
+		//	{
+		//		Storyboard.SetTarget(storyboard, elt);
+		//		storyboard.Begin();
+		//	}
+		//}
 
-		/*private void BeginAnimation(object sender, RoutedEventArgs e)
+		private void BeginAnimation(object sender, RoutedEventArgs e)
 		{
 			Console.WriteLine("*************************** PATH LOADED");
 
@@ -69,6 +69,6 @@ namespace GenericApp.Views.Content.UITests.Animations
 			storyboard.Begin();
 
 			Console.WriteLine($"*************************** ANIMATION STARTED");
-		}*/
+		}
 	}
 }

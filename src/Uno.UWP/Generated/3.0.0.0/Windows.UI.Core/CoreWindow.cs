@@ -21,7 +21,7 @@ namespace Windows.UI.Core
 			}
 		}
 		#endif
-		#if __ANDROID__ || __IOS__ || NET461 || false || __MACOS__
+		#if false //__ANDROID__ || __IOS__ || NET461 || false || __MACOS__
 		[global::Uno.NotImplemented]
 		public  global::Windows.UI.Core.CoreCursor PointerCursor
 		{
@@ -157,7 +157,7 @@ namespace Windows.UI.Core
 			throw new global::System.NotImplementedException("The member CoreVirtualKeyStates CoreWindow.GetAsyncKeyState(VirtualKey virtualKey) is not implemented in Uno.");
 		}
 		#endif
-		#if __ANDROID__ || __IOS__ || NET461 || false || __MACOS__
+		#if false //__ANDROID__ || __IOS__ || NET461 || false || __MACOS__
 		[global::Uno.NotImplemented]
 		public  global::Windows.UI.Core.CoreVirtualKeyStates GetKeyState( global::Windows.System.VirtualKey virtualKey)
 		{

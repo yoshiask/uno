@@ -49,8 +49,11 @@ namespace Windows.UI.Xaml.Input
 			return InnerFindNextFocusableElement(focusNavigationDirection) as UIElement;
 		}
 
-		internal static void OnFocusChanged(Control control, FocusState focusState)
+		// This is invoked in the DP callback when the Control.FocusState changed
+		internal static void OnFocusStateChanged(Control control, FocusState focusState)
 		{
+			Console.Error.WriteLine($"************* FOCUS CHANGED {control} - {focusState}");
+
 			if (focusState == FocusState.Unfocused)
 			{
 				if (control == _focusedElement)
@@ -60,7 +63,12 @@ namespace Windows.UI.Xaml.Input
 			}
 			else // Focused
 			{
-				(_focusedElement as Control)?.Unfocus();
+				if (_focusedElement != control)
+				{
+					// Sanity only: The previous '_focusedElement' should have been unfocused BEFORE this
+					(_focusedElement as Control)?.Unfocus();
+				}
+
 				_focusedElement = control;
 				_fallbackFocusedElement = control;
 

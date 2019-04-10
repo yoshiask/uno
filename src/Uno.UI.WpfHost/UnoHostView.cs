@@ -233,18 +233,36 @@ namespace Uno.UI.WpfHost
 				Windows.UI.Core.CoreDispatcherPriority.Normal,
 				() =>
 				{
-                    // parse htmlId to IntPtr
-                    if (int.TryParse(htmlIdStr, out var handle))
-                    {
-                        // Console.WriteLine($"Dispatch {htmlIdStr} {eventNameStr} {eventPayloadStr}");
-                        Windows.UI.Xaml.UIElement.DispatchEvent(handle, eventNameStr, eventPayloadStr);
-                    }
-                    else
-                    {
-                        Console.WriteLine("Failed to parse htmlIdStr");
-                    }
+					// parse htmlId to IntPtr
+					if (int.TryParse(htmlIdStr, out var handle))
+					{
+						// Console.WriteLine($"Dispatch {htmlIdStr} {eventNameStr} {eventPayloadStr}");
+						Windows.UI.Xaml.UIElement.DispatchEvent(handle, eventNameStr, eventPayloadStr);
+					}
+					else
+					{
+						Console.WriteLine("Failed to parse htmlIdStr");
+					}
 				});
 		}
 
+		public void FocusChanged(string htmlIdStr)
+		{
+			var d = Windows.UI.Core.CoreDispatcher.Main.RunAsync(
+				Windows.UI.Core.CoreDispatcherPriority.Normal,
+				() =>
+				{
+					// parse htmlId to IntPtr
+					if (int.TryParse(htmlIdStr, out var handle))
+					{
+						// Console.WriteLine($"Focused {htmlIdStr} {eventNameStr} {eventPayloadStr}");
+						Windows.UI.Xaml.Input.FocusManager.OnNativeFocusChanged(handle);
+					}
+					else
+					{
+						Console.WriteLine("Failed to parse htmlIdStr for focus changed");
+					}
+				});
+		}
 	}
 }

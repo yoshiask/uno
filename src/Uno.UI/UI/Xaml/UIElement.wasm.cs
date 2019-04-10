@@ -489,7 +489,7 @@ namespace Windows.UI.Xaml
 			return false;
 		}
 
-		private static UIElement GetElementFromHandle(int handle)
+		internal static UIElement GetElementFromHandle(int handle)
 		{
 			var gcHandle = GCHandle.FromIntPtr((IntPtr)handle);
 
@@ -817,7 +817,7 @@ namespace Windows.UI.Xaml
 				{ PointerExitedEvent, (nameof(PointerExitedEvent), "pointerleave") },
 				{ KeyDownEvent, (nameof(KeyDownEvent), "keydown") },
 				{ KeyUpEvent, (nameof(KeyUpEvent), "keyup") },
-				{ GotFocusEvent, (nameof(GotFocusEvent), "focus") },
+				{ GotFocusEvent, (nameof(GotFocusEvent), "focusin") },
 				{ LostFocusEvent, (nameof(LostFocusEvent), "focusout") },
 				{ TappedEvent, (nameof(TappedEvent), "click") },
 				{ DoubleTappedEvent, (nameof(DoubleTappedEvent), "dblclick") }

@@ -133,6 +133,7 @@
 
 		private static resizeMethod: any;
 		private static dispatchEventMethod: any;
+		private static focusChangedMethod: any;
 
 		private constructor(private containerElementId: string, private loadingElementId: string) {
 			this.initDom();
@@ -1234,7 +1235,6 @@
 			if (UnoAppManifest.displayName) {
 				document.title = UnoAppManifest.displayName;
 			}
-
 		}
 
 		private static initMethods() {
@@ -1249,6 +1249,10 @@
 				if (!WindowManager.dispatchEventMethod) {
 					WindowManager.dispatchEventMethod = (<any>Module).mono_bind_static_method("[Uno.UI] Windows.UI.Xaml.UIElement:DispatchEvent");
 				}
+
+				if (!WindowManager.focusChangedMethod) {
+					WindowManager.focusChangedMethod = (<any>Module).mono_bind_static_method("[Uno.UI] Windows.UI.Xaml.Input.FocusManager:OnNativeFocusChanged");
+				}
 			}
 		}
 
@@ -1261,6 +1265,7 @@
 			}
 
 			window.addEventListener("resize", x => this.resize());
+			window.addEventListener("focusin", evt => this.focusChanged(evt as FocusEvent));
 		}
 
 		private removeLoading() {
@@ -1286,6 +1291,25 @@
 			}
 			else {
 				WindowManager.resizeMethod(document.documentElement.clientWidth, document.documentElement.clientHeight);
+			}
+		}
+
+		private focusChanged(evt: FocusEvent) {
+			const targetElement = evt.target as HTMLElement | SVGElement;
+			if (!targetElement) {
+				return;
+			}
+
+			const targetHandle = targetElement.getAttribute("XamlHandle");
+			if (!targetHandle) {
+				return;
+			}
+
+			if (WindowManager.isHosted) {
+				UnoDispatch.focusChanged(String(targetHandle));
+			}
+			else {
+				WindowManager.focusChangedMethod(targetHandle);
 			}
 		}
 

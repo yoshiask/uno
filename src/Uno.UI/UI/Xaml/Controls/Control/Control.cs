@@ -690,7 +690,7 @@ namespace Windows.UI.Xaml.Controls
 
 			OnFocusStateChangedPartial(oldValue, newValue);
 #if XAMARIN || __WASM__
-			FocusManager.OnFocusChanged(this, newValue);
+			FocusManager.OnFocusStateChanged(this, newValue);
 #endif
 
 			var eventArgs = new RoutedEventArgs

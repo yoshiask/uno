@@ -9,9 +9,9 @@
 	d:DesignHeight="300"
 	d:DesignWidth="400">
 
-	<controls:SampleControl SampleDescription="You should see an arrow rotating on itself (loading effect)">
+	<!--<controls:SampleControl SampleDescription="You should see an arrow rotating on itself (loading effect)">
 		<controls:SampleControl.SampleContent>
-			<DataTemplate>
+			<DataTemplate>-->
 				<Grid>
 					<Path
 						Loaded="BeginAnimation"
@@ -36,7 +36,7 @@
 						</Path.Resources>
 					</Path>
 				</Grid>
-			</DataTemplate>
+			<!--</DataTemplate>
 		</controls:SampleControl.SampleContent>
-	</controls:SampleControl>
+	</controls:SampleControl>-->
 </UserControl>

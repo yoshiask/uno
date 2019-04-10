@@ -137,6 +137,8 @@ namespace Windows.UI.Xaml.Media.Animation
 
 			if (elapsed < StartDelay)
 			{
+				Console.WriteLine("MANAGED FRAME - DE-DELAY: " + elapsed);
+
 				// We got an invalid tick ... handle it gracefully
 
 				// Reconfigure the start interval to tick only at the end of the start delay
@@ -145,8 +147,10 @@ namespace Windows.UI.Xaml.Media.Animation
 				CurrentPlayTime = 0;
 				_currentValue = _from;
 			}
-			else if (elapsed >= Duration)
+			else if (elapsed >= StartDelay + Duration)
 			{
+				Console.WriteLine("MANAGED FRAME - END");
+
 				IsRunning = false;
 				DisableFrameReporting();
 				_elapsed.Stop();

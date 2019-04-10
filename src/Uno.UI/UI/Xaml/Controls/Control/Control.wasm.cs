@@ -70,7 +70,7 @@ namespace Windows.UI.Xaml.Controls
 			try
 			{
 				_pendingFocusRequestState = state;
-				return FocusManager.Focus(this);
+				return FocusManager.NativeFocus(this);
 			}
 			finally
 			{

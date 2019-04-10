@@ -18,8 +18,19 @@ namespace Uno.UI.Samples.Content.UITests.Animations
 			this.InitializeComponent();
 		}
 
+		private DateTimeOffset _lastStart = DateTimeOffset.MinValue.AddDays(2);
+
 		private void StartAnimation(object sender, TappedRoutedEventArgs e)
 		{
+			var now = DateTimeOffset.Now;
+			if (_lastStart > now.AddSeconds(-5)) // Do not run 2 animations at same time
+			{
+				return;
+			}
+			_lastStart = now;
+
+			Console.WriteLine("START ANIMATION");
+
 			var animation = new DoubleAnimation
 			{
 				To = 0,
