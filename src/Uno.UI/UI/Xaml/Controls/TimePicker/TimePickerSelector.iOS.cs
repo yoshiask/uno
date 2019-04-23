@@ -15,6 +15,7 @@ namespace Windows.UI.Xaml.Controls
 	{
 		private UIDatePicker _picker;
 		private NSDate _initialTime;
+		private NSDate _newDate;
 
 		protected override void OnLoaded()
 		{
@@ -36,6 +37,8 @@ namespace Windows.UI.Xaml.Controls
 			_picker.Calendar = new NSCalendar(NSCalendarType.Gregorian);
 			_picker.Mode = UIDatePickerMode.Time;
 
+			_picker.ValueChanged += OnValueChanged;
+			
 			var parent = _picker.FindFirstParent<FrameworkElement>();
 
 			//Removing the date picker and adding it is what enables the lines to appear. Seems to be a side effect of adding it as a view. 
@@ -44,6 +47,11 @@ namespace Windows.UI.Xaml.Controls
 				parent.RemoveChild(_picker);
 				parent.AddSubview(_picker);
 			}
+		}
+		
+		private void OnValueChanged(object sender, EventArgs e)
+		{
+			_newDate = _picker.Date;
 		}
 
 		public void Initialize()
@@ -68,9 +76,9 @@ namespace Windows.UI.Xaml.Controls
 		{
 			if (_picker != null)
 			{
-				if (_picker.Date != _initialTime)
+				if (_newDate != _initialTime)
 				{
-					var time = _picker.Date.ToTimeSpan(_picker.TimeZone.GetSecondsFromGMT);
+					var time = _newDate.ToTimeSpan(_picker.TimeZone.GetSecondsFromGMT);
 
 					if (Time.Hours != time.Hours || Time.Minutes != time.Minutes)
 					{
@@ -140,6 +148,13 @@ namespace Windows.UI.Xaml.Controls
 							: "fr";
 
 			return new NSLocale(localeID);
+		}
+
+		protected override void OnUnloaded()
+		{
+			_picker.ValueChanged -= OnValueChanged;
+
+			base.OnUnloaded();
 		}
 	}
 }
