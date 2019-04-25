@@ -61,6 +61,8 @@
 * 151282 [iOS] Fixed Slider not responding on second navigation, fixed RemoveHandler for RoutedEvents removing all instances of handler 
 * 151497 [iOS/Android] Fixed Slider not responding, by ^ RemoveHandler fix for RoutedEvents 
 * 151524 [Android] Cleaned up Textbox for android to remove keyboard showing/dismissal inconsistencies
+* 151655 [TimePicker][iOS] First time you open time picker it initializes the existing value to current time
+* 151656 [TimePicker][iOS] Time picker always shows +1 minute than selected value
 
 ## Release 1.44.0
 
