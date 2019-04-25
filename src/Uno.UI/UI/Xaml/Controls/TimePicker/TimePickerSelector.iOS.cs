@@ -78,7 +78,7 @@ namespace Windows.UI.Xaml.Controls
 			{
 				if (_newDate != _initialTime)
 				{
-					var time = _newDate.ToTimeSpan(_picker.TimeZone.GetSecondsFromGMT);
+					var time = _newDate.ToTimeSpan();
 
 					if (Time.Hours != time.Hours || Time.Minutes != time.Minutes)
 					{
@@ -110,20 +110,7 @@ namespace Windows.UI.Xaml.Controls
 
 		private void SetPickerTime(TimeSpan time)
 		{
-			if (_picker != null)
-			{
-				// Because the UIDatePicker is set to use LocalTimeZone,
-				// we need to get the offset and apply it to the requested time.
-				var offset = TimeSpan.FromSeconds(_picker.TimeZone.GetSecondsFromGMT);
-
-				// Because the UIDatePicker applies the local timezone offset automatically when we set it,
-				// we need to compensate with a negated offset. This will show the time
-				// as if it was provided with no offset.
-				var timeWithOffset = time.Add(offset.Negate());
-				var nsDate = timeWithOffset.ToNSDate();
-
-				_picker.SetDate(nsDate, animated: false);
-			}
+			_picker?.SetDate(time.ToNSDate(), animated: false);
 		}
 
 		partial void OnClockIdentifierChangedPartialNative(string oldClockIdentifier, string newClockIdentifier)
