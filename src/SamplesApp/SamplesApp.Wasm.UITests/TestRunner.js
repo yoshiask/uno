@@ -28,11 +28,8 @@ class TestRunner {
             // Ask for the list of available tests in the running application
             const allTestsData = yield this.getAllTests(this._page);
             console.log(`Running ${allTestsData.length}`);
-            let i = 0;
             for (let testName of allTestsData) {
-                i += 1;
-                console.log("---");
-                console.log(`Running ${i}/${allTestsData.length}: ${testName}`);
+                console.log(`Running ${testName}`);
                 // Start the test run
                 var testRunId = yield this._page.evaluate(`SampleRunner.runTest(\'${testName}\')`);
                 if (debug) {
@@ -63,7 +60,7 @@ class TestRunner {
     waitXamlElement(page, xamlName, waitTime = 10000) {
         return __awaiter(this, void 0, void 0, function* () {
             var startDate = new Date();
-            while ((new Date() - startDate) < waitTime) {
+            while ((startDate - new Date()) < waitTime) {
                 yield this.delay(200);
                 try {
                     var xamlElement = yield page.$eval(`[xamlname="${xamlName}"]`, a => a);
@@ -78,7 +75,8 @@ class TestRunner {
                     }
                 }
             }
-            throw `Failed to get [${xamlName}]`;
+            console.log(`Failed to get [${xamlName}]`);
+            return null;
         });
     }
     delay(time) {

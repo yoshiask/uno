@@ -3,7 +3,7 @@ using Windows.UI.Xaml.Controls;
 
 namespace Uno.UI.Samples.Content.UITests.Popup
 {
-	[SampleControlInfo("Popup", "Popup_Simple")]
+	[SampleControlInfoAttribute("Popup", "Popup_Simple")]
 	public sealed partial class Popup_Simple : UserControl
 	{
 		public Popup_Simple()

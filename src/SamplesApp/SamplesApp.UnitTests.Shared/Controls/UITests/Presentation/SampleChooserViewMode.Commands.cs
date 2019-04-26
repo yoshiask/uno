@@ -47,7 +47,6 @@ namespace SampleControl.Presentation
 			ShowNewSectionCommand = new DelegateCommand<string>(section => ShowNewSection(CancellationToken.None, ConvertSectionEnum(section)));
 			ToggleFavoriteCommand = new DelegateCommand<SampleChooserContent>(sample => ToggleFavorite(CancellationToken.None, sample));
 			RecordAllTestsCommandCommand = new DelegateCommand(() => RecordAllTests(CancellationToken.None));
-			ReloadCurrentTestCommand = new DelegateCommand(() => ReloadCurrentTest(CancellationToken.None)) { CanExecuteEnabled = false };
 
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 		}
@@ -57,6 +56,5 @@ namespace SampleControl.Presentation
 		public ICommand ShowNewSectionCommand { get; private set; }
 		public ICommand ToggleFavoriteCommand { get; private set; }
 		public ICommand RecordAllTestsCommandCommand { get; private set; }
-		public ICommand ReloadCurrentTestCommand { get; private set; }
 	}
 }

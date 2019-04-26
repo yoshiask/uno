@@ -9,12 +9,8 @@
     d:DesignHeight="300"
     d:DesignWidth="400">
 
-	<Grid>
-		<Grid.RowDefinitions>
-			<RowDefinition Height="*" />
-			<RowDefinition Height="Auto" />
-		</Grid.RowDefinitions>
-		<ContentControl x:Name="root" />
-		<TextBlock x:Name="result" Grid.Row="1" />
-	</Grid>
+		<StackPanel>
+		<ContentControl x:Name="root"/>
+		<TextBlock x:Name="result"/>
+	</StackPanel>
 </UserControl>

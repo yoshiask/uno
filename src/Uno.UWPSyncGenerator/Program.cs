@@ -19,7 +19,7 @@ namespace Uno.UWPSyncGenerator
 		{
 			if (args.Length == 0)
 			{
-				Console.WriteLine("No mode selected. Supported modes: doc, sync & all.");
+				Console.WriteLine("No mode selected.");
 				return;
 			}
 
@@ -28,7 +28,7 @@ namespace Uno.UWPSyncGenerator
 			if (mode == SyncMode || mode == AllMode)
 			{
 				Console.WriteLine("*** WARNING: Close all editor files in visual studio, otherwise VS will freeze for a few minutes ****");
-				Console.WriteLine("Press enter to continue...");
+				Console.WriteLine("Press any key to continue...");
 				Console.ReadLine();
 
 				new SyncGenerator().Build(@"..\..\..\..\Uno.Foundation", "Uno.Foundation", "Windows.Foundation.FoundationContract");

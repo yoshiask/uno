@@ -13,13 +13,11 @@ using View = Windows.UI.Xaml.FrameworkElement;
 
 namespace Windows.UI.Xaml.Controls
 {
-	internal interface IPopup
-	{
+    public interface IPopup
+    {
 		event EventHandler<object> Closed;
 		event EventHandler<object> Opened;
-
 		bool IsOpen { get; set; }
 		View Child { get; set; }
-
 	}
 }

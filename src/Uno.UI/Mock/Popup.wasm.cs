@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Windows.UI.Xaml.Controls.Primitives
 {
-	public enum FlyoutPlacementMode
+	public partial class Popup
 	{
-		Top,
-		Bottom,
-		Left,
-		Right,
-		Full,
 	}
 }

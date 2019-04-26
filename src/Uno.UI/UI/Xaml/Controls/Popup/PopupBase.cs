@@ -30,6 +30,7 @@ namespace Windows.UI.Xaml.Controls
 
 		public PopupBase()
 		{
+
 		}
 
 		partial void OnIsOpenChangedPartial(bool oldIsOpen, bool newIsOpen)

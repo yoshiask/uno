@@ -517,10 +517,7 @@ namespace Windows.UI.Xaml
 			{
 				_name = value;
 
-				if (FeatureConfiguration.UIElement.AssignDOMXamlName)
-				{
-					Uno.UI.Xaml.WindowManagerInterop.SetName(HtmlId, _name);
-				}
+				Uno.UI.Xaml.WindowManagerInterop.SetName(HtmlId, _name);
 			}
 		}
 

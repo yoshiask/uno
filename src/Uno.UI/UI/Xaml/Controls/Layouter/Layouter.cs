@@ -39,17 +39,17 @@ namespace Windows.UI.Xaml.Controls
 {
 	public abstract partial class Layouter : ILayouter
 	{
-		private static readonly IEventProvider _trace = Tracing.Get(FrameworkElement.TraceProvider.Id);
+		private readonly static IEventProvider _trace = Tracing.Get(FrameworkElement.TraceProvider.Id);
 
 		private readonly IFrameworkElement _element;
 
 		public IFrameworkElement Panel { get { return _element; } }
 
-		protected Layouter(IFrameworkElement element)
+		public Layouter(IFrameworkElement element)
 		{
 			_element = element;
 		}
-
+		
 		/// <summary>
 		/// Determine the size of the panel.
 		/// </summary>
@@ -106,13 +106,9 @@ namespace Windows.UI.Xaml.Controls
 		/// <summary>
 		/// Places the children of the panel using a specific size, in logical pixels.
 		/// </summary>
+		/// <param name="finalSize">The final panel size</param>
 		public void Arrange(Rect finalRect)
 		{
-			if (_element is UIElement ui)
-			{
-				ui.LayoutSlot = finalRect;
-			}
-
 			IDisposable traceActivity = null;
 			if (_trace.IsEnabled)
 			{
@@ -326,7 +322,9 @@ namespace Windows.UI.Xaml.Controls
 
 		protected Thickness MarginChild(View view)
 		{
-			if (view is IFrameworkElement frameworkElement)
+			var frameworkElement = view as IFrameworkElement;
+
+			if (frameworkElement != null)
 			{
 				return frameworkElement.Margin;
 			}
@@ -346,7 +344,9 @@ namespace Windows.UI.Xaml.Controls
 			// Panel that do not use this helper a bit more complex, but for all other panels that use this
 			// layouter, the logic is implied.
 
-			if (view is IFrameworkElement frameworkElement)
+			var frameworkElement = view as IFrameworkElement;
+
+			if (frameworkElement != null)
 			{
 				// Apply the margin for framework elements, as if it were padding to the child.
 				double x = frame.X;

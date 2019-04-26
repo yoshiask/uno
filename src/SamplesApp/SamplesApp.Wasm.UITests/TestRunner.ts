@@ -29,13 +29,9 @@ export class TestRunner {
 
 		console.log(`Running ${allTestsData.length}`);
 
-		let i = 0;
-
 		for (let testName of allTestsData) {
-			i += 1;
+			console.log(`Running ${testName}`);
 
-			console.log("---")
-			console.log(`Running ${i}/${allTestsData.length}: ${testName}`);
 			// Start the test run
 			var testRunId = await this._page.evaluate(`SampleRunner.runTest(\'${testName}\')`);
 
@@ -73,7 +69,7 @@ export class TestRunner {
 	private async waitXamlElement(page: any, xamlName: string, waitTime: number = 10000): Promise<any> {
 		var startDate = new Date();
 
-		while ((<any>new Date() - <any>startDate) < waitTime) {
+		while ((<any>startDate - <any>new Date()) < waitTime) {
 			await this.delay(200);
 			try {
 				var xamlElement = await page.$eval(`[xamlname="${xamlName}"]`, a => a);
@@ -88,8 +84,8 @@ export class TestRunner {
 				}
 			}
 		}
-
-		throw `Failed to get [${xamlName}]`;
+		console.log(`Failed to get [${xamlName}]`);
+		return null;
 	}
 
 	private async delay(time) {

@@ -169,7 +169,7 @@ namespace Windows.UI.Xaml
 
 		partial void OnIsHitTestVisibleChangedPartial(bool oldValue, bool newValue);
 
-		#endregion
+#endregion
 
 		#region Opacity Dependency Property
 
@@ -236,8 +236,6 @@ namespace Windows.UI.Xaml
 			return dp == null ? null : owner.GetValue(dp);
 		}
 
-		internal Rect LayoutSlot { get; set; } = default;
-
 #if !__WASM__
 		/// <summary>
 		/// Provides the size reported during the last call to Measure.
@@ -248,6 +246,7 @@ namespace Windows.UI.Xaml
 		{
 			get; internal set;
 		}
+
 
 		public virtual void Measure(Size availableSize)
 		{
@@ -282,7 +281,7 @@ namespace Windows.UI.Xaml
 		{
 			InvalidateMeasure();
 		}
-#endif
+		#endif
 
 		public bool CapturePointer(Pointer value)
 		{
@@ -302,7 +301,7 @@ namespace Windows.UI.Xaml
 
 		public void ReleasePointerCapture(Pointer value)
 		{
-			if (_pointCaptures.Contains(value))
+			if(_pointCaptures.Contains(value))
 			{
 				_pointCaptures.Remove(value);
 #if __WASM__

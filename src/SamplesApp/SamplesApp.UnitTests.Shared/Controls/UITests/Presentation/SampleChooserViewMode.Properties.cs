@@ -21,7 +21,6 @@ using Windows.UI.Xaml;
 using System.IO;
 using Uno.Disposables;
 using System.ComponentModel;
-using Uno.UI.Common;
 
 #if XAMARIN || NETSTANDARD2_0
 using Windows.UI.Xaml.Controls;
@@ -247,7 +246,6 @@ namespace SampleControl.Presentation
 			{
 				_currentSelectedSample = value;
 				RaisePropertyChanged();
-				(ReloadCurrentTestCommand as DelegateCommand).CanExecuteEnabled = true;
 			}
 		}
 

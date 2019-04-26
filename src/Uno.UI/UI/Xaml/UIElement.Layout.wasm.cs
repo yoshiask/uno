@@ -6,6 +6,7 @@ namespace Windows.UI.Xaml
 	public partial class UIElement : DependencyObject
 	{
 		private Size _size;
+		private Rect _finalRect;
 		private Size _desiredSize;
 		private Size _previousAvailableSize;
 
@@ -90,14 +91,14 @@ namespace Windows.UI.Xaml
 
 			if (Visibility == Visibility.Collapsed)
 			{
-				LayoutSlot = finalRect;
+				_finalRect = finalRect;
 				return;
 			}
 
-			if (!_isArrangeValid || finalRect != LayoutSlot)
+			if (!_isArrangeValid || finalRect != _finalRect)
 			{
 				ArrangeCore(finalRect);
-				LayoutSlot = finalRect;
+				_finalRect = finalRect;
 				_isArrangeValid = true;
 			}
 		}
@@ -115,7 +116,7 @@ namespace Windows.UI.Xaml
 		public Size RenderSize
 		{
 			get => Visibility == Visibility.Collapsed ? new Size() : _size;
-			internal set
+			set
 			{
 				var previousSize = _size;
 				_size = value;

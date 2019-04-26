@@ -1,5 +1,7 @@
 ﻿#if NETFX_CORE
 using System;
+using System.Collections.Generic;
+using System.Text;
 using System.Windows.Input;
 
 namespace Uno.UI.Common
@@ -7,7 +9,6 @@ namespace Uno.UI.Common
 	public class DelegateCommand<T> : ICommand
 	{
 		private Action<T> _action;
-		private bool _canExecuteEnabled = true;
 
 		public event EventHandler CanExecuteChanged;
 
@@ -16,7 +17,10 @@ namespace Uno.UI.Common
 			_action = action;
 		}
 
-		public bool CanExecute(object parameter) => CanExecuteEnabled;
+		public bool CanExecute(object parameter)
+		{
+			return true;
+		}
 
 		public void Execute(object parameter)
 		{
@@ -34,16 +38,9 @@ namespace Uno.UI.Common
 			}
 		}
 
-		private void OnCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
-
-		public bool CanExecuteEnabled
+		private void OnCanExecuteChanged(bool canExecute)
 		{
-			get => _canExecuteEnabled;
-			set
-			{
-				_canExecuteEnabled = value;
-				OnCanExecuteChanged();
-			}
+			CanExecuteChanged?.Invoke(this, new EventArgs());
 		}
 	}
 }

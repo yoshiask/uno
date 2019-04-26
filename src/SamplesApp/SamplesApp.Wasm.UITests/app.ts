@@ -13,10 +13,6 @@ const fs = require('fs');
 	});
 
 	const page = await browser.newPage();
-	page.on('console', msg => {
-		console.log('BROWSER LOG:', msg.text());
-	});
-	page.on('requestfailed', err => console.error('BROWSER-REQUEST-FAILED:', err))
 	await page.goto("http://localhost:8000/");
 
 	var runner = new TestRunner(page);

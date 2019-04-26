@@ -106,8 +106,8 @@ namespace Windows.UI.Xaml.Controls
 
 		public bool IsOn
 		{
-			get => (bool)GetValue(IsOnProperty);
-			set => SetValue(IsOnProperty, value);
+			get { return (bool)this.GetValue(IsOnProperty); }
+			set { this.SetValue(IsOnProperty, value); }
 		}
 
 		public static readonly DependencyProperty IsOnProperty =
@@ -115,8 +115,8 @@ namespace Windows.UI.Xaml.Controls
 
 		public DataTemplate OnContentTemplate
 		{
-			get => (DataTemplate)GetValue(OnContentTemplateProperty);
-			set => SetValue(OnContentTemplateProperty, value);
+			get { return (DataTemplate)this.GetValue(OnContentTemplateProperty); }
+			set { this.SetValue(OnContentTemplateProperty, value); }
 		}
 
 		public static readonly DependencyProperty OnContentTemplateProperty =
@@ -124,8 +124,8 @@ namespace Windows.UI.Xaml.Controls
 
 		public DataTemplate OffContentTemplate
 		{
-			get => (DataTemplate)GetValue(OffContentTemplateProperty);
-			set => SetValue(OffContentTemplateProperty, value);
+			get { return (DataTemplate)this.GetValue(OffContentTemplateProperty); }
+			set { this.SetValue(OffContentTemplateProperty, value); }
 		}
 
 		public static readonly DependencyProperty OffContentTemplateProperty =
@@ -133,8 +133,8 @@ namespace Windows.UI.Xaml.Controls
 
 		public DataTemplate HeaderTemplate
 		{
-			get => (DataTemplate)GetValue(HeaderTemplateProperty);
-			set => SetValue(HeaderTemplateProperty, value);
+			get { return (DataTemplate)this.GetValue(HeaderTemplateProperty); }
+			set { this.SetValue(HeaderTemplateProperty, value); }
 		}
 
 		public static readonly DependencyProperty HeaderTemplateProperty =
@@ -142,8 +142,8 @@ namespace Windows.UI.Xaml.Controls
 
 		public object OnContent
 		{
-			get => (object)GetValue(OnContentProperty);
-			set => SetValue(OnContentProperty, value);
+			get { return (object)this.GetValue(OnContentProperty); }
+			set { this.SetValue(OnContentProperty, value); }
 		}
 
 		public static readonly DependencyProperty OnContentProperty =
@@ -151,8 +151,8 @@ namespace Windows.UI.Xaml.Controls
 
 		public object OffContent
 		{
-			get => (object)GetValue(OffContentProperty);
-			set => SetValue(OffContentProperty, value);
+			get { return (object)this.GetValue(OffContentProperty); }
+			set { this.SetValue(OffContentProperty, value); }
 		}
 
 		public static readonly DependencyProperty OffContentProperty =
@@ -160,8 +160,8 @@ namespace Windows.UI.Xaml.Controls
 
 		public object Header
 		{
-			get => (object)GetValue(HeaderProperty);
-			set => SetValue(HeaderProperty, value);
+			get { return (object)this.GetValue(HeaderProperty); }
+			set { this.SetValue(HeaderProperty, value); }
 		}
 
 		public static readonly DependencyProperty HeaderProperty =
