@@ -62,5 +62,8 @@
     <Compile Update="C:\src\Uno\src\SamplesApp\SamplesApp.Shared\Samples\UnitTests\HttpUnitTests.xaml.cs">
       <DependentUpon>HttpUnitTests.xaml</DependentUpon>
     </Compile>
+    <Compile Update="C:\Users\w4384\source\repos\Uno\src\SamplesApp\SamplesApp.Shared\ListViewBindingPage.xaml.cs">
+      <DependentUpon>ListViewBindingPage.xaml</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>
