@@ -581,8 +581,8 @@ namespace Windows.UI.Xaml.Controls
 			var remainingLines = remainingItems / leadingLine.NumberOfViews;
 			var remainingItemExtent = remainingLines * leadingLine.Extent;
 
-			int headerExtent = HeaderViewCount > 0 ? GetChildEnd(GetChildAt(GetHeaderViewIndex())) - GetChildStart(GetChildAt(GetHeaderViewIndex())) : 0;
-			int footerExtent = FooterViewCount > 0 ? GetChildEnd(GetChildAt(GetFooterViewIndex())) - GetChildStart(GetChildAt(GetFooterViewIndex())) : 0;
+			int headerExtent = HeaderViewCount > 0 ? GetChildExtentWithMargins(GetChildAt(GetHeaderViewIndex())) : 0;
+			int footerExtent = FooterViewCount > 0 ? GetChildExtentWithMargins(GetChildAt(GetFooterViewIndex())) : 0;
 
 			int remainingGroupExtent = 0;
 			if (XamlParent.NumberOfDisplayGroups > 0 && RelativeGroupHeaderPlacement == RelativeHeaderPlacement.Inline)
