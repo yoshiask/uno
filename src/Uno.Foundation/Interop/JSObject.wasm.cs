@@ -21,7 +21,7 @@ namespace Uno.Foundation.Interop
 		/// </summary>
 		[Obfuscation(Feature = "renaming", Exclude = true)]
 		[Preserve]
-		public static void Dispatch(string handlePtr, string method, string parameters)
+		public static string Dispatch(string handlePtr, string method, string parameters)
 		{
 			var intPtr = _strToIntPtr(handlePtr);
 			var handle = GCHandle.FromIntPtr(intPtr);
@@ -29,22 +29,34 @@ namespace Uno.Foundation.Interop
 			if (!handle.IsAllocated)
 			{
 				handle.Log().Debug($"Cannot invoke '{method}' as target has been collected!");
-				return;
+				return @"{""isSuccess"":false}";
 			}
 
 			if (!(handle.Target is JSObjectHandle jsObjectHandle))
 			{
 				handle.Log().Debug($"Cannot invoke '{method}' as target is not a valid JSObjectHandle! ({handle.Target?.GetType()})");
-				return;
+				return @"{""isSuccess"":false}";
 			}
 
 			if (!jsObjectHandle.TryGetManaged(out var target))
 			{
 				jsObjectHandle.Log().Debug($"Cannot invoke '{method}' as target has been collected!");
-				return;
+				return @"{""isSuccess"":false}";
 			}
 
-			jsObjectHandle.Metadata.InvokeManaged(target, method, parameters);
+			var result = jsObjectHandle.Metadata.InvokeManaged(target, method, parameters);
+
+			switch (result)
+			{
+				case string str:
+					return $@"{{""isSuccess"":true, ""value"": ""{str.Replace("\\", "\\\\").Replace("\"", @"\""")}""}}";
+
+				case bool b:
+					return $@"{{""isSuccess"":true, ""value"": ""{(b ? "true" : "false")}""}}";
+
+				default:
+					return @"{""isSuccess"":true}";
+			}
 		}
 	}
 }

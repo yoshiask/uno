@@ -1837,7 +1837,11 @@ var Uno;
                     if (!ManagedObject.dispatchMethod) {
                         ManagedObject.init();
                     }
-                    ManagedObject.dispatchMethod(handle, method, parameters || "");
+                    var serializedResult = ManagedObject.dispatchMethod(handle, method, parameters || "");
+                    var result = JSON.parse(serializedResult);
+                    if (result.isSuccess) {
+                        return result.value;
+                    }
                 }
             }
             Interop.ManagedObject = ManagedObject;

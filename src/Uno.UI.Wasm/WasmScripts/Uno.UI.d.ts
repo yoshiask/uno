@@ -648,7 +648,7 @@ declare namespace Uno.Foundation.Interop {
         private static assembly;
         private static dispatchMethod;
         private static init;
-        static dispatch(handle: string, method: string, parameters: string): void;
+        static dispatch(handle: string, method: string, parameters: string): any;
     }
 }
 declare namespace Uno.UI.Interop {
