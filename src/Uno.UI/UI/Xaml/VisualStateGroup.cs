@@ -141,178 +141,200 @@ namespace Windows.UI.Xaml
 
 		public event VisualStateChangedEventHandler CurrentStateChanged;
 
-		internal void RaiseCurrentStateChanging(VisualState oldState, VisualState newState)
+		internal void RaiseCurrentStateChanging(Control control, VisualState oldState, VisualState newState)
 		{
-			if (this.CurrentStateChanging == null)
+			CurrentStateChanging?.Invoke(this, new VisualStateChangedEventArgs
 			{
-				return;
-			}
-
-			this.CurrentStateChanging(this, new VisualStateChangedEventArgs() { Control = FindFirstAncestorControl(), NewState = newState, OldState = oldState });
+				Control = control,
+				OldState = oldState,
+				NewState = newState
+			});
 		}
 
-		internal void RaiseCurrentStateChanged(VisualState oldState, VisualState newState)
+		internal void RaiseCurrentStateChanged(Control control, VisualState oldState, VisualState newState)
 		{
-			if (this.CurrentStateChanged == null)
+			CurrentStateChanged?.Invoke(this, new VisualStateChangedEventArgs
 			{
-				return;
-			}
-
-			this.CurrentStateChanged(this, new VisualStateChangedEventArgs() { Control = FindFirstAncestorControl(), NewState = newState, OldState = oldState });
+				Control = control,
+				OldState = oldState,
+				NewState = newState
+			});
 		}
 
-		private Control FindFirstAncestorControl()
-		{
-			// The owner may not be an actual control, so we return the first control we find in the ancestors.
-			// This matches the UWP behavior.
-			return (this.GetParent() as FrameworkElement)?.FindFirstParent<Control>();
-		}
-
-		internal void GoToState(IFrameworkElement element, VisualState state, VisualState originalState, bool useTransitions, Action onStateChanged)
+		internal void GoToState(IFrameworkElement element, VisualState oldState, VisualState newState, bool useTransitions, Action onStateChanged)
 		{
 			if (this.Log().IsEnabled(Microsoft.Extensions.Logging.LogLevel.Debug))
 			{
-				this.Log().DebugFormat("Go to state [{0}/{1}] on [{2}]", Name, state?.Name, element);
+				this.Log().DebugFormat("Go to state [{0}/{1}] on [{2}]", Name, newState?.Name, element);
 			}
 
-			var transition = FindTransition(originalState?.Name, state?.Name);
+			var transition = FindTransition(oldState?.Name, newState?.Name);
 
-			EventHandler<object> onComplete = null;
+			// The CurrentState is the target state even before raising the 'StateChanging' event!
+			CurrentState = newState;
 
-			onComplete = (s, a) =>
+			// First step is to cleanup the current state
+			if (oldState != null)
 			{
-				onStateChanged();
-
-				if (state?.Storyboard == null)
+				// Stops 'oldState' Storyboard animation
+				if (oldState.Storyboard != null)
 				{
-					return;
-				}
 
-				state.Storyboard.Completed -= onComplete;
-			};
+					// TODO: We must wait for the "TurnOver" Animation to complete before staring the target state animation
 
-			EventHandler<object> onTransitionComplete = null;
-
-			onTransitionComplete = (s, a) =>
-			{
-				if (transition?.Storyboard != null && useTransitions)
-				{
-					transition.Storyboard.Completed -= onTransitionComplete;
-
-					if (state?.Storyboard != null)
+					if (transition != null)
 					{
-						transition.Storyboard.TurnOverAnimationsTo(state.Storyboard);
+						oldState.Storyboard.TurnOverAnimationsTo(transition.Storyboard);
 					}
-				}
 
-				//Starts Storyboard Animation
-				if (state?.Storyboard == null)
-				{
-					onComplete(this, null);
-				}
-				else if(state != null)
-				{
-					state.Storyboard.Completed += onComplete;
-					state.Storyboard.Begin();
-				}
-			};
-
-			//Stops Previous Storyboard Animation
-			if (originalState != null)
-			{
-				if (originalState.Storyboard != null)
-				{
 					if (transition?.Storyboard != null)
 					{
-						originalState.Storyboard.TurnOverAnimationsTo(transition.Storyboard);
+						oldState.Storyboard.TurnOverAnimationsTo(transition.Storyboard);
 					}
-					else if (state?.Storyboard != null)
+					else if (newState?.Storyboard != null)
 					{
-						originalState.Storyboard.TurnOverAnimationsTo(state.Storyboard);
+						oldState.Storyboard.TurnOverAnimationsTo(newState.Storyboard);
 					}
 					else
 					{
-						originalState.Storyboard.Stop();
+						oldState.Storyboard.Stop();
 					}
 				}
 
+				// Revert 'oldState' Setters
 				foreach (var setter in this.CurrentState.Setters.OfType<Setter>())
 				{
+					if (element != null && (newState?.Setters.OfType<Setter>().Any(o => o.HasSameTarget(setter, DependencyPropertyValuePrecedences.Animations, element)) ?? false))
+					{
+						// PERF: We clear the value of the current setter only if there isn't any setter in the target state
+						// which changes the same target property.
+
+						continue;
+					}
+
 					setter.ClearValue();
 				}
 			}
 
-			this.CurrentState = state;
-			if (this.CurrentState != null && element != null)
+			
+
+			if (newState != null && element != null)
 			{
+				// Apply 'Setters'
 				foreach (var setter in this.CurrentState.Setters.OfType<Setter>())
 				{
 					setter.ApplyValue(DependencyPropertyValuePrecedences.Animations, element);
 				}
 			}
 
+			// Run 'transition'
 			if (transition?.Storyboard == null || !useTransitions)
 			{
-				onTransitionComplete(this, null);
+				OnTransitionCompleted(this, null);
 			}
 			else
 			{
-				transition.Storyboard.Completed += onTransitionComplete;
+				transition.Storyboard.Completed += OnTransitionCompleted;
 				transition.Storyboard.Begin();
 			}
+
+			// Start the 'newState' Storyboard animation
+
+
+			void OnStoryboardCompleted(object s, object a)
+			{
+				onStateChanged();
+
+				if (newState?.Storyboard == null)
+				{
+					return;
+				}
+
+				newState.Storyboard.Completed -= OnStoryboardCompleted;
+			}
+
+			void OnTransitionCompleted(object s, object a)
+			{
+				if (transition?.Storyboard != null && useTransitions)
+				{
+					transition.Storyboard.Completed -= OnTransitionCompleted;
+
+					if (newState?.Storyboard != null)
+					{
+						transition.Storyboard.TurnOverAnimationsTo(newState.Storyboard);
+					}
+				}
+
+				//Starts Storyboard Animation
+				if (newState?.Storyboard == null)
+				{
+					OnStoryboardCompleted(this, null);
+				}
+				else
+				{
+					newState.Storyboard.Completed += OnStoryboardCompleted;
+					newState.Storyboard.Begin();
+				}
+			}
+
+			void Start
 		}
 
 		private VisualTransition FindTransition(string oldStateName, string newStateName)
 		{
-			if (oldStateName.IsNullOrEmpty() || newStateName.IsNullOrEmpty())
+			var hasOldState = oldStateName.HasValue();
+			var hasNewState = newStateName.HasValue();
+
+			if (hasOldState && hasNewState)
 			{
-				return null;
+				var perfectMatch = Transitions.FirstOrDefault(vt =>
+					string.Equals(vt.From, oldStateName) &&
+					string.Equals(vt.To, newStateName));
+
+				if (perfectMatch != null)
+				{
+					return perfectMatch;
+				}
 			}
 
-			var perfectMatch = Transitions.FirstOrDefault(vt =>
-				string.Equals(vt.From, oldStateName) &&
-				string.Equals(vt.To, newStateName));
-
-			if (perfectMatch != null)
+			if (hasOldState)
 			{
-				return perfectMatch;
+				var fromMatch = Transitions.FirstOrDefault(vt =>
+					string.Equals(vt.From, oldStateName) &&
+					vt.To == null);
+
+				if (fromMatch != null)
+				{
+					return fromMatch;
+				}
 			}
 
-			var fromMatch = Transitions.FirstOrDefault(vt =>
-				string.Equals(vt.From, oldStateName) &&
-				vt.To == null);
-
-			if (fromMatch != null)
+			if (hasNewState)
 			{
-				return fromMatch;
+				var toMatch = Transitions.FirstOrDefault(vt =>
+					vt.From == null &&
+					string.Equals(vt.To, newStateName));
+
+				return toMatch;
 			}
-
-			var toMatch = Transitions.FirstOrDefault(vt =>
-				vt.From == null &&
-				string.Equals(vt.To, newStateName));
-
-			return toMatch;
 		}
 
 		internal void RefreshStateTriggers()
 		{
 			var activeVisualState = GetActiveTrigger();
 
-			var oldState = CurrentState;
-
 			if (this.Log().IsEnabled(LogLevel.Debug))
 			{
-				this.Log().Debug($"[{this}].RefreshStateTriggers() activeState={activeVisualState}, oldState={oldState}");
+				this.Log().Debug($"[{this}].RefreshStateTriggers() activeState={activeVisualState}, oldState={CurrentState}");
 			}
 
-			var parent = this.GetParent() as IFrameworkElement;
-
-			void OnStateChanged()
+			if (this.GetParent() is IFrameworkElement root)
 			{
-				RaiseCurrentStateChanged(oldState, activeVisualState);
-			}
+				var ctrl = (root as FrameworkElement)?.FindFirstParent<Control>();
 
-			GoToState(parent, activeVisualState, CurrentState, false, OnStateChanged);
+				// We use the VisualStateManager to effectively GoToState its protected overridable "RaiseStateChang<ing|ed>" are invoked
+				VisualStateManager.GetVisualStateManager(ctrl).GoToStateCore(ctrl, root, activeVisualState.Name, this, activeVisualState, true);
+			}
 		}
 
 		private void OnParentChanged(object instance, object key, DependencyObjectParentChangedEventArgs args)

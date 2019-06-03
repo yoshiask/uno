@@ -245,6 +245,10 @@ namespace Windows.UI.Xaml.Media.Animation
 
 		internal void TurnOverAnimationsTo(Storyboard storyboard)
 		{
+			// TODO: This should Deactivate animation that has matching animations in the target SToryboard
+			// And generate an animation of nearly 1 sec to go back to the original state
+			// And finally just revert changes sync if target storyboard is null
+
 			var affectedProperties = storyboard.Children.TargetedProperties;
 
 			foreach (var child in Children)

@@ -181,7 +181,7 @@ namespace Windows.UI.Xaml
 			return (null, null);
 		}
 
-		protected virtual bool GoToStateCore(Control control, IFrameworkElement templateRoot, string stateName, VisualStateGroup group, VisualState state, bool useTransitions)
+		protected internal virtual bool GoToStateCore(Control control, IFrameworkElement templateRoot, string stateName, VisualStateGroup group, VisualState state, bool useTransitions)
 		{
 #if IS_UNO
 			if (_trace.IsEnabled)
@@ -207,7 +207,7 @@ namespace Windows.UI.Xaml
 				return true;
 			}
 
-			RaiseCurrentStateChanging(group, originalState, state);
+			RaiseCurrentStateChanging(group, originalState, state, control);
 
 			// The visual state group must not keep a hard reference to the control, 
 			// otherwise it may leak.
@@ -215,16 +215,14 @@ namespace Windows.UI.Xaml
 
 			group.GoToState(
 				control,
-				state,
 				originalState,
+				state,
 				useTransitions,
 				() =>
 				{
-					var innerControl = wr?.Target as Control;
-
-					if (innerControl != null)
+					if (wr?.Target is Control ctrl)
 					{
-						RaiseCurrentStateChanged(group, originalState, state);
+						RaiseCurrentStateChanged(group, originalState, state, ctrl);
 					}
 				}
 			);
@@ -232,24 +230,14 @@ namespace Windows.UI.Xaml
 			return true;
 		}
 
-		protected virtual void RaiseCurrentStateChanging(VisualStateGroup stateGroup, VisualState oldState, VisualState newState)
+		protected virtual void RaiseCurrentStateChanging(VisualStateGroup stateGroup, VisualState oldState, VisualState newState, Control control)
 		{
-			if (stateGroup == null)
-			{
-				return;
-			}
-
-			stateGroup.RaiseCurrentStateChanging(oldState, newState);
+			stateGroup?.RaiseCurrentStateChanging(control, oldState, newState);
 		}
 
-		protected virtual void RaiseCurrentStateChanged(VisualStateGroup stateGroup, VisualState oldState, VisualState newState)
+		protected virtual void RaiseCurrentStateChanged(VisualStateGroup stateGroup, VisualState oldState, VisualState newState, Control control)
 		{
-			if (stateGroup == null)
-			{
-				return;
-			}
-
-			stateGroup.RaiseCurrentStateChanged(oldState, newState);
+			stateGroup?.RaiseCurrentStateChanged(control, oldState, newState);
 		}
 
 		internal static VisualState GetCurrentState(Control control, string groupName)
