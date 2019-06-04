@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using Uno.UI;
 #if XAMARIN_IOS
 using UIKit;
+#elif XAMARIN_ANDROID
+using Android.Views;
 #endif
 
 namespace Windows.UI.Xaml.Controls.Primitives
@@ -134,6 +136,9 @@ namespace Windows.UI.Xaml.Controls.Primitives
 				state = CommonStates.Pressed;
 			}
 
+#if XAMARIN_ANDROID
+			this.RequestLayout();
+#endif
 			SetVisualState(state, true);
 		}
 

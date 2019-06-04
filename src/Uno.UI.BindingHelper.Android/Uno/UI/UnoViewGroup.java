@@ -973,6 +973,11 @@ public abstract class UnoViewGroup
 		return didFindTransform;
 	}
 
+	@Override
+	protected boolean onSetAlpha(int alpha){
+		return alpha < 255 && alpha > 0;
+	}
+
 	/**
 	 * Get touch coordinate transformed to a view's local space. If view is a UnoViewGroup, use already-calculated value;
 	 * interpolate offsets for any non-UnoViewGroups in the visual hierarchy, and use the raw absolute position at the
