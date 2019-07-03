@@ -33,6 +33,7 @@ namespace Uno.UI.Controls
 			{
 				Content = navigationBar;
 			}
+			navigationBar.PrefersLargeTitles = PrefersLargeTitles;
 
 			var statusBar = StatusBar.GetForCurrentView();
 
@@ -59,6 +60,8 @@ namespace Uno.UI.Controls
 			_statusBarSubscription.Disposable = null;
 			_orientationSubscription.Disposable = null;
 		}
+		
+		public bool PrefersLargeTitles { get; set; }
 	}
 }
 #endif

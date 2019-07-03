@@ -50,6 +50,8 @@ namespace Windows.UI.Xaml.Controls
 
 #if __ANDROID__ || __IOS__
 		internal NativeCommandBarPresenter Presenter { get; set; }
+
+		public bool PrefersLargeTitles { get; set; }
 #endif
 
 		protected override void OnApplyTemplate()
@@ -63,6 +65,7 @@ namespace Windows.UI.Xaml.Controls
 
 #if __ANDROID__ || __IOS__
 			Presenter = this.FindFirstChild<NativeCommandBarPresenter>();
+			Presenter.PrefersLargeTitles = PrefersLargeTitles;
 #endif
 			RegisterEvents();
 
