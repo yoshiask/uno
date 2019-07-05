@@ -37,6 +37,12 @@ namespace Uno.UI.Controls
 
 			// Hook CommandBar to NavigationItem
 			SetNavigationItem(topCommandBar, pageController.NavigationItem);
+
+			pageController.NavigationItem.LargeTitleDisplayMode = UINavigationItemLargeTitleDisplayMode.Never;
+			if (topCommandBar.PrefersLargeTitles)
+			{
+				pageController.NavigationItem.LargeTitleDisplayMode = UINavigationItemLargeTitleDisplayMode.Always;
+			}
 		}
 
 		/// <summary>

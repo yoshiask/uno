@@ -597,11 +597,13 @@ namespace Windows.UI.Xaml.Controls
 			// maxMeasuredWidth variable is only used for the fast paths calculation
 			if (isMeasuring)
 			{
+				this.Log().LogError("Grid.Layout.CalculateRows: Measure phase");
 				//This is the measure phase. The value will be set when measuring children.
 				maxMeasuredWidth = 0;
 			}
 			else
 			{
+				this.Log().LogError("Grid.Layout.CalculateRows: Arrange phase");
 				//This is the arrange phase. We already know the measured size of children.
 				var minWidth = Children.Max(child => GetElementDesiredSize(child).Width);
 
@@ -685,7 +687,6 @@ namespace Windows.UI.Xaml.Controls
 					var currentSize = autoRows.Sum(pair => calculatedPixelRows.Span[pair.Key]);
 					if (childSize.Height - pixelSize > currentSize)
 					{
-
 						// The child has only one auto row in is RowSpan
 						var index = autoRows[0].Key;
 						var remainingSpaceForIndex = remainingSpace(index, calculatedPixelRows.Span);
@@ -733,6 +734,14 @@ namespace Windows.UI.Xaml.Controls
 			var totalStarSizedHeight = initialTotalStarSizedHeight;
 			var unitStarHeight = remainingHeight / totalStarSizedHeight;
 
+			var message = "Grid.Layout.CalculateRows: CalculatedPixelRows";
+			for (int rowN = 0; rowN < calculatedPixelRows.Span.Length; rowN++)
+			{
+				message += $" -- {rowN} {calculatedPixelRows.Span[rowN]}";
+			}
+
+			this.Log().LogError(message);
+
 			// We want to run at least one iteration. We don't expect more iterations than the number of star children (but allow margin for programmer error).
 			var maxTries = starSizeChildren.Span.Length * 2 + 1;
 			var previousRemainingHeight = remainingHeight;
@@ -747,6 +756,8 @@ namespace Windows.UI.Xaml.Controls
 			Memory<double> starCalculatedPixelRows = null;
 			for (int i = 0; i <= maxTries; i++)
 			{
+				this.Log().LogError($"Tries: remainingHeight = {remainingHeight}");
+
 				var maxHeightRowsHeight = 0d;
 				var minHeightRowsHeight = 0d;
 				var maxHeightRowsStarHeight = 0d;
