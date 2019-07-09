@@ -29,6 +29,7 @@ namespace Windows.UI.Xaml.Controls
 		private ColumnDefinition _thirdTextBlockColumn;
 		private bool _isLoaded;
 		private bool _isViewReady;
+		private bool _isSetupCompleted;
 
 		public TimePicker() { }
 
@@ -143,9 +144,14 @@ namespace Windows.UI.Xaml.Controls
 			SetupFlyoutButton();
 		}
 
+		protected override void OnUnloaded()
+		{
+			base.OnUnloaded();
+		}
+
 		private void SetupFlyoutButton()
 		{
-			if (!_isViewReady || !_isLoaded)
+			if ((!_isViewReady || !_isLoaded) || _isSetupCompleted)
 			{
 				return;
 			}
@@ -169,6 +175,8 @@ namespace Windows.UI.Xaml.Controls
 				BindToFlyout(nameof(MinuteIncrement));
 				BindToFlyout(nameof(ClockIdentifier));
 #endif
+
+				_isSetupCompleted = true;
 			}
 		}
 
