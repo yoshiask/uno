@@ -15,4 +15,8 @@
 		<PackageReference Include="Uno.UITest.Helpers" Version="1.0.0-dev.57" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Windows_UI_Xaml_Controls\SliderTest\" />
+	</ItemGroup>
+
 </Project>
