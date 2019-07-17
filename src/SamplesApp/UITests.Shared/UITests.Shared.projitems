@@ -13,6 +13,34 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Performance\BenchmarkControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Performance\BorderLoadUnloadBenchmark.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Performance\BorderMeasureBenchmark.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Performance\TextBlockLoadUnloadBenchmark.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Performance\TextBlockMeasureBenchmark.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Performance\ViewCreationBenchmark.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Performance\ViewLoadUnloadBenchmark.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="$(MSBuildThisFileDirectory)Resources\StaticResource\StaticResource_Simple.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -2341,6 +2369,13 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\ViewModelBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Lottie\SampleLottieAnimation.xaml.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Performance\BenchmarkControl.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Performance\BorderLoadUnloadBenchmark.xaml.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Performance\BorderMeasureBenchmark.xaml.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Performance\TextBlockLoadUnloadBenchmark.xaml.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Performance\TextBlockMeasureBenchmark.xaml.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Performance\ViewCreationBenchmark.xaml.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Performance\ViewLoadUnloadBenchmark.xaml.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Resources\StaticResource\StaticResource_Simple.xaml.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Toolkit\Elevation.xaml.cs">
       <DependentUpon>Elevation.xaml</DependentUpon>
@@ -4146,6 +4181,24 @@
     </Compile>
     <Compile Update="$(MSBuildThisFileDirectory)Resources\StaticResource\StaticResource_Simple.xaml.cs">
       <DependentUpon>StaticResource_Simple.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="C:\GitRepos\_GitHub\Uno\src\SamplesApp\UITests.Shared\Performance\BorderLoadUnloadBenchmark.xaml.cs">
+      <DependentUpon>BorderLoadUnloadBenchmark.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="C:\GitRepos\_GitHub\Uno\src\SamplesApp\UITests.Shared\Performance\BorderMeasureBenchmark.xaml.cs">
+      <DependentUpon>BorderMeasureBenchmark.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="C:\GitRepos\_GitHub\Uno\src\SamplesApp\UITests.Shared\Performance\TextBlockLoadUnloadBenchmark.xaml.cs">
+      <DependentUpon>TextBlockLoadUnloadBenchmark.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="C:\GitRepos\_GitHub\Uno\src\SamplesApp\UITests.Shared\Performance\TextBlockMeasureBenchmark.xaml.cs">
+      <DependentUpon>TextBlockMeasureBenchmark.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="C:\GitRepos\_GitHub\Uno\src\SamplesApp\UITests.Shared\Performance\ViewCreationBenchmark.xaml.cs">
+      <DependentUpon>ViewCreationBenchmark.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="C:\GitRepos\_GitHub\Uno\src\SamplesApp\UITests.Shared\Performance\ViewLoadUnloadBenchmark.xaml.cs">
+      <DependentUpon>ViewLoadUnloadBenchmark.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
