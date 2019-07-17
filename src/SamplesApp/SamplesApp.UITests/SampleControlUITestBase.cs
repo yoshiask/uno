@@ -11,6 +11,7 @@ namespace SamplesApp.UITests
 	public class SampleControlUITestBase
 	{
 		protected IApp _app;
+		protected Platform? _platform;
 
 		public SampleControlUITestBase()
 		{
@@ -22,7 +23,10 @@ namespace SamplesApp.UITests
 			// and gain some time for the tests.
 			AppInitializer.ColdStartApp();
 		}
-
+		public SampleControlUITestBase(Platform platform) : this()
+		{
+			_platform = platform;
+		}
 
 		[SetUp]
 		public void BeforeEachTest()
