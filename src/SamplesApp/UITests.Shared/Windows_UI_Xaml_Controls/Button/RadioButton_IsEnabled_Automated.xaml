@@ -91,42 +91,46 @@
 		</Style>
 	</UserControl.Resources>
 
-	<StackPanel VerticalAlignment="Center"
-			HorizontalAlignment="Center"
-			Width="330">
+	<controls:SampleControl SampleDescription="RadioButton_IsEnabled_Automated">
+		<controls:SampleControl.SampleContent>
+			<StackPanel VerticalAlignment="Center"
+						HorizontalAlignment="Center"
+						Width="330">
 
-		<!-- RadioButton State -->
-		<StackPanel Orientation="Horizontal"
-					HorizontalAlignment="Left">
+				<!-- RadioButton State -->
+				<StackPanel Orientation="Horizontal"
+							HorizontalAlignment="Left">
 
-			<!-- Label -->
-			<TextBlock Text="Current Radio Button:"
-					   FontSize="20" />
+					<!-- Label -->
+					<TextBlock Text="Current Radio Button:"
+							   FontSize="20" />
 
-			<!-- Value -->
-			<TextBlock x:Name="CurrentRadioButton"
-					   FontSize="20"
-					   Margin="4,0,0,0" />
-		</StackPanel>
+					<!-- Value -->
+					<TextBlock x:Name="CurrentRadioButton"
+							   FontSize="20"
+							   Margin="4,0,0,0" />
+				</StackPanel>
 
-		<!-- My MyRadioButton_1 -->
-		<RadioButton x:Name="MyRadioButton_1"
-					Style="{StaticResource SampleChooserNavRadioButtonStyle}"
-						Content="RadioButton 1"
-						Click="MyRadioButton_Click"
-						Margin="0,24,0,0" />
+				<!-- My MyRadioButton_1 -->
+				<RadioButton x:Name="MyRadioButton_1"
+							 Style="{StaticResource SampleChooserNavRadioButtonStyle}"
+							 Content="RadioButton 1"
+							 Click="MyRadioButton_Click"
+							 Margin="0,24,0,0" />
 
-		<!-- My MyRadioButton_2 
+				<!-- My MyRadioButton_2 
 					 android:Style="{StaticResource NativeDefaultRadioButton}"-->
-		<RadioButton x:Name="MyRadioButton_2"
-					Style="{StaticResource SampleChooserNavRadioButtonStyle}"
-					 Content="RadioButton 2"
-					 Click="MyRadioButton_Click"
-					 Margin="0,0,0,16" />
+				<RadioButton x:Name="MyRadioButton_2"
+							 Style="{StaticResource SampleChooserNavRadioButtonStyle}"
+							 Content="RadioButton 2"
+							 Click="MyRadioButton_Click"
+							 Margin="0,0,0,16" />
 
-		<!-- My ToggleButton Disabler -->
-		<CheckBox x:Name="MyRadioButtonDisabler"
-				  Content="Disable My RadioButton"
-				  Click="MyRadioButtonDisabler_Click" />
-	</StackPanel>
+				<!-- My ToggleButton Disabler -->
+				<CheckBox x:Name="MyRadioButtonDisabler"
+						  Content="Disable My RadioButton"
+						  Click="MyRadioButtonDisabler_Click" />
+			</StackPanel>
+		</controls:SampleControl.SampleContent>
+	</controls:SampleControl>
 </UserControl>
