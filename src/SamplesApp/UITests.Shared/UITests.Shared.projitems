@@ -9,6 +9,14 @@
     <Import_RootNamespace>UITests.Shared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Page Include="$(MSBuildThisFileDirectory)AdaptiveTrigger\AdaptiveTrigger_TextBlock.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)AdaptiveTrigger\AdaptiveTrigger_TextBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="$(MSBuildThisFileDirectory)Lottie\SampleLottieAnimation.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -2339,6 +2347,8 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)AdaptiveTrigger\AdaptiveTrigger_TextBlock.xaml.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)AdaptiveTrigger\AdaptiveTrigger_TextBox.xaml.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\ViewModelBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Lottie\SampleLottieAnimation.xaml.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Resources\StaticResource\StaticResource_Simple.xaml.cs" />
@@ -4146,6 +4156,12 @@
     </Compile>
     <Compile Update="$(MSBuildThisFileDirectory)Resources\StaticResource\StaticResource_Simple.xaml.cs">
       <DependentUpon>StaticResource_Simple.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="$(MSBuildThisFileDirectory)AdaptiveTrigger\AdaptiveTrigger_TextBlock.xaml.cs">
+      <DependentUpon>AdaptiveTrigger_TextBlock.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="$(MSBuildThisFileDirectory)AdaptiveTrigger\AdaptiveTrigger_TextBox.xaml.cs">
+      <DependentUpon>AdaptiveTrigger_TextBox.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
