@@ -1,0 +1,43 @@
+﻿<UserControl x:Class="UITests.Shared.Windows_UI_Xaml_Media_Animation.ButtonAnimationTest_Translation_Automated"
+			 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:local="using:UITests.Shared.Windows_UI_Xaml_Media_Animation"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 mc:Ignorable="">
+
+	<StackPanel VerticalAlignment="Center"
+				HorizontalAlignment="Center">
+		<StackPanel>
+
+			<!-- Click Count value -->
+			<TextBlock x:Name="TotalClicks"
+					   Text="0"
+					   FontSize="20"
+					   HorizontalAlignment="Center" />
+
+			<!-- Click Count title -->
+			<TextBlock Text="Total Clicks"
+					   FontSize="16"
+					   HorizontalAlignment="Center" />
+		</StackPanel>
+
+		<Grid Background="LightBlue"
+			  Height="250"
+			  Width="250"
+			  Margin="0,34,0,0">
+
+			<!-- Translate Button -->
+			<Button x:Name="MyTranslatingButton"
+					Content="Translation"
+					HorizontalAlignment="Center"
+					VerticalAlignment="Center"
+					Click="IncreaseClick" />
+		</Grid>
+
+		<!-- Start Animation Button -->
+		<Button x:Name="StartAnimationButton"
+				Content="Start Animation"
+				HorizontalAlignment="Center"
+				Margin="0,24,0,0" />
+	</StackPanel>
+</UserControl>

@@ -2157,6 +2157,26 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Windows_UI_Xaml_Media_Animation\ButtonAnimationTest_Composite_Automated.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Windows_UI_Xaml_Media_Animation\ButtonAnimationTest_Rotation_Automated.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Windows_UI_Xaml_Media_Animation\ButtonAnimationTest_Scale_Automated.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Windows_UI_Xaml_Media_Animation\ButtonAnimationTest_Skew_Automated.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Windows_UI_Xaml_Media_Animation\ButtonAnimationTest_Translation_Automated.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="$(MSBuildThisFileDirectory)Windows_UI_Xaml_Media_Animation\DoubleAnimationTestsControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -3474,6 +3494,11 @@
     <Compile Include="$(MSBuildThisFileDirectory)Windows_UI_Xaml_Media\Transform\TransformToVisual_Translate2d.xaml.cs">
       <DependentUpon>TransformToVisual_Translate2d.xaml</DependentUpon>
     </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Windows_UI_Xaml_Media_Animation\ButtonAnimationTest_Composite_Automated.xaml.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows_UI_Xaml_Media_Animation\ButtonAnimationTest_Rotation_Automated.xaml.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows_UI_Xaml_Media_Animation\ButtonAnimationTest_Scale_Automated.xaml.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows_UI_Xaml_Media_Animation\ButtonAnimationTest_Skew_Automated.xaml.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows_UI_Xaml_Media_Animation\ButtonAnimationTest_Translation_Automated.xaml.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows_UI_Xaml_Media_Animation\DoubleAnimationTestsControl.xaml.cs">
       <DependentUpon>DoubleAnimationTestsControl.xaml</DependentUpon>
     </Compile>
@@ -4151,6 +4176,21 @@
     </Compile>
     <Compile Update="$(MSBuildThisFileDirectory)Resources\StaticResource\StaticResource_Simple.xaml.cs">
       <DependentUpon>StaticResource_Simple.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="C:\GitRepos\_GitHub\Uno\src\SamplesApp\UITests.Shared\Windows_UI_Xaml_Media_Animation\ButtonAnimationTest_Composite_Automated.xaml.cs">
+      <DependentUpon>ButtonAnimationTest_Composite_Automated.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="C:\GitRepos\_GitHub\Uno\src\SamplesApp\UITests.Shared\Windows_UI_Xaml_Media_Animation\ButtonAnimationTest_Rotation_Automated.xaml.cs">
+      <DependentUpon>ButtonAnimationTest_Rotation_Automated.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="C:\GitRepos\_GitHub\Uno\src\SamplesApp\UITests.Shared\Windows_UI_Xaml_Media_Animation\ButtonAnimationTest_Scale_Automated.xaml.cs">
+      <DependentUpon>ButtonAnimationTest_Scale_Automated.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="C:\GitRepos\_GitHub\Uno\src\SamplesApp\UITests.Shared\Windows_UI_Xaml_Media_Animation\ButtonAnimationTest_Skew_Automated.xaml.cs">
+      <DependentUpon>ButtonAnimationTest_Skew_Automated.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="C:\GitRepos\_GitHub\Uno\src\SamplesApp\UITests.Shared\Windows_UI_Xaml_Media_Animation\ButtonAnimationTest_Translation_Automated.xaml.cs">
+      <DependentUpon>ButtonAnimationTest_Translation_Automated.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
