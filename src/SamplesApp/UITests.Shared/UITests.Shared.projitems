@@ -209,6 +209,30 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Windows_UI_Xaml_Controls\ListView\ListViewTemplates.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Windows_UI_Xaml_Controls\ListView\ListView_GroupedItems_Selection_Automated.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Windows_UI_Xaml_Controls\ListView\ListView_Scrolling_Horizontal_Automated.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Windows_UI_Xaml_Controls\ListView\ListView_Scrolling_Vertical_Automated.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Windows_UI_Xaml_Controls\ListView\ListView_Selection_Automated.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Windows_UI_Xaml_Controls\ListView\ListView_ShortLists_Automated.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="$(MSBuildThisFileDirectory)Windows_UI_Xaml_Controls\TextBox\TextBox_BeforeTextChanging.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -2452,6 +2476,11 @@
     <Compile Include="$(MSBuildThisFileDirectory)Windows_UI_Xaml\xBindTests\PhaseBinding.xaml.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows_UI_Xaml\xBindTests\PhaseBinding_Large.xaml.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows_UI_Xaml\xBindTests\PhaseBinding_StartOne.xaml.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows_UI_Xaml_Controls\ListView\ListView_GroupedItems_Selection_Automated.xaml.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows_UI_Xaml_Controls\ListView\ListView_Scrolling_Horizontal_Automated.xaml.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows_UI_Xaml_Controls\ListView\ListView_Scrolling_Vertical_Automated.xaml.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows_UI_Xaml_Controls\ListView\ListView_Selection_Automated.xaml.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Windows_UI_Xaml_Controls\ListView\ListView_ShortLists_Automated.xaml.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows_UI_Xaml_Controls\TextBox\TextBox_BeforeTextChanging.xaml.cs">
       <DependentUpon>TextBox_BeforeTextChanging.xaml</DependentUpon>
     </Compile>
@@ -4146,6 +4175,21 @@
     </Compile>
     <Compile Update="$(MSBuildThisFileDirectory)Resources\StaticResource\StaticResource_Simple.xaml.cs">
       <DependentUpon>StaticResource_Simple.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="(MSBuildThisFileDirectory)ListView\ListView_GroupedItems_Selection_Automated.xaml.cs">
+      <DependentUpon>ListView_GroupedItems_Selection_Automated.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="(MSBuildThisFileDirectory)ListView\ListView_Scrolling_Horizontal_Automated.xaml.cs">
+      <DependentUpon>ListView_Scrolling_Horizontal_Automated.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="(MSBuildThisFileDirectory)ListView\ListView_Scrolling_Vertical_Automated.xaml.cs">
+      <DependentUpon>ListView_Scrolling_Vertical_Automated.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="(MSBuildThisFileDirectory)ListView\ListView_Selection_Automated.xaml.cs">
+      <DependentUpon>ListView_Selection_Automated.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="(MSBuildThisFileDirectory)ListView\ListView_ShortLists_Automated.xaml.cs">
+      <DependentUpon>ListView_ShortLists_Automated.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
