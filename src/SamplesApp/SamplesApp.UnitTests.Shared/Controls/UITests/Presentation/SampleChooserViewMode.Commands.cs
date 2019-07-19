@@ -46,6 +46,7 @@ namespace SampleControl.Presentation
 			ShowPreviousSectionCommand = new DelegateCommand(() => ShowPreviousSection(CancellationToken.None));
 			ShowNewSectionCommand = new DelegateCommand<string>(section => ShowNewSection(CancellationToken.None, ConvertSectionEnum(section)));
 			ToggleFavoriteCommand = new DelegateCommand<SampleChooserContent>(sample => ToggleFavorite(CancellationToken.None, sample));
+			ShowHideTitleBarCommand = new DelegateCommand<bool>(show => ShowHideTitleBar(CancellationToken.None, show));
 			RecordAllTestsCommandCommand = new DelegateCommand(() => RecordAllTests(CancellationToken.None));
 			LoadPreviousTestCommand = new DelegateCommand(() => LoadPreviousTest(CancellationToken.None)) { CanExecuteEnabled = false };
 			ReloadCurrentTestCommand = new DelegateCommand(() => ReloadCurrentTest(CancellationToken.None)) { CanExecuteEnabled = false };
@@ -62,5 +63,6 @@ namespace SampleControl.Presentation
 		public ICommand LoadPreviousTestCommand { get; private set; }
 		public ICommand ReloadCurrentTestCommand { get; private set; }
 		public ICommand LoadNextTestCommand { get; private set; }
+		public ICommand ShowHideTitleBarCommand { get; private set; }
 	}
 }

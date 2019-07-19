@@ -48,6 +48,7 @@ namespace SampleControl.Presentation
 		private bool _favoritesVisibility = false;
 		private bool _searchVisibility = false;
 		private bool _contentVisibility = false;
+		private bool _titleBarVisibility = true;
 		private bool _isFavoritedSample = false;
 		private bool _isAnyContentVisible = false;
 		private bool _contentAttachedToWindow;
@@ -185,6 +186,16 @@ namespace SampleControl.Presentation
 				_contentVisibility = value;
 				RaisePropertyChanged();
 				OnContentVisibilityChanged();
+			}
+		}
+
+		public bool TitleBarVisibility
+		{
+			get => _titleBarVisibility;
+			set
+			{
+				_titleBarVisibility = value;
+				RaisePropertyChanged();
 			}
 		}
 

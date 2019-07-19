@@ -39,7 +39,16 @@ namespace Uno.UI.Samples.Controls
 
 		public static readonly DependencyProperty SampleDescriptionProperty =
 			DependencyProperty.Register("SampleDescription", typeof(string), typeof(SampleControl), new PropertyMetadata(""));
-		
+
+		public Visibility DescriptionVisibility
+		{
+			get { return (Visibility)this.GetValue(DescriptionVisibilityProperty); }
+			set { this.SetValue(DescriptionVisibilityProperty, value); }
+		}
+
+		public static readonly DependencyProperty DescriptionVisibilityProperty =
+			DependencyProperty.Register("DescriptionVisibility", typeof(Visibility), typeof(SampleControl), new PropertyMetadata(Visibility.Visible));
+
 		// This only exists as a proxy to ContentTemplate
 		public DataTemplate SampleContent
 		{

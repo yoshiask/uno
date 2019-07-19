@@ -21,6 +21,22 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Toolkit\VisibleBoundsPadding\VisibleBoundsPadding_Border.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Toolkit\VisibleBoundsPadding\VisibleBoundsPadding_Grid.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Toolkit\VisibleBoundsPadding\VisibleBoundsPadding_ListView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)Toolkit\VisibleBoundsPadding\VisibleBoundsPadding_ScrollViewer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="$(MSBuildThisFileDirectory)Wasm\Wasm_CustomEvent.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -2349,6 +2365,10 @@
     <Compile Include="$(MSBuildThisFileDirectory)Toolkit\Elevation.xaml.cs">
       <DependentUpon>Elevation.xaml</DependentUpon>
     </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Toolkit\VisibleBoundsPadding\VisibleBoundsPadding_Border.xaml.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Toolkit\VisibleBoundsPadding\VisibleBoundsPadding_Grid.xaml.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Toolkit\VisibleBoundsPadding\VisibleBoundsPadding_ListView.xaml.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Toolkit\VisibleBoundsPadding\VisibleBoundsPadding_ScrollViewer.xaml.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ValueConverters\BoolNegationValueConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Wasm\Wasm_CustomEvent.xaml.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Windows_ApplicationModel\Calls\PhoneCallManagerTests.xaml.cs">
@@ -4151,6 +4171,18 @@
     </Compile>
     <Compile Update="$(MSBuildThisFileDirectory)Resources\StaticResource\StaticResource_Simple.xaml.cs">
       <DependentUpon>StaticResource_Simple.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="$(MSBuildThisFileDirectory)Toolkit\VisibleBoundsPadding\VisibleBoundsPadding_Border.xaml.cs">
+      <DependentUpon>VisibleBoundsPadding_Border.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="$(MSBuildThisFileDirectory)Toolkit\VisibleBoundsPadding\VisibleBoundsPadding_Grid.xaml.cs">
+      <DependentUpon>VisibleBoundsPadding_Grid.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="$(MSBuildThisFileDirectory)Toolkit\VisibleBoundsPadding\VisibleBoundsPadding_ListView.xaml.cs">
+      <DependentUpon>VisibleBoundsPadding_ListView.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="$(MSBuildThisFileDirectory)Toolkit\VisibleBoundsPadding\VisibleBoundsPadding_ScrollViewer.xaml.cs">
+      <DependentUpon>VisibleBoundsPadding_ScrollViewer.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>

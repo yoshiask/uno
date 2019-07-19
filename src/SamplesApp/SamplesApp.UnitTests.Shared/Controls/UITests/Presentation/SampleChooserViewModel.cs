@@ -147,6 +147,11 @@ namespace SampleControl.Presentation
 			}
 		}
 
+		private async Task ShowHideTitleBar(CancellationToken ct, bool show)
+		{
+			TitleBarVisibility = show;
+		}
+
 		private async Task ShowSelectedList(CancellationToken ct, Section section)
 		{
 			CategoryVisibility = section == Section.Library;
@@ -745,7 +750,8 @@ namespace SampleControl.Presentation
 				control = new Uno.UI.Samples.Controls.SampleControl()
 				{
 					Content = control,
-					SampleDescription = newContent.Description
+					SampleDescription = newContent.Description,
+					DescriptionVisibility = newContent.DescriptionVisibility ? Visibility.Visible : Visibility.Collapsed
 				};
 			}
 
