@@ -11,10 +11,6 @@
 
 	<Page.Resources>
 		<ResourceDictionary>
-			<ResourceDictionary.MergedDictionaries>
-				<ResourceDictionary Source="..\..\styles\SwipableItem.xaml" />
-			</ResourceDictionary.MergedDictionaries>
-
 			<DataTemplate x:Key="SwipableMockItemContent">
 				<Border Background="DimGray"
 						HorizontalAlignment="Stretch">
