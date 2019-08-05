@@ -9433,6 +9433,39 @@
 		</Setter>
 	</Style>
 
+	<xamarin:Style TargetType="SwipableItem">
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="control:SwipableItem">
+					<Grid Background="DimGray">
+
+						<!-- NearPresenter -->
+						<ContentPresenter x:Name="NearPresenter"
+										  Content="{TemplateBinding NearContent}"
+										  ContentTemplate="{TemplateBinding NearContentTemplate}"
+										  ContentTemplateSelector="{TemplateBinding NearContentTemplateSelector}"
+										  HorizontalAlignment="Left" />
+
+						<!-- FarPresenter -->
+						<ContentPresenter x:Name="FarPresenter"
+										  Content="{TemplateBinding FarContent}"
+										  ContentTemplate="{TemplateBinding FarContentTemplate}"
+										  ContentTemplateSelector="{TemplateBinding FarContentTemplateSelector}"
+										  HorizontalAlignment="Right" />
+
+						<!-- MainPresenter -->
+						<ContentPresenter x:Name="MainPresenter"
+										  Content="{TemplateBinding Content}"
+										  ContentTemplate="{TemplateBinding ContentTemplate}"
+										  ContentTemplateSelector="{TemplateBinding ContentTemplateSelector}"
+										  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+										  VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+					</Grid>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+	</xamarin:Style>
+
 	<win:AcrylicBrush x:Key="SystemControlChromeMediumLowAcrylicElementMediumBrush" BackgroundSource="Backdrop" TintColor="{StaticResource SystemChromeAltHighColor}" TintOpacity="0.6" FallbackColor="{StaticResource SystemChromeMediumLowColor}" />
 	<xamarin:SolidColorBrush x:Key="SystemControlChromeMediumLowAcrylicElementMediumBrush" Color="{StaticResource SystemChromeMediumLowColor}" />
 	<StaticResource x:Key="NavigationViewDefaultPaneBackground" ResourceKey="SystemControlChromeMediumLowAcrylicElementMediumBrush" />

@@ -1,0 +1,106 @@
+﻿<Page x:Class="UITests.Shared.Windows_UI_Xaml_Controls.SwipableItem.SwipableItemPage"
+	  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	  xmlns:local="using:UITests.Shared.Windows_UI_Xaml_Controls.SwipableItem"
+	  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	  xmlns:xamarin="http://uno.ui/xamarin"
+	  xmlns:win="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	  mc:Ignorable="d xamarin"
+	  Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+	<Page.Resources>
+		<ResourceDictionary>
+			<ResourceDictionary.MergedDictionaries>
+				<ResourceDictionary Source="..\..\styles\SwipableItem.xaml" />
+			</ResourceDictionary.MergedDictionaries>
+
+			<DataTemplate x:Key="SwipableMockItemContent">
+				<Border Background="DimGray"
+						HorizontalAlignment="Stretch">
+
+					<!-- Content -->
+					<TextBlock Text="{Binding Content}"
+							   Foreground="White"
+							   FontSize="20"
+							   Margin="20" />
+				</Border>
+			</DataTemplate>
+
+			<DataTemplate x:Key="SwipableMockItemNearContent">
+				<Border Background="Teal"
+						Width="100"
+						HorizontalAlignment="Stretch">
+
+					<!-- Content -->
+					<TextBlock Text="{Binding NearContent}"
+							   Foreground="White"
+							   FontSize="20"
+							   HorizontalAlignment="Left"
+							   Margin="20" />
+				</Border>
+			</DataTemplate>
+
+			<DataTemplate x:Key="SwipableMockItemFarContent">
+				<Border Background="Crimson"
+						Width="100"
+						HorizontalAlignment="Stretch">
+
+					<!-- Content -->
+					<TextBlock Text="{Binding FarContent}"
+							   Foreground="White"
+							   FontSize="20"
+							   HorizontalAlignment="Right"
+							   Margin="20" />
+				</Border>
+			</DataTemplate>
+
+			<DataTemplate x:Key="SwipableContent">
+				<xamarin:SwipableItem IsAutoReset="true"
+									  FarSnapWidth="100"
+									  NearSnapWidth="100"
+									  Content="{Binding}"
+									  NearContent="{Binding}"
+									  FarContent="{Binding}"
+									  NearContentTemplate="{StaticResource SwipableMockItemNearContent}"
+									  ContentTemplate="{StaticResource SwipableMockItemContent}"
+									  FarContentTemplate="{StaticResource SwipableMockItemFarContent}"
+									  Style="{StaticResource DefaultSwipableItemStyle}"
+									  HorizontalContentAlignment="Stretch"
+									  Width="1600" />
+			</DataTemplate>
+		</ResourceDictionary>
+	</Page.Resources>
+
+	<Grid Background="White">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="*" />
+		</Grid.RowDefinitions>
+
+		<!-- CommandBar -->
+		<CommandBar Content="SwipableItem"
+					Grid.Row="0" />
+
+		<win:StackPanel VerticalAlignment="Center"
+						Grid.Row="1">
+
+			<!-- UWP message -->
+			<TextBlock Text="This page is only available for android and iOS"
+					   TextAlignment="Center"
+					   FontSize="18"
+					   Margin="25,0" />
+		</win:StackPanel>
+
+		<xamarin:ScrollViewer Grid.Row="1">
+
+			<!-- ListView -->
+			<Border Background="Black">
+				<xamarin:ListView ItemsSource="{Binding [Items]}"
+								  xamarin:ItemTemplate="{StaticResource SwipableContent}"
+								  IsItemClickEnabled="False"
+								  SelectionMode="None" />
+			</Border>
+		</xamarin:ScrollViewer>
+	</Grid>
+</Page>
