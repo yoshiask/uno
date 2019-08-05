@@ -2,6 +2,8 @@
   items:
     - name: What is the Uno Platform?
       href: intro.md
+    - name: Philosophy of Uno
+      href: concepts/overview/philosophy-of-uno.md
     - name: API differences
       href: api-differences.md
     - name: Features list
@@ -83,6 +85,8 @@
       href: howto-use-uno-in-xamarin-forms.md
 - name: Contributing to Uno
   items:
+    - name: Guidelines for breaking changes
+      href: contributing\guidelines\breaking-changes.md
     - name: Guidelines for issue triage
       href: contributing\guidelines\issue-triage.md
     - name: Guidelines for pull-requests

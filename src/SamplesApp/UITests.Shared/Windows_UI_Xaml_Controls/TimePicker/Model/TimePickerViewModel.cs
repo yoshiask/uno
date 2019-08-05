@@ -4,16 +4,15 @@ using Uno.UI.Samples.UITests.Helpers;
 using Windows.UI.Core;
 using Windows.UI.Xaml.Data;
 
-namespace SamplesApp.Windows_UI_Xaml_Controls.Models
+namespace UITests.Shared.Windows_UI_Xaml_Controls.TimePicker.Model
 {
 	[Bindable]
 	public class TimePickerViewModel : ViewModelBase
 	{
-		private TimeSpan _time = DateTime.Now.TimeOfDay;
+		private TimeSpan _time = new TimeSpan(12,0,0);
 
 		public TimePickerViewModel(CoreDispatcher dispatcher) : base(dispatcher)
 		{
-			SetToCurrentTime = CreateCommand(ExecuteSetToCurrentTime);
 		}
 
 		public TimeSpan Time
@@ -26,11 +25,6 @@ namespace SamplesApp.Windows_UI_Xaml_Controls.Models
 			}
 		}
 
-		public ICommand SetToCurrentTime { get; }
-
-		private void ExecuteSetToCurrentTime()
-		{
-			Time = DateTime.Now.TimeOfDay;
-		}
+		public ICommand SetToCurrentTime => GetOrCreateCommand(() => Time = DateTime.Now.TimeOfDay);
 	}
 }
