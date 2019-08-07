@@ -8,6 +8,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using SamplesApp.Samples.NavigationViewSample;
 using Uno.Extensions;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
@@ -44,7 +45,7 @@ namespace SamplesApp
 		}
 
 		/// <summary>
-		/// Invoked when the application is launched normally by the end user.  Other entry points
+		/// Invoked when the application is launched normally by the end user. Other entry points
 		/// will be used such as when the application is launched to open a specific file.
 		/// </summary>
 		/// <param name="e">Details about the launch request and process.</param>
@@ -87,7 +88,7 @@ namespace SamplesApp
 					// When the navigation stack isn't restored navigate to the first page,
 					// configuring the new page by passing required information as a navigation
 					// parameter
-					rootFrame.Navigate(typeof(MainPage), e.Arguments);
+					rootFrame.Navigate(typeof(NavigationViewSample), e.Arguments);
 				}
 				// Ensure the current window is active
 				Windows.UI.Xaml.Window.Current.Activate();
