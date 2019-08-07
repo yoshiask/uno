@@ -24,42 +24,45 @@ namespace SamplesApp.Samples.NavigationViewSample
 	{
 		public NavigationViewSample()
 		{
-			this.InitializeComponent();
-
-			contentFrame.Navigated += (s, e) =>
+			using (new Windows.Foundation.Diagnostics.DisposableMeasure("InitializeComponent()"))
 			{
-				UpdateBackButton();
-				Console.WriteLine($"Navigated to {e.Content}, {contentFrame.BackStackDepth}");
+				this.InitializeComponent();
+			}
 
-				if (e.NavigationMode == NavigationMode.Back)
-				{
-					NavigationViewItem getItemNamed(string name)
-					=> nvSample.MenuItems.OfType<NavigationViewItem>().FirstOrDefault(i => i.Tag?.ToString() == name);
+			//contentFrame.Navigated += (s, e) =>
+			//{
+			//	UpdateBackButton();
+			//	Console.WriteLine($"Navigated to {e.Content}, {contentFrame.BackStackDepth}");
 
-					if (e.Content is Item1Page)
-					{
-						nvSample.SelectedItem = getItemNamed("SamplePage1");
-					}
-					else if (e.Content is Item2Page)
-					{
-						nvSample.SelectedItem = getItemNamed("SamplePage2");
-					}
-					else if (e.Content is Item3Page)
-					{
-						nvSample.SelectedItem = getItemNamed("SamplePage3");
-					}
-					else if (e.Content is SettingsPage)
-					{
-						nvSample.SelectedItem = nvSample.SettingsItem;
-					}
-				}
-			};
+			//	if (e.NavigationMode == NavigationMode.Back)
+			//	{
+			//		NavigationViewItem getItemNamed(string name)
+			//		=> nvSample.MenuItems.OfType<NavigationViewItem>().FirstOrDefault(i => i.Tag?.ToString() == name);
 
-			UpdateBackButton();
+			//		if (e.Content is Item1Page)
+			//		{
+			//			nvSample.SelectedItem = getItemNamed("SamplePage1");
+			//		}
+			//		else if (e.Content is Item2Page)
+			//		{
+			//			nvSample.SelectedItem = getItemNamed("SamplePage2");
+			//		}
+			//		else if (e.Content is Item3Page)
+			//		{
+			//			nvSample.SelectedItem = getItemNamed("SamplePage3");
+			//		}
+			//		else if (e.Content is SettingsPage)
+			//		{
+			//			nvSample.SelectedItem = nvSample.SettingsItem;
+			//		}
+			//	}
+			//};
+			//
+			//UpdateBackButton();
 		}
 
-		private void UpdateBackButton()
-			=> nvSample.IsBackEnabled = contentFrame.BackStackDepth != 0;
+		//private void UpdateBackButton()
+		//	=> nvSample.IsBackEnabled = contentFrame.BackStackDepth != 0;
 
 		private void NavigationView_Loaded(object sender, RoutedEventArgs e)
 		{
@@ -73,31 +76,31 @@ namespace SamplesApp.Samples.NavigationViewSample
 
 		private void NvSample_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
 		{
-			if (args.IsSettingsInvoked)
-			{
-				contentFrame.Navigate(typeof(SettingsPage));
-			}
-			else if(args.InvokedItemContainer is NavigationViewItem item)
-			{
-				switch (item.Tag)
-				{
-					case "SamplePage1":
-						contentFrame.Navigate(typeof(Item1Page));
-						break;
-					case "SamplePage2":
-						contentFrame.Navigate(typeof(Item2Page));
-						break;
-					case "SamplePage3":
-						contentFrame.Navigate(typeof(Item3Page));
-						break;
-				}
-			}
+			//if (args.IsSettingsInvoked)
+			//{
+			//	contentFrame.Navigate(typeof(SettingsPage));
+			//}
+			//else if(args.InvokedItemContainer is NavigationViewItem item)
+			//{
+			//	switch (item.Tag)
+			//	{
+			//		case "SamplePage1":
+			//			contentFrame.Navigate(typeof(Item1Page));
+			//			break;
+			//		case "SamplePage2":
+			//			contentFrame.Navigate(typeof(Item2Page));
+			//			break;
+			//		case "SamplePage3":
+			//			contentFrame.Navigate(typeof(Item3Page));
+			//			break;
+			//	}
+			//}
 		}
 
 		private void NvSample_BackRequested(NavigationView sender, NavigationViewBackRequestedEventArgs args)
 		{
 			Console.WriteLine("NvSample_BackRequested");
-			contentFrame.GoBack();
+			//contentFrame.GoBack();
 		}
 	}
 }
