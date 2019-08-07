@@ -18,7 +18,7 @@ namespace Windows.UI.Xaml.Controls
 	{
 		private const int MaxMeasureCache = 50;
 
-		private static TextBlockMeasureCache _cache = new TextBlockMeasureCache();
+		private static readonly TextBlockMeasureCache _cache = new TextBlockMeasureCache();
 
 		public TextBlock() : base("p")
 		{

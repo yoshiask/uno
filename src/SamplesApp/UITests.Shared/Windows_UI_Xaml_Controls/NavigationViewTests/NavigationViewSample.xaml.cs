@@ -24,10 +24,7 @@ namespace SamplesApp.Samples.NavigationViewSample
 	{
 		public NavigationViewSample()
 		{
-			using (new Windows.Foundation.Diagnostics.DisposableMeasure("InitializeComponent()"))
-			{
-				this.InitializeComponent();
-			}
+			this.InitializeComponent();
 
 			//contentFrame.Navigated += (s, e) =>
 			//{

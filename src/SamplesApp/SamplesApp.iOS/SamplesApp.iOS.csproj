@@ -12,7 +12,6 @@
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
     <ResourcesDirectory>..\SamplesApp.Shared\Strings</ResourcesDirectory>
-		
     <!-- https://github.com/unoplatform/uno/issues/61 -->
     <UnoSkipUserControlsInVisualTree>false</UnoSkipUserControlsInVisualTree>
   </PropertyGroup>
@@ -29,7 +28,13 @@
     <MtouchLink>None</MtouchLink>
     <MtouchDebug>true</MtouchDebug>
     <MtouchExtraArgs>--xml=./LinkerExclusions.xml --linkskip=$(AssemblyName) --setenv=MONO_GC_PARAMS=soft-heap-limit=512m,nursery-size=64m,evacuation-threshold=66,major=marksweep,concurrent-sweep</MtouchExtraArgs>
-    <CodesignEntitlements>Entitlements.plist</CodesignEntitlements>
+    <CodesignEntitlements>
+    </CodesignEntitlements>
+    <MtouchFloat32>true</MtouchFloat32>
+    <CodesignKey>iPhone Developer</CodesignKey>
+    <CodesignProvision />
+    <CodesignExtraArgs />
+    <CodesignResourceRules />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|iPhoneSimulator' ">
     <DebugType>none</DebugType>
@@ -140,6 +145,10 @@
     <ProjectReference Include="..\..\AddIns\Uno.UI.Lottie\Uno.UI.Lottie.csproj">
       <Project>{f9277925-fc11-4a97-8ca1-b4a33e726f55}</Project>
       <Name>Uno.UI.Lottie</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\SourceGenerators\System.Xaml\Uno.Xaml.csproj">
+      <Project>{6ffac28c-aced-4ba1-954d-7e720b035928}</Project>
+      <Name>Uno.Xaml</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Uno.UI.Maps\Uno.UI.Maps.csproj">
       <Project>{f25ccf70-5a21-4245-ae4e-342bc55f9e86}</Project>

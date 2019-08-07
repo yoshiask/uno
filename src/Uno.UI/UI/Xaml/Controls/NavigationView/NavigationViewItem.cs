@@ -14,11 +14,22 @@ using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Hosting;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Shapes;
+using Uno.Diagnostics.Eventing;
 
 namespace Windows.UI.Xaml.Controls
 {
 	public partial class NavigationViewItem : NavigationViewItemBase
 	{
+		private static readonly IEventProvider _trace = Tracing.Get(TraceProvider.Id);
+
+		public new static class TraceProvider
+		{
+			public static readonly Guid Id = Guid.Parse("{93f9948e-bdc2-49a7-b197-fbd6eae45831}");
+
+			public const int NavigationViewItem_LoadedStarted = 1;
+			public const int NavigationViewItem_LoadedFinished = 2;
+		}
+
 		const string c_navigationViewItemPresenterName = "NavigationViewItemPresenter";
 
 		private long m_splitViewIsPaneOpenChangedRevoker;
@@ -60,6 +71,11 @@ namespace Windows.UI.Xaml.Controls
 
 		private void NavigationViewItem_Loaded(object sender, RoutedEventArgs e)
 		{
+			using var trace = _trace.WriteEventActivity(
+				TraceProvider.NavigationViewItem_LoadedStarted,
+				TraceProvider.NavigationViewItem_LoadedFinished,
+				new object[] { GetType().Name, this.GetDependencyObjectId(), Name });
+
 			var splitView = GetSplitView();
 			if (splitView != null)
 			{
@@ -90,11 +106,11 @@ namespace Windows.UI.Xaml.Controls
 		{
 			// Stop UpdateVisualState before template is applied. Otherwise the visual may not the same as we expect
 			m_appliedTemplate = false;
- 
+
 			base.OnApplyTemplate();
 
 			// Find selection indicator
-			// Retrieve pointers to stable controls 
+			// Retrieve pointers to stable controls
 			m_helper.Init(this);
 			m_navigationViewItemPresenter = GetTemplateChild(c_navigationViewItemPresenterName) as NavigationViewItemPresenter;
 
@@ -154,7 +170,7 @@ namespace Windows.UI.Xaml.Controls
 		void UpdateNavigationViewItemToolTip()
 		{
 			var toolTipContent = ToolTipService.GetToolTip(this);
-    
+
 			// no custom tooltip, then use suggested tooltip
 			if (toolTipContent == null || toolTipContent == m_suggestedToolTipContent)
 			{
@@ -222,7 +238,7 @@ namespace Windows.UI.Xaml.Controls
 #if !IS_UNO
 				if (SharedHelpers.IsRS4OrHigher() && Application.Current.FocusVisualKind == FocusVisualKind.Reveal)
 				{
-					// OnLeftNavigationReveal is introduced in RS6. 
+					// OnLeftNavigationReveal is introduced in RS6.
 					// Will fallback to stateName for the customer who re-template rs5 NavigationViewItem
 					if (VisualStateManager.GoToState(this, NavigationViewItemHelper.c_OnLeftNavigationReveal, false /*useTransitions*/))
 					{
@@ -303,15 +319,15 @@ namespace Windows.UI.Xaml.Controls
 
 			bool shouldShowIcon = ShouldShowIcon();
 			bool shouldShowContent = ShouldShowContent();
-  
+
 			if (IsOnLeftNav())
 			{
-				VisualStateManager.GoToState(this, m_isClosedCompact ? "ClosedCompact" : "NotClosedCompact", useTransitions); 
+				VisualStateManager.GoToState(this, m_isClosedCompact ? "ClosedCompact" : "NotClosedCompact", useTransitions);
 
 				// Backward Compatibility with RS4-, new implementation prefer IconOnLeft/IconOnly/ContentOnly
 				VisualStateManager.GoToState(this, shouldShowIcon ? "IconVisible" : "IconCollapsed", useTransitions);
-			} 
-   
+			}
+
 			UpdateVisualStateForToolTip();
 
 			UpdateVisualStateForIconAndContent(shouldShowIcon, shouldShowContent);
@@ -378,7 +394,7 @@ namespace Windows.UI.Xaml.Controls
 				if (navView != null)
 				{
 					navView.TopNavigationViewItemContentChanged();
-				} 
+				}
 				else
 				{
 					m_isContentChangeHandlingDelayedForTopNav = true;
@@ -392,8 +408,8 @@ namespace Windows.UI.Xaml.Controls
 			var originalSource = e.OriginalSource as Control;
 			if (originalSource != null)
 			{
-				// It's used to support bluebar have difference appearance between focused and focused+selection. 
-				// For example, we can move the SelectionIndicator 3px up when focused and selected to make sure focus rectange doesn't override SelectionIndicator. 
+				// It's used to support bluebar have difference appearance between focused and focused+selection.
+				// For example, we can move the SelectionIndicator 3px up when focused and selected to make sure focus rectange doesn't override SelectionIndicator.
 				// If it's a pointer or programatic, no focus rectangle, so no action
 				var focusState = originalSource.FocusState;
 				if (focusState == FocusState.Keyboard)

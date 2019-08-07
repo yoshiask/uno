@@ -12,6 +12,7 @@ using Windows.UI.Text;
 using Windows.UI.Xaml.Markup;
 using System.ComponentModel;
 using System.Reflection;
+using Uno.Diagnostics.Eventing;
 using Uno.UI.Xaml;
 #if XAMARIN_ANDROID
 using View = Android.Views.View;
@@ -38,6 +39,15 @@ namespace Windows.UI.Xaml.Controls
 {
 	public partial class Control : FrameworkElement
 	{
+		private static readonly IEventProvider _trace = Tracing.Get(TraceProvider.Id);
+		public new static class TraceProvider
+		{
+			public static readonly Guid Id = Guid.Parse("{00c53006-1990-485b-a3cc-6783e9e86afd}");
+
+			public const int Control_ApplyTemplateStart = 1;
+			public const int Control_ApplyTemplateStop = 2;
+		}
+
 		private View _templatedRoot;
 		private bool _updateTemplate;
 
@@ -58,7 +68,7 @@ namespace Windows.UI.Xaml.Controls
 		{
 			// this is defined in the FrameworkElement mixin, and must not be used in Control.
 			// When setting the background color in a Control, the property is simply used as a placeholder
-			// for children controls, applied by inheritance. 
+			// for children controls, applied by inheritance.
 
 			// base.OnBackgroundChanged(e);
 		}
@@ -137,7 +147,13 @@ namespace Windows.UI.Xaml.Controls
 					{
 						RegisterContentTemplateRoot();
 
-						OnApplyTemplate();
+						using (_trace.WriteEventActivity(
+							TraceProvider.Control_ApplyTemplateStart,
+							TraceProvider.Control_ApplyTemplateStop,
+							new object[] {GetType().FullName}))
+						{
+							OnApplyTemplate();
+						}
 					}
 				}
 			}
@@ -255,7 +271,7 @@ namespace Windows.UI.Xaml.Controls
 				&& NameScope.GetNameScope(root) is INameScope nameScope
 				&& nameScope.FindName(name) is DependencyObject element
 				// Doesn't currently support ElementStub (fallbacks to other FindName implementation)
-				&& !(element is ElementStub) 
+				&& !(element is ElementStub)
 					? element
 					: null;
 		}
@@ -277,7 +293,7 @@ namespace Windows.UI.Xaml.Controls
 		/// no parent view has been set. This is used for the ListView control (and other virtualizing controls)
 		/// to measure items properly. These controls set the size of the view based on the size reported
 		/// immediately after the BaseAdapter.GetView method returns, but the parent still has not been set.
-		/// 
+		///
 		/// The Content control uses this delayed creation as an optimization technique for layout creation, when controls
 		/// are created but not yet used.
 		/// </remarks>
@@ -308,7 +324,7 @@ namespace Windows.UI.Xaml.Controls
 			}
 
 			if (
-				!FeatureConfiguration.FrameworkElement.UseLegacyApplyStylePhase && 
+				!FeatureConfiguration.FrameworkElement.UseLegacyApplyStylePhase &&
 				FeatureConfiguration.FrameworkElement.ClearPreviousOnStyleChange
 			)
 			{

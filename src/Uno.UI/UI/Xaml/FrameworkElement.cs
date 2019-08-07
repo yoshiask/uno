@@ -31,10 +31,9 @@ namespace Windows.UI.Xaml
 {
 	public partial class FrameworkElement : UIElement, IFrameworkElement, ILayoutConstraints
 	{
-		public
-			static class TraceProvider
+		public new static class TraceProvider
 		{
-			public readonly static Guid Id = Guid.Parse("{DDDCCA61-5CB7-4585-95D7-58C5528AABE6}");
+			public static readonly Guid Id = Guid.Parse("{DDDCCA61-5CB7-4585-95D7-58C5528AABE6}");
 
 			public const int FrameworkElement_MeasureStart = 1;
 			public const int FrameworkElement_MeasureStop = 2;

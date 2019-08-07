@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using CoreAnimation;
 using CoreGraphics;
 using Foundation;
@@ -15,6 +16,7 @@ using Windows.Foundation;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using UIViewExtensions = UIKit.UIViewExtensions;
+using Uno.Diagnostics.Eventing;
 
 namespace Windows.UI.Xaml
 {
@@ -24,6 +26,9 @@ namespace Windows.UI.Xaml
 		private readonly Lazy<DoubleTappedGestureHandler> _doubleTap;
 
 		private bool _areGesturesAttached = false;
+
+		private static long _nextId = 0;
+		private readonly long _id = Interlocked.Increment(ref _nextId);
 
 #if DEBUG
 		/// <summary>
@@ -38,6 +43,11 @@ namespace Windows.UI.Xaml
 
 		public UIElement()
 		{
+			_trace.WriteEvent(
+				TraceProvider.UIElement_ObjectCreated,
+				EventOpcode.Send,
+				new object[] {GetType().Name, _id });
+
 			_tap = new Lazy<TappedGestureHandler>(() => new TappedGestureHandler(this));
 			_doubleTap = new Lazy<DoubleTappedGestureHandler>(() => new DoubleTappedGestureHandler(this));
 

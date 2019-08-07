@@ -53,6 +53,7 @@ namespace Windows.UI.Xaml.Controls
 
 		protected override Size ArrangeOverride(Size finalSize)
 		{
+			return finalSize;
 			if (this.FindFirstChild() is UIElement child)
 			{
 				var finalRect = new Rect(

@@ -18,6 +18,7 @@ using Uno;
 using Uno.UI.Controls;
 using Uno.UI.Media;
 using System;
+using Uno.Diagnostics.Eventing;
 
 #if __IOS__
 using UIKit;
@@ -27,6 +28,14 @@ namespace Windows.UI.Xaml
 {
 	public partial class UIElement : DependencyObject, IXUidProvider
 	{
+		private static readonly IEventProvider _trace = Tracing.Get(TraceProvider.Id);
+		public static class TraceProvider
+		{
+			public static readonly Guid Id = Guid.Parse("{2389a740-e9fc-486b-9f4e-23c09596f860}");
+
+			public const int UIElement_ObjectCreated = 1;
+		}
+
 		private readonly SerialDisposable _clipSubscription = new SerialDisposable();
 		private readonly List<Pointer> _pointCaptures = new List<Pointer>();
 		private readonly List<KeyboardAccelerator> _keyboardAccelerators = new List<KeyboardAccelerator>();
