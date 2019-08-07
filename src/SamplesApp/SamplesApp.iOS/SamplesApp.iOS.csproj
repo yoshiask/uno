@@ -13,9 +13,9 @@
     </NuGetPackageImportStamp>
     <ResourcesDirectory>..\SamplesApp.Shared\Strings</ResourcesDirectory>
 		
-		<!-- https://github.com/unoplatform/uno/issues/61 -->
-		<UnoSkipUserControlsInVisualTree>false</UnoSkipUserControlsInVisualTree>
-	</PropertyGroup>
+    <!-- https://github.com/unoplatform/uno/issues/61 -->
+    <UnoSkipUserControlsInVisualTree>false</UnoSkipUserControlsInVisualTree>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|iPhoneSimulator' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
@@ -124,6 +124,12 @@
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json">
       <Version>12.0.1</Version>
+    </PackageReference>
+    <PackageReference Include="Umbrella.Diagnostics.Eventing.Implementations">
+      <Version>3.8.1-dev.3759</Version>
+    </PackageReference>
+    <PackageReference Include="Umbrella.Diagnostics.Eventing.Providers">
+      <Version>3.8.1-dev.3759</Version>
     </PackageReference>
     <PackageReference Include="Uno.SourceGenerationTasks" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.1" />

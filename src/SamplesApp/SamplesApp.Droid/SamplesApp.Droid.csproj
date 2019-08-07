@@ -79,6 +79,12 @@
     <PackageReference Include="Newtonsoft.Json">
       <Version>12.0.1</Version>
     </PackageReference>
+    <PackageReference Include="Umbrella.Diagnostics.Eventing.Implementations">
+      <Version>3.8.1-dev.3759</Version>
+    </PackageReference>
+    <PackageReference Include="Umbrella.Diagnostics.Eventing.Providers">
+      <Version>3.8.1-dev.3759</Version>
+    </PackageReference>
     <PackageReference Include="Uno.UniversalImageLoader" Version="1.9.32" />
   </ItemGroup>
   <ItemGroup>
