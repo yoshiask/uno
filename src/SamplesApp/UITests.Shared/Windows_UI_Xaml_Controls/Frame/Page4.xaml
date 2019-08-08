@@ -1,0 +1,15 @@
+﻿<Page x:Class="UITests.Shared.Windows_UI_Xaml_Controls.Frame.Page4"
+	  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	  xmlns:local="using:UITests.Shared.Windows_UI_Xaml_Controls.Frame"
+	  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	  mc:Ignorable="">
+
+	<Grid>
+
+		<TextBlock Text="Page 4 (no CommandBar)"
+				   VerticalAlignment="Center"
+				   HorizontalAlignment="Center" />
+	</Grid>
+</Page>
+

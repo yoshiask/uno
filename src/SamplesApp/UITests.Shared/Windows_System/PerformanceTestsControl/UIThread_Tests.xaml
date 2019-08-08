@@ -1,0 +1,22 @@
+﻿<UserControl x:Class="UITests.Shared.Windows_System.PerformanceTestsControl.UIThread_Tests"
+			 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:local="using:UITests.Shared.Windows_System.PerformanceTestsControl"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:controls="using:Uno.UI.Samples.Controls"
+			 mc:Ignorable="">
+
+	<controls:SampleControl SampleDescription="UIThread_Tests">
+		<controls:SampleControl.SampleContent>
+			<DataTemplate>
+				<StackPanel>
+					<Button Content="Run UIThread"
+							Command="{Binding [UIThread_Run]}" />
+					<TextBlock MaxLines="0"
+							   TextWrapping="Wrap"
+							   Text="{Binding [UIThread_Results]}" />
+				</StackPanel>
+			</DataTemplate>
+		</controls:SampleControl.SampleContent>
+	</controls:SampleControl>
+</UserControl>

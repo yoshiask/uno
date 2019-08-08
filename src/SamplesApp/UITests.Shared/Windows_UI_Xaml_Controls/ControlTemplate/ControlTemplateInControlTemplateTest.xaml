@@ -1,0 +1,31 @@
+﻿<UserControl x:Class="UITests.Shared.Windows_UI_Xaml_Controls.ControlTemplate.ControlTemplateInControlTemplateTest"
+			 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:local="using:UITests.Shared.Windows_UI_Xaml_Controls.ControlTemplate"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 mc:Ignorable="">
+
+	<UserControl.Resources>
+
+		<ControlTemplate x:Key="ControlTemplateTemplate">
+			<StackPanel Background="{TemplateBinding Background}">
+				<TextBlock Text="{TemplateBinding Name}" />
+				<TextBlock Text="I should be Hot Pink and the TextBlock should say IntermediateControl" />
+			</StackPanel>
+		</ControlTemplate>
+	</UserControl.Resources>
+
+	<local:ControlEmpty x:Name="OuterControl"
+						Background="Red"
+						SecondTemplate="{StaticResource ControlTemplateTemplate}">
+		
+		<local:ControlEmpty.Template>
+			<ControlTemplate  TargetType="local:ControlEmpty">
+				<local:ControlEmpty Background="HotPink"
+									x:Name="IntermediateControl"
+									Template="{TemplateBinding SecondTemplate}">
+				</local:ControlEmpty>
+			</ControlTemplate>
+		</local:ControlEmpty.Template>
+	</local:ControlEmpty>
+</UserControl>

@@ -1,0 +1,53 @@
+﻿<UserControl x:Class="UITests.Shared.Windows_System.Keyboard.Keyboard_Focus"
+			 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:local="using:UITests.Shared.Windows_System.Keyboard"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 mc:Ignorable="">
+
+	<StackPanel>
+
+		<TextBlock Text="1. Focus any of these fields. Make sure the keyboard opens." />
+
+		<TextBox PlaceholderText="TextBox" />
+
+		<TextBox PlaceholderText="TextBox with AcceptsReturn" />
+
+		<PasswordBox PlaceholderText="PasswordBox" />
+
+		<TextBlock Text="2. Decide whether or not interacting with the following controls should make the above control lose focus (and dismiss the keyboard)"
+				   Margin="0,10,0,0" />
+
+		<CheckBox x:Name="IsTabStop"
+				  Content="IsTabStop"
+				  IsTabStop="False" />
+
+		<TextBlock Text="Interacting with any of these items should not dismiss the keyboard if IsTabStop is false."
+				   Margin="0,10,0,0" />
+
+		<Button Content="Button"
+				IsTabStop="{Binding IsChecked, ElementName=IsTabStop}" />
+
+		<Button Content="Button"
+				IsTabStop="{Binding IsChecked, ElementName=IsTabStop}"
+				IsEnabled="False" />
+
+		<ToggleButton Content="ToggleButton"
+					  IsTabStop="{Binding IsChecked, ElementName=IsTabStop}" />
+
+		<ContentControl Content="ContentControl"
+						IsTabStop="{Binding IsChecked, ElementName=IsTabStop}" />
+
+		<CheckBox Content="CheckBox"
+				  IsTabStop="{Binding IsChecked, ElementName=IsTabStop}" />
+
+		<RadioButton Content="RadioButton 1"
+					 IsTabStop="{Binding IsChecked, ElementName=IsTabStop}" />
+
+		<RadioButton Content="RadioButton 2"
+					 IsTabStop="{Binding IsChecked, ElementName=IsTabStop}" />
+
+		<TextBox Text="TextBox"
+				 IsTabStop="{Binding IsChecked, ElementName=IsTabStop}" />
+	</StackPanel>
+</UserControl>

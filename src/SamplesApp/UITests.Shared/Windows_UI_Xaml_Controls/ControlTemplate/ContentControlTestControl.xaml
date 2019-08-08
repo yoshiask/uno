@@ -1,0 +1,196 @@
+﻿<UserControl x:Class="UITests.Shared.Windows_UI_Xaml_Controls.ControlTemplate.ContentControlTestControl"
+			 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:local="using:UITests.Shared.Windows_UI_Xaml_Controls.ControlTemplate"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:controls="using:Uno.UI.Samples.Controls"
+			 xmlns:uno="using:Uno.UI.Samples.Controls"
+			 mc:Ignorable="">
+
+	<ScrollViewer HorizontalScrollBarVisibility="Disabled">
+		
+		<uno:StarStackPanel Orientation="Vertical">
+
+			<TextBlock Text="1. Template + ContentTemplate with text Content" />
+
+			<ContentControl Content="[1] Text assigned to Content">
+
+				<ContentControl.ContentTemplate>
+					<DataTemplate>
+						<Border BorderBrush="Red"
+								BorderThickness="2"
+								VerticalAlignment="Stretch"
+								HorizontalAlignment="Stretch">
+							<StackPanel Orientation="Horizontal"
+										Margin="2">
+								<TextBlock Text="[1] Text in ContentTemplate: "
+										   TextAlignment="Center"
+										   VerticalAlignment="Center"
+										   Foreground="Red" />
+								<TextBlock Text="{Binding}"
+										   TextAlignment="Center"
+										   VerticalAlignment="Center"
+										   Foreground="Red" />
+							</StackPanel>
+						</Border>
+					</DataTemplate>
+				</ContentControl.ContentTemplate>
+
+				<ContentControl.Template>
+					<ControlTemplate TargetType="ContentControl">
+						<Border BorderBrush="Blue"
+								BorderThickness="4"
+								Background="White"
+								Padding="3">
+							<StackPanel>
+								<Ellipse Fill="Blue"
+										 Height="30"
+										 Width="30" />
+								<TextBlock Text="[1] Text in Template"
+										   Foreground="Blue" />
+								<!--Note that for Android/iOS the ContentTemplate has to be explicitly bound to the template parent's ContentTemplate-->
+								<ContentPresenter ContentTemplate="{TemplateBinding ContentTemplate}"
+												  Content="{TemplateBinding Content}" />
+							</StackPanel>
+						</Border>
+					</ControlTemplate>
+				</ContentControl.Template>
+			</ContentControl>
+
+			<TextBlock Text="2. Template with text Content" />
+
+			<ContentControl Content="[2] Text assigned to Content">
+
+				<ContentControl.Template>
+					<ControlTemplate TargetType="ContentControl">
+						<Border BorderBrush="Purple"
+								BorderThickness="4"
+								Background="Orange"
+								Padding="2">
+							<StackPanel>
+								<Ellipse Fill="Purple"
+										 Height="30"
+										 Width="30" />
+								<TextBlock Text="[2] Text in Template"
+										   Foreground="Purple" />
+								<ContentPresenter ContentTemplate="{TemplateBinding ContentTemplate}"
+												  Content="{TemplateBinding Content}" />
+							</StackPanel>
+						</Border>
+					</ControlTemplate>
+				</ContentControl.Template>
+			</ContentControl>
+
+			<TextBlock Text="3. Template with visual Content" />
+
+			<ContentControl Name="Template_VisualContent">
+
+				<ContentControl.Content>
+					<Border BorderBrush="Green"
+							BorderThickness="4"
+							Padding="3">
+						<StackPanel>
+							<Ellipse Fill="Green"
+									 Height="20"
+									 Width="40" />
+							<TextBlock Text="[3] Text within Content"
+									   Foreground="Green" />
+						</StackPanel>
+					</Border>
+				</ContentControl.Content>
+
+				<ContentControl.Template>
+					<ControlTemplate TargetType="ContentControl">
+						<Border BorderBrush="Blue"
+								BorderThickness="4"
+								Background="Yellow"
+								Padding="2">
+							<StackPanel>
+								<Ellipse Fill="Blue"
+										 Height="30"
+										 Width="30" />
+								<TextBlock Text="[3] Text in Template"
+										   Foreground="Blue" />
+								<ContentPresenter ContentTemplate="{TemplateBinding ContentTemplate}"
+												  Content="{TemplateBinding Content}" />
+							</StackPanel>
+						</Border>
+					</ControlTemplate>
+				</ContentControl.Template>
+			</ContentControl>
+
+			<TextBlock Text="4. Template + ContentTemplate with data-bound Content" />
+
+			<ContentControl Content="{Binding [SampleData]}">
+
+				<ContentControl.ContentTemplate>
+					<DataTemplate>
+						<Border BorderBrush="Brown"
+								BorderThickness="2">
+							<StackPanel>
+								<TextBlock Text="[4] Text in ContentTemplate"
+										   Foreground="Brown" />
+								<TextBlock Text="{Binding UpperString}"
+										   Foreground="Brown" />
+								<TextBlock Text="{Binding LowerString}"
+										   Foreground="Brown" />
+								<Ellipse Fill="Brown"
+										 Height="20"
+										 Width="40" />
+							</StackPanel>
+						</Border>
+					</DataTemplate>
+				</ContentControl.ContentTemplate>
+
+				<ContentControl.Template>
+					<ControlTemplate TargetType="ContentControl">
+						<Border BorderBrush="Yellow"
+								BorderThickness="5"
+								Background="Green"
+								Padding="3">
+							<StackPanel>
+								<Ellipse Fill="Yellow"
+										 Height="30"
+										 Width="30" />
+								<ContentPresenter ContentTemplate="{TemplateBinding ContentTemplate}"
+												  Content="{TemplateBinding Content}" />
+								<TextBlock Text="[4] Text in Template"
+										   Foreground="Yellow" />
+							</StackPanel>
+						</Border>
+					</ControlTemplate>
+				</ContentControl.Template>
+			</ContentControl>
+
+			<TextBlock Text="5. Button with visual Content" />
+
+			<!--Set Template to Null because, on Android, default Template only supports a string as Content-->
+			<Button Template="{x:Null}">
+				<Button.Content>
+					<Border BorderBrush="Blue"
+							BorderThickness="5"
+							Background="Yellow"
+							Padding="3">
+						<TextBlock Text="[5] Text within Button.Content"
+								   Foreground="Blue" />
+					</Border>
+				</Button.Content>
+			</Button>
+
+			<TextBlock Text="6. ContentControl with visual Content and neither Template nor ControlTemplate" />
+
+			<ContentControl>
+				<ContentControl.Content>
+					<Border BorderBrush="Red"
+							BorderThickness="5"
+							Background="White"
+							Padding="3">
+						<TextBlock Text="[6] Text within ContentControl.Content"
+								   Foreground="Red" />
+					</Border>
+				</ContentControl.Content>
+			</ContentControl>
+		</uno:StarStackPanel>
+	</ScrollViewer>
+</UserControl>
+
