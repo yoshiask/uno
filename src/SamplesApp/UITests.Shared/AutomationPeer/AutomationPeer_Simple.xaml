@@ -1,0 +1,19 @@
+﻿<UserControl x:Class="UITests.Shared.AutomationPeer.AutomationPeer_Simple"
+			 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:local="using:UITests.Shared.AutomationPeer"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 mc:Ignorable="">
+
+	<StackPanel>
+		<TextBlock Text="This text should be read"
+			 x:Name="Label" />
+		<TextBlock Text="The above text should be read"
+					 AutomationProperties.LabeledBy="{Binding ElementName=Label}" />
+		<TextBlock Text="This text should not be focusable"
+					 AutomationProperties.AccessibilityView="Raw" />
+		<TextBlock Text="This should read: 'alternative text'"
+					 AutomationProperties.Name="alternative text" />
+	</StackPanel>
+	
+</UserControl>

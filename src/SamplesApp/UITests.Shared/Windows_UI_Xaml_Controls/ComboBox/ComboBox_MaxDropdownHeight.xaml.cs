@@ -12,7 +12,7 @@ namespace UITests.Shared.Windows_UI_Xaml_Controls.ComboBox
 		{
 			this.InitializeComponent();
 
-			ApplicationView.GetForCurrentView().SetPreferredMinSize(new Windows.Foundation.Size(200, 200));
+			//ApplicationView.GetForCurrentView().SetPreferredMinSize(new Windows.Foundation.Size(200, 200));
 		}
 	}
 }

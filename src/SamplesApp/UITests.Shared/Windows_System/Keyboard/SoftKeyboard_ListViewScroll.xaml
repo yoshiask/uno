@@ -1,0 +1,44 @@
+﻿<UserControl x:Class="UITests.Shared.Windows_System.Keyboard.SoftKeyboard_ListViewScroll"
+			 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:local="using:UITests.Shared.Windows_System.Keyboard"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 mc:Ignorable="">
+
+	<UserControl.Resources>
+
+		<DataTemplate x:Key="ListFooterTemplate">
+			<StackPanel Margin="22,12,2,24">
+
+				<TextBlock Text="1. Focus the textbox, make sure the textbox remains visible above the keyboard."
+						   Margin="0,0,20,1" />
+
+				<TextBlock Text="2. Dismiss the keyboard, make sure the listview is scrolled back to the previous position."
+						   Margin="0,0,20,1" />
+
+				<TextBox PlaceholderText="TextBox"
+						 InputScope="CurrencyAmount"
+						 BorderBrush="Black"
+						 BorderThickness="1,1,1,1" />
+			</StackPanel>
+		</DataTemplate>
+
+		<DataTemplate x:Key="ListItemTemplate">
+
+			<Grid Background="YellowGreen">
+				<TextBlock Text="{Binding}" />
+			</Grid>
+		</DataTemplate>
+
+	</UserControl.Resources>
+
+	<Grid Background="White">
+
+		<TextBlock Text="Main page" />
+
+		<ListView x:Name="MainList"
+				  ItemTemplate="{StaticResource ListItemTemplate}"
+				  FooterTemplate="{StaticResource ListFooterTemplate}">
+		</ListView>
+	</Grid>
+</UserControl>

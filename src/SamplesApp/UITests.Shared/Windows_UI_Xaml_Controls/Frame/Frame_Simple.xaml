@@ -1,0 +1,86 @@
+﻿<UserControl x:Class="UITests.Shared.Windows_UI_Xaml_Controls.Frame.Frame_Simple"
+			 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:local="using:UITests.Shared.Windows_UI_Xaml_Controls.Frame"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 mc:Ignorable="">
+	<Grid>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="*" />
+			<ColumnDefinition Width="150" />
+		</Grid.ColumnDefinitions>
+
+		<Border Grid.Column="0"
+				BorderThickness="4"
+				BorderBrush="Black">
+			
+			<SplitView x:Name="SplitView"
+					   OpenPaneLength="280"
+					   PaneBackground="White">
+
+				<SplitView.Pane>
+					<Grid Background="White" />
+				</SplitView.Pane>
+				
+				<SplitView.Content>
+					<Frame x:Name="MyFrame"
+						   HorizontalAlignment="Stretch"
+						   VerticalAlignment="Stretch"
+						   Tag="{Binding ElementName=SplitView}" />
+				</SplitView.Content>
+			</SplitView>
+		</Border>
+
+		<StackPanel Grid.Column="1">
+
+			<CheckBox x:Name="DisableNavigation"
+					  Content="Disable Navigation" />
+
+			<CheckBox x:Name="SuppressTransition"
+					  Content="Suppress Transition" />
+
+			<Button x:Name="Page1Button"
+					Content="Page1"
+					Click="Page1" />
+
+			<Button x:Name="Page2Button"
+					Content="Page2"
+					Click="Page2" />
+
+			<Button x:Name="Page3Button"
+					Content="Page3"
+					Click="Page3" />
+
+			<Button x:Name="Page4Button"
+					Content="Page4"
+					Click="Page4" />
+
+			<Button x:Name="Page5Button"
+					Content="Page5"
+					Click="Page5" />
+
+			<Button x:Name="Page6Button"
+					Content="Page6"
+					Click="Page6" />
+
+			<Button x:Name="DelayedButton"
+					Content="Delayed"
+					Click="DelayedNavigate" />
+
+			<Button x:Name="BackButton"
+					Content="Back"
+					Click="Back" />
+
+			<Button x:Name="ForwardButton"
+					Content="Forward"
+					Click="Forward" />
+
+			<Button x:Name="ClearHistoryButton"
+					Content="Clear"
+					Click="ClearHistory" />
+			
+			<ListView x:Name="BackStack" />
+		</StackPanel>
+	</Grid>
+</UserControl>

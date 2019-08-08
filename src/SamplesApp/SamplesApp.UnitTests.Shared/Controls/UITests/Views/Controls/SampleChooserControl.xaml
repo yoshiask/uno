@@ -1,23 +1,19 @@
-﻿<UserControl
-	x:Class="Uno.UI.Samples.Controls.SampleChooserControl"
-	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-	xmlns:converters="using:Uno.UI.Samples.Converters"
-	xmlns:u="using:Uno.UI.Samples.Controls"
-	xmlns:ub="using:Uno.UI.Samples.Behaviors"
-	xmlns:uc="using:Uno.UI.Samples.Converters"
-	xmlns:helper="using:Uno.UI.Samples.Behaviors"
-	xmlns:ios="http://umbrella/ios"
-	xmlns:xamarin="http://umbrella/xamarin"
-	xmlns:win="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-	xmlns:toolkit="using:Uno.UI.Toolkit"
-	xmlns:not_ios="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-	xmlns:sections="using:Uno.UI.Samples.Entities"
-	mc:Ignorable="d ios xamarin"
-	d:DesignHeight="300"
-	d:DesignWidth="400">
+﻿<UserControl x:Class="Uno.UI.Samples.Controls.SampleChooserControl"
+			 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:converters="using:Uno.UI.Samples.Converters"
+			 xmlns:u="using:Uno.UI.Samples.Controls"
+			 xmlns:ub="using:Uno.UI.Samples.Behaviors"
+			 xmlns:uc="using:Uno.UI.Samples.Converters"
+			 xmlns:helper="using:Uno.UI.Samples.Behaviors"
+			 xmlns:ios="http://umbrella/ios"
+			 xmlns:xamarin="http://umbrella/xamarin"
+			 xmlns:win="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+			 xmlns:toolkit="using:Uno.UI.Toolkit"
+			 xmlns:not_ios="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:sections="using:Uno.UI.Samples.Entities"
+			 mc:Ignorable="ios xamarin">
 
 	<UserControl.Resources>
 		<ResourceDictionary>
@@ -32,7 +28,7 @@
 			<x:Double x:Key="TitleContainerHeight">45</x:Double>
 
 			<uc:FromNullableBoolToReverseBoolConverter x:Key="reverseBoolConverter" />
-			
+
 			<!-- Converters -->
 			<uc:FromNullableBoolToDefaultValueConverter x:Key="FavoritesPathConverter"
 														NullOrFalseValue="{StaticResource Icon_Favorite_Empty}"
@@ -52,7 +48,7 @@
 				<Setter Property="Background"
 						Value="{StaticResource Color08Brush}" />
 				<Setter Property="Height"
-								Value="50" />
+						Value="50" />
 			</Style>
 
 			<Style x:Key="BaseTitleContainerStyle"
@@ -147,7 +143,7 @@
 						  Style="{StaticResource StretchedListViewStyle}"
 						  helper:ListViewBaseCommand.Command="{Binding ShowNewSectionCommand}"
 						  helper:ListViewBaseCommand.CommandParameter="SamplesContent"
-							ub:SplitViewBehavior.CloseOnClick="True">
+						  ub:SplitViewBehavior.CloseOnClick="True">
 				</ListView>
 			</DataTemplate>
 
@@ -159,7 +155,7 @@
 						  Style="{StaticResource StretchedListViewStyle}"
 						  helper:ListViewBaseCommand.Command="{Binding ShowNewSectionCommand}"
 						  helper:ListViewBaseCommand.CommandParameter="FavoritesContent"
-							ub:SplitViewBehavior.CloseOnClick="True">
+						  ub:SplitViewBehavior.CloseOnClick="True">
 				</ListView>
 			</DataTemplate>
 
@@ -171,7 +167,7 @@
 						  Style="{StaticResource StretchedListViewStyle}"
 						  helper:ListViewBaseCommand.Command="{Binding ShowNewSectionCommand}"
 						  helper:ListViewBaseCommand.CommandParameter="RecentsContent"
-							ub:SplitViewBehavior.CloseOnClick="True">
+						  ub:SplitViewBehavior.CloseOnClick="True">
 				</ListView>
 			</DataTemplate>
 
@@ -195,7 +191,7 @@
 							  Style="{StaticResource StretchedListViewStyle}"
 							  helper:ListViewBaseCommand.Command="{Binding ShowNewSectionCommand}"
 							  helper:ListViewBaseCommand.CommandParameter="SearchContent"
-								ub:SplitViewBehavior.CloseOnClick="True">
+							  ub:SplitViewBehavior.CloseOnClick="True">
 					</ListView>
 				</Grid>
 			</DataTemplate>
@@ -457,35 +453,35 @@
 
 					<!-- Previous Button -->
 					<Button Style="{StaticResource IconButtonStyle}"
-					        Grid.Column="2"
-					        Command="{Binding LoadPreviousTestCommand}"
-					        CommandParameter="{Binding CurrentSelectedSample}">
+							Grid.Column="2"
+							Command="{Binding LoadPreviousTestCommand}"
+							CommandParameter="{Binding CurrentSelectedSample}">
 						<u:PathControl Style="{StaticResource Icon_Previous}"
-						               VerticalContentAlignment="Center"
-						               HorizontalContentAlignment="Center"
-						               Margin="0,4,10,0" />
+									   VerticalContentAlignment="Center"
+									   HorizontalContentAlignment="Center"
+									   Margin="0,4,10,0" />
 					</Button>
 
 					<!-- Reload Button -->
 					<Button Style="{StaticResource IconButtonStyle}"
-					        Grid.Column="3"
-					        Command="{Binding ReloadCurrentTestCommand}"
-					        CommandParameter="{Binding CurrentSelectedSample}">
+							Grid.Column="3"
+							Command="{Binding ReloadCurrentTestCommand}"
+							CommandParameter="{Binding CurrentSelectedSample}">
 						<u:PathControl Style="{StaticResource Icon_Reload}"
-						               VerticalContentAlignment="Center"
-						               HorizontalContentAlignment="Center"
-						               Margin="0,4,10,0" />
+									   VerticalContentAlignment="Center"
+									   HorizontalContentAlignment="Center"
+									   Margin="0,4,10,0" />
 					</Button>
 
 					<!-- Next Button -->
 					<Button Style="{StaticResource IconButtonStyle}"
-					        Grid.Column="4"
-					        Command="{Binding LoadNextTestCommand}"
-					        CommandParameter="{Binding CurrentSelectedSample}">
+							Grid.Column="4"
+							Command="{Binding LoadNextTestCommand}"
+							CommandParameter="{Binding CurrentSelectedSample}">
 						<u:PathControl Style="{StaticResource Icon_Next}"
-						               VerticalContentAlignment="Center"
-						               HorizontalContentAlignment="Center"
-						               Margin="0,4,10,0" />
+									   VerticalContentAlignment="Center"
+									   HorizontalContentAlignment="Center"
+									   Margin="0,4,10,0" />
 					</Button>
 
 					<!-- Favorite Button -->
@@ -517,7 +513,7 @@
 								HorizontalAlignment="Stretch"
 								HorizontalContentAlignment="Stretch"
 								VerticalContentAlignment="Stretch"
-								Grid.Row="1"/>
+								Grid.Row="1" />
 			</Grid>
 		</SplitView.Content>
 	</SplitView>
