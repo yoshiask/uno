@@ -686,8 +686,6 @@
 			const element = this.getView(elementId);
 			const eventExtractor = this.getEventExtractor(eventExtractorName);
 			const eventHandler = (event: Event) => {
-				console.log("Raising event " + eventName + " on element " + elementId);
-
 				const eventPayload = eventExtractor
 					? `${eventExtractor(event)}`
 					: "";
@@ -697,8 +695,6 @@
 					event.stopPropagation();
 				}
 			};
-
-			console.log("Subscribing to event " + eventName + " on element " + elementId);
 
 			if (eventName == "pointerenter") {
 				const enterPointerHandler = (event: Event) => {
