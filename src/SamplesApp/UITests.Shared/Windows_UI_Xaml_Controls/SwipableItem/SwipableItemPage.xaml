@@ -61,7 +61,6 @@
 									  NearContentTemplate="{StaticResource SwipableMockItemNearContent}"
 									  ContentTemplate="{StaticResource SwipableMockItemContent}"
 									  FarContentTemplate="{StaticResource SwipableMockItemFarContent}"
-									  Style="{StaticResource DefaultSwipableItemStyle}"
 									  HorizontalContentAlignment="Stretch"
 									  Width="1600" />
 			</DataTemplate>
