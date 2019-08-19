@@ -29,7 +29,15 @@
       "avatar_url": "https://avatars0.githubusercontent.com/u/8270914?v=4",
       "profile": "http://www.dissolutegames.com/",
       "contributions": [
-        "blog"
+        "blog",
+        "code",
+        "content",
+        "doc",
+        "maintenance",
+        "tutorial",
+        "review",
+        "test",
+        "example"
       ]
     },
     {
@@ -57,6 +65,32 @@
         "test",
         "tutorial",
         "review"
+      ]
+    },
+    {
+      "login": "pdecostervgls",
+      "name": "Patrick Decoster",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/47024956?v=4",
+      "profile": "https://www.vogels.com",
+      "contributions": [
+        "test",
+        "code",
+        "example"
+      ]
+    },
+    {
+      "login": "dr1rrb",
+      "name": "David",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/8635919?v=4",
+      "profile": "https://github.com/dr1rrb",
+      "contributions": [
+        "code",
+        "content",
+        "doc",
+        "maintenance",
+        "review",
+        "test",
+        "example"
       ]
     }
   ],
