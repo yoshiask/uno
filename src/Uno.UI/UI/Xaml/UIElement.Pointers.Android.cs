@@ -78,7 +78,13 @@ namespace Windows.UI.Xaml
 
 		protected sealed override bool OnNativeTouch(MotionEvent nativeEvent)
 		{
+			if (nativeEvent.PointerCount > 1)
+			{
+				this.Log().Error("Multi touches is not supported yet by UNO. You will receive only event only for the first pointer.");
+			}
+
 			var args = new PointerRoutedEventArgs(nativeEvent, this);
+
 			switch (nativeEvent.ActionMasked)
 			{
 				case MotionEventActions.HoverEnter:
@@ -99,8 +105,8 @@ namespace Windows.UI.Xaml
 				case MotionEventActions.PointerUp:
 					return OnNativePointerUp(args);
 
-				case MotionEventActions.Move:
-				case MotionEventActions.HoverMove:
+				case MotionEventActions.Move: // when IsCaptured(args.Pointer) || IsInView(args.Pointer):
+				case MotionEventActions.HoverMove: //when IsCaptured(args.Pointer) || IsInView(args.Pointer):
 					return OnNativePointerMove(args);
 
 				case MotionEventActions.Cancel:

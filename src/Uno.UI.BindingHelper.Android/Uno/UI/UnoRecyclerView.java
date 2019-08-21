@@ -12,52 +12,65 @@ import java.lang.reflect.*;
 
 public abstract class UnoRecyclerView
 		extends RecyclerView
-		implements UnoViewParent{
-	private boolean _childHandledTouchEvent;
-	private boolean _childBlockedTouchEvent;
-	private boolean _childIsUnoViewGroup;
+		implements Uno.UI.UnoViewParent {
+//	private boolean _childHandledTouchEvent;
+//	private boolean _childBlockedTouchEvent;
+//	private boolean _childIsUnoViewGroup;
 
 	protected UnoRecyclerView(Context context) {
 		super(context);
 	}
 
-	public final void setChildHandledTouchEvent(boolean childHandledTouchEvent)
-	{
-		_childHandledTouchEvent |= childHandledTouchEvent;
-	}
+//	public final void setChildHandledTouchEvent(boolean childHandledTouchEvent)
+//	{
+//		_childHandledTouchEvent |= childHandledTouchEvent;
+//	}
+//
+//	public final void setChildBlockedTouchEvent(boolean childBlockedTouchEvent)
+//	{
+//		_childBlockedTouchEvent |= childBlockedTouchEvent;
+//	}
+//
+//	public final void setChildIsUnoViewGroup(boolean childIsUnoViewGroup)
+//	{
+//		_childIsUnoViewGroup |= childIsUnoViewGroup;
+//	}
 
-	public final void setChildBlockedTouchEvent(boolean childBlockedTouchEvent)
-	{
-		_childBlockedTouchEvent |= childBlockedTouchEvent;
-	}
+	private boolean _isCurrentMotionBlockedByAnyChild, _isCurrentMotionHandledByAnyChild, _isCurrentMotionDispatchedToAChildUnoViewGroup;
 
-	public final void setChildIsUnoViewGroup(boolean childIsUnoViewGroup)
+	public final void setChildMotionEventResult(View child, boolean isBlocking, boolean isHandling)
 	{
-		_childIsUnoViewGroup |= childIsUnoViewGroup;
+		_isCurrentMotionDispatchedToAChildUnoViewGroup = true;
+		_isCurrentMotionBlockedByAnyChild = isBlocking;
+		_isCurrentMotionHandledByAnyChild = isHandling;
 	}
 
 	public boolean dispatchTouchEvent(MotionEvent e)
 	{
 		// See UnoViewGroup for exegesis of Uno.Android's touch handling logic.
-		_childIsUnoViewGroup = false;
-		_childBlockedTouchEvent = false;
-		_childHandledTouchEvent = false;
+		_isCurrentMotionDispatchedToAChildUnoViewGroup = false;
+		_isCurrentMotionBlockedByAnyChild = false;
+		_isCurrentMotionHandledByAnyChild = false;
+
+		Log.i("ListView", "BTW I'm here MotionEvent: " + e.toString());
 
 		// Always dispatch the touch events, otherwise system controls may not behave
 		// properly, such as not displaying "material design" animation cues (e.g. the
 		// growing circles in buttons when keeping pressed).
 		boolean superDispatchTouchEvent = super.dispatchTouchEvent(e);
 
-		if (!_childIsUnoViewGroup) // child is native
-		{
-			// Log.i(this.toString(), "!_childIsUnoViewGroup: " + !_childIsUnoViewGroup);
-			// If no child is under the touch, or the UnoRecyclerView is scrolling, superDispatchTouchEvent is normally true.
-			_childBlockedTouchEvent = _childHandledTouchEvent = superDispatchTouchEvent;
-		}
+		Log.i("ListView", "BTW I'm here superDispatchTouchEvent: " + superDispatchTouchEvent);
 
-		boolean isBlockingTouchEvent = _childBlockedTouchEvent;
+//		if (!_isCurrentMotionDispatchedToAChildUnoViewGroup) // child is native
+//		{
+//			// Log.i(this.toString(), "!_childIsUnoViewGroup: " + !_childIsUnoViewGroup);
+//			// If no child is under the touch, or the UnoRecyclerView is scrolling, superDispatchTouchEvent is normally true.
+//			_isCurrentMotionBlockedByAnyChild = _isCurrentMotionHandledByAnyChild = superDispatchTouchEvent;
+//		}
+
+		boolean isBlockingTouchEvent = superDispatchTouchEvent;
 		// Always return true if super returns true, otherwise scrolling might not be handled correctly.
-		boolean isHandlingTouchEvent = _childHandledTouchEvent || superDispatchTouchEvent;
+		boolean isHandlingTouchEvent = _isCurrentMotionHandledByAnyChild; // || superDispatchTouchEvent;
 
 		// Log.i(this.toString(), "MotionEvent: " + e.toString());
 		// Log.i(this.toString(), "superDispatchTouchEvent: " + superDispatchTouchEvent);
@@ -66,29 +79,64 @@ public abstract class UnoRecyclerView
 		// Log.i(this.toString(), "isBlockingTouchEvent: " + isBlockingTouchEvent);
 		// Log.i(this.toString(), "isHandlingTouchEvent: " + isHandlingTouchEvent);
 
-		UnoViewParent parentUnoViewGroup = getParentUnoViewGroup();
-		boolean parentIsUnoViewGroup = parentUnoViewGroup != null;
-		// Log.i(this.toString(), "parentIsUnoViewGroup: " + parentIsUnoViewGroup);
+//		Uno.UI.UnoViewParent parentUnoViewGroup = getParentUnoViewGroup();
+//		boolean parentIsUnoViewGroup = parentUnoViewGroup != null;
+//		// Log.i(this.toString(), "parentIsUnoViewGroup: " + parentIsUnoViewGroup);
+//
+//		if (parentIsUnoViewGroup)
+//		{
+//			parentUnoViewGroup.setChildMotionEventResult(this, isBlockingTouchEvent, isHandlingTouchEvent);
+//
+//			Log.i("ListView", "BTW I'm here MANAGED : " + isBlockingTouchEvent);
+//
+//			// Prevents siblings from receiving the touch event.
+//			// Won't actually be read by parent (which will prefer _childBlockedTouchEvent and _childHandledTouchEvent).
+//			return isBlockingTouchEvent;
+//		}
+//		else // parent is native
+//		{
+//			Log.i("ListView", "BTW I'm here NATIVE: " + isHandlingTouchEvent);
+//
+//			// Native views don't understand the difference between 'blocked' and 'handled',
+//			// and will assume true to mean that the touch event was handled (which can cause problems when nested inside native controls like ListViews).
+//			return isBlockingTouchEvent;
+//		}
 
-		if (parentIsUnoViewGroup)
+		ViewParent parent = getParent();
+		Uno.UI.UnoViewParent unoParent = null;
+		while(parent != null)
 		{
-			parentUnoViewGroup.setChildIsUnoViewGroup(true);
+			if (parent instanceof Uno.UI.UnoViewParent) {
+				unoParent = (Uno.UI.UnoViewParent)parent;
+				break;
+			}
 		}
 
-		if (parentIsUnoViewGroup)
-		{
-			parentUnoViewGroup.setChildBlockedTouchEvent(isBlockingTouchEvent);
-			parentUnoViewGroup.setChildHandledTouchEvent(isHandlingTouchEvent);
+		if (unoParent == null) {
+			// The top element of the visual tree must always reply 'true' in order to receive all pointers events.
+			// (If we reply 'false' to an ACTION_DOWN, we won't receive the subsequent ACTION_MOVE nor ACTION_UP.)
 
-			// Prevents siblings from receiving the touch event.
-			// Won't actually be read by parent (which will prefer _childBlockedTouchEvent and _childHandledTouchEvent).
-			return isBlockingTouchEvent;
+			Log.i("ListView", "ROOT result: true");
+
+			return true;
 		}
-		else // parent is native
+		else if (isBlockingTouchEvent)
 		{
-			// Native views don't understand the difference between 'blocked' and 'handled',
-			// and will assume true to mean that the touch event was handled (which can cause problems when nested inside native controls like ListViews).
-			return isHandlingTouchEvent;
+			if (isHandlingTouchEvent) {
+				unoParent.setChildMotionEventResult(this, true, isHandlingTouchEvent);
+			}
+
+			Log.i("ListView", "ROOT result: true");
+
+			return true;
+		}
+		else
+		{
+			if (!isHandlingTouchEvent) {
+				Log.e("ListView", "WHAT THE HELL *********************************************");
+			}
+
+			return false;
 		}
 	}
 
@@ -108,8 +156,8 @@ public abstract class UnoRecyclerView
 	private void notifyChildRemoved(View child)
 	{
 		Uno.UI.UnoViewGroup childViewGroup = child instanceof Uno.UI.UnoViewGroup
-				? (Uno.UI.UnoViewGroup)child
-				: null;
+			? (Uno.UI.UnoViewGroup)child
+			: null;
 
 		if(childViewGroup != null)
 		{
@@ -119,12 +167,12 @@ public abstract class UnoRecyclerView
 		}
 	}
 
-	private UnoViewParent getParentUnoViewGroup()
+	private Uno.UI.UnoViewParent getParentUnoViewGroup()
 	{
 		ViewParent parent = getParent();
 
-		return parent instanceof UnoViewParent
-				? (UnoViewParent)parent
+		return parent instanceof Uno.UI.UnoViewParent
+				? (Uno.UI.UnoViewParent)parent
 				: null;
 	}
 }
