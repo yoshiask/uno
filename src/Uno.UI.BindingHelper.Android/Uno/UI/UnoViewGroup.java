@@ -356,530 +356,95 @@ public abstract class UnoViewGroup
 		super.setAlpha(opacity);
 	}
 
-	private interface IDispatchStrategy {
-		boolean getIsTargetCachingSupported();
-		boolean ToSuper(MotionEvent event);
-		boolean ToChild(View view, MotionEvent event);
+	private abstract class MotionTarget extends Uno.UI.DispatchMotionTarget {
+		protected MotionTarget() {
+			super(UnoViewGroup.this);
+		}
+
+		@Override
+		public ViewGroup getView() { return UnoViewGroup.this; }
+
+		@Override
+		public int getChildRenderTransformCount() { return UnoViewGroup.this._childrenTransformations.size(); }
+
+		@Override
+		public Matrix findRenderTransform(View child) { return UnoViewGroup.this._childrenTransformations.get(child); }
+
+		@Override
+		public boolean getIsHitTestVisible() { return UnoViewGroup.this._isHitTestVisible; }
+
+		@Override
+		public boolean nativeHitCheck() { return UnoViewGroup.this.nativeHitCheck(); }
+
+		@Override
+		public boolean getIsEnable() { return UnoViewGroup.this._isEnabled; }
+
+		@Override
+		public boolean tryRaiseNativeMotionEvent(MotionEvent event, View originalSource) {
+			return UnoViewGroup.this._isNativeMotionEventsEnabled && UnoViewGroup.this.OnNativeMotionEvent(event, originalSource);
+		}
 	}
 
-	private final IDispatchStrategy _touchStrategy = new DispatchTouchStrategy();
-	private final IDispatchStrategy _genericMotionStrategy = new DispatchGenericMotionStrategy();
-	private class DispatchTouchStrategy implements IDispatchStrategy
+	private class DispatchTouchStrategy extends MotionTarget
 	{
+		@Override
 		public boolean getIsTargetCachingSupported() { return true; }
-		public boolean ToSuper(MotionEvent event) { return UnoViewGroup.super.dispatchTouchEvent(event); }
-		public boolean ToChild(View view, MotionEvent event) { return view.dispatchTouchEvent(event); }
+
+		@Override
+		public boolean dispatchToSuper(MotionEvent event) { return UnoViewGroup.super.dispatchTouchEvent(event); }
+
+		@Override
+		public boolean dispatchToChild(View view, MotionEvent event) { return view.dispatchTouchEvent(event); }
 	}
-	private class DispatchGenericMotionStrategy implements IDispatchStrategy
+
+	private class DispatchGenericMotionStrategy extends MotionTarget
 	{
+		@Override
 		public boolean getIsTargetCachingSupported() { return false; }
-		public boolean ToSuper(MotionEvent event) { return UnoViewGroup.super.dispatchGenericMotionEvent(event); }
-		public boolean ToChild(View view, MotionEvent event) { return view.dispatchGenericMotionEvent(event); }
+
+		@Override
+		public boolean dispatchToSuper(MotionEvent event) { return UnoViewGroup.super.dispatchGenericMotionEvent(event); }
+
+		@Override
+		public boolean dispatchToChild(View view, MotionEvent event) { return view.dispatchGenericMotionEvent(event); }
 	}
 
-	public boolean dispatchTouchEvent(MotionEvent event) { return dispatchMotionEvent(event, _touchStrategy); }
-	public boolean dispatchGenericMotionEvent(MotionEvent event) { return dispatchMotionEvent(event, _genericMotionStrategy); }
+	private final Uno.UI.DispatchMotionTarget _thisAsTouchTarget = new DispatchTouchStrategy();
+	private final Uno.UI.DispatchMotionTarget _thisAsGenericMotionTarget = new DispatchGenericMotionStrategy();
 
+	public boolean dispatchTouchEvent(MotionEvent event) { return Uno.UI.UnoMotionHelper.Instance.dispatchMotionEvent(_thisAsTouchTarget, event); }
+	public boolean dispatchGenericMotionEvent(MotionEvent event) { return Uno.UI.UnoMotionHelper.Instance.dispatchMotionEvent(_thisAsGenericMotionTarget, event); }
 
-	// To trace the 'dispatchTouchEvent', uncomment this and then uncomment logs in the method itself
-	private static String _indent = "";
-//	public boolean dispatchTouchEvent(MotionEvent e)
-//	{
-//		String originalIndent = _indent;
-//		Log.i(LOGTAG, _indent + "    + " + this.toString() + "(" + System.identityHashCode(this) + ") [size: " + getWidth() + "x" + getHeight() + " | scroll: x="+ getScrollX() + " y=" + getScrollY() + "]");
-//		_indent += "    | ";
-//		Log.i(LOGTAG, _indent + e.toString());
-//
-//		boolean dispatched = dispatchTouchEventCore(e);
-//
-//		_indent = originalIndent;
-//
-//		return dispatched;
-//	}
-//
-//	public boolean dispatchTouchEventCore(MotionEvent e) {
-//		return dispatchMotionEvent(e, true);
-//	}
-//
-//	public boolean dispatchGenericMotionEvent(MotionEvent e) {
-//		Log.i(LOGTAG,  System.identityHashCode(this) + "GenericMotion evt");
-//		// return super.dispatchGenericMotionEvent(e) || (_isTouchEnabled && OnNativeTouch(e));
-//
-//		return dispatchMotionEvent(e, false);
-//	}
-
-	//public boolean dispatchTouchEventCore(MotionEvent e)
-	//public boolean dispatchTouchEvent(MotionEvent e)
-
-	//private boolean _isCurrentMotionInView;
-	private boolean _isCurrentMotionBlockedByAnyChild, _isCurrentMotionHandledByAnyChild, _isCurrentMotionDispatchedToAChildUnoViewGroup;
-
-	public final void setChildMotionEventResult(View child, boolean isBlocking, boolean isHandling)
-	{
-		_isCurrentMotionDispatchedToAChildUnoViewGroup = true;
-		_isCurrentMotionBlockedByAnyChild = isBlocking;
-		_isCurrentMotionHandledByAnyChild = isHandling;
-	}
-
-	private boolean _isCustomDispatchingTouchEvents;
-	private View _customDispatchTouchTarget;
-
-	// To trace the pointer events (dispatchTouchEvent and dispatchGenericMotionEvent),
-	// uncomment this and then uncomment logs in the method itself.
-	public boolean dispatchMotionEvent(MotionEvent event, IDispatchStrategy dispatch)
-	{
-		String originalIndent = _indent;
-		Log.i(LOGTAG, _indent + "    + " + this.toString() + "(" + System.identityHashCode(this) + ") [size: " + getWidth() + "x" + getHeight() + " | scroll: x="+ getScrollX() + " y=" + getScrollY() + "]");
-		_indent += "    | ";
-		Log.i(LOGTAG, _indent + event.toString());
-
-		final boolean dispatched = dispatchMotionEventCore(event, dispatch);
-
-		_indent = originalIndent;
-
-		return dispatched;
-	}
-	private boolean dispatchMotionEventCore(MotionEvent e, IDispatchStrategy dispatch)
-	//private boolean dispatchMotionEvent(MotionEvent e, IDispatchStrategy dispatch)
-	{
-		// The purpose of dispatchTouchEvent is to find the target (view) of a touch event.
-		// When the user touches the screen, dispatchTouchEvent is called on the top-most view, and recursively passed down to all children.
-		// Once a view (that we will call target) decides to handle the touch event (generally when it has gesture detectors and none of its children handled the event), it returns true.
-		// The parent then gets notified that the event was handled by one of its child, stops passing down the touch event to the siblings of the target,
-		// ignores the event (i.e., doesn't handle it itself even if it could), and returns true to its own parent (which bubbles all the way to the top-most view).
-		//
-		// Essentially, returning true means that you 'handled' (and implicitly also 'blocked') a touch event, where:
-		// - blocked -> prevent siblings from handling the event
-		// - handled -> prevent parents from handling the event
-		// Natively, you can't 'block' a touch event without also 'handling' it.
-		//
-		// In XAML, the distinction between 'blocking' and 'handling' is important, and a view must be able to 'block' a touch event without necessarily 'handling' it.
-		// Therefore, the single boolean offered by dispatchTouchEvent isn't enough, and we must allow UnoViewGroups to communicate these 'blocked' vs 'handled' nuances through some other channel.
-		// To do this, we introduce 3 boolean fields in UnoViewGroups: _childIsUnoViewGroup, _childBlockedTouchEvent, _childHandledTouchEvent (each with their own public setter).
-		// Because UnoViewGroup must be compatible with native (non-UnoViewGroup) views, we need to process the input (super.dispatchTouchEvent) and output (return) differently based on the nature of the parent and children.
-		//
-		// Input:
-		// - Child is UnoViewGroup (_childIsUnoViewGroup = true) ->
-		//     - read the values of _childBlockedTouchEvent and _childHandledTouchEvent (set by the child in its own dispatchTouchEvent)
-		// - Child is native (_childIsUnoViewGroup = false) ->
-		//     - set both the values of _childBlockedTouchEvent and _childHandledTouchEvent to the value of super.dispatchTouchEvent
-		//
-		// Output:
-		// - Parent is UnoViewGroup ->
-		//     - set _childIsUnoViewGroup, _childBlockedTouchEvent and _childHandledTouchEvent on the parent
-		//     - return true if isBlockingTouchEvent to prevent siblings from receiving the touch event
-		//       (returned value won't actually be read by parent, as it will prefer _childBlockedTouchEvent and _childHandledTouchEvent instead)
-		// - Parent is native ->
-		//	   - return true if isHandlingTouchEvent
-		//       (because native views can't read _childBlockedTouchEvent and _childHandledTouchEvent, and will assume true to mean the event was handled)
-
-		// Reset possibly invalid states (set by children in previous calls)
-		_isCurrentMotionDispatchedToAChildUnoViewGroup = false;
-		_isCurrentMotionBlockedByAnyChild = false;
-		_isCurrentMotionHandledByAnyChild = false;
-
-		if (!_isHitTestVisible || !_isEnabled)
-		{
-			// The View is not TestVisible or disabled, there is nothing to do here!
-			Log.i(LOGTAG, _indent + "BLOCKED [isHitTestVisible: " + _isHitTestVisible + " | isEnabled: " + _isEnabled + "]");
-
-			return false;
-		}
-
-		// TODO: Is this usefull ???? It seems to be achieve twice: once here, once in the native stuff
-		// updateTransformedTouchCoordinate(e);
-
-		//final boolean wasPointInView = _isPointInView;
-
-		// For the ACTION_CANCEL the coordinates are not set properly:
-		// "Canceling motions is a special case.  We don't need to perform any transformations
-		// or filtering.  The important part is the action, not the contents."
-		// https://android.googlesource.com/platform/frameworks/base/+/master/core/java/android/view/ViewGroup.java#3010
-
-//		final boolean isPointerUp = e.getAction() == MotionEvent.ACTION_UP
-//			//|| e.getAction() == MotionEvent.ACTION_POINTER_UP
-//			//|| e.getAction() == MotionEvent.ACTION_BUTTON_RELEASE
-//			//|| e.getAction() == MotionEvent.ACTION_HOVER_EXIT
-//			|| e.getAction() == MotionEvent.ACTION_CANCEL
-//			//|| e.getAction() == MotionEvent.ACTION_OUTSIDE
-//			;
-
-		//final boolean isPointerDown = e.getAction() == MotionEvent.ACTION_DOWN;
-
-
-//		final boolean wasPointerPressed = _isPointerPressed;
-//		if (e.getAction() == MotionEvent.ACTION_DOWN) {
-//			// Note: The ACTION_POINTER_DOWN is only for subsequent pointers in case of multi-touch
-//			_isPointerPressed = true;
-//		} else if (e.getAction() == MotionEvent.ACTION_UP || e.getAction() == MotionEvent.ACTION_CANCEL) {
-//			// Note: In case of multi-touch the ACTION_UP is for the last pointer
-//			_isPointerPressed = false;
-//		}
-
-
-//		// It's possible that for visual constraints (e.g. clipping), the view must not handle the touch.
-//		// If that's the case, the touch event must be dispatched to other controls.
-//		// This check must be done independent of whether the gestureDetector is tested
-//		// because some controls may want to react to the gesture (e.g. action_cancel, action_up)
-//		// even if the point is outside the view bounds.
-//		//_isPointInView = isMotionInView(_transformedTouchX, _transformedTouchY); // takes clipping into account
-//		boolean isPointInView = (e.getAction() == MotionEvent.ACTION_UP && wasPointerPressed)
-//			// || isCaptured() // Can we do that in managed ?
-//			|| isMotionInView(e.getX(), e.getY());
-
-
-//		if (isPointerDown) {
-//			_isPointerPressed = isPointInView;
-//		} else if (isPointerUp) {
-//			_isPointerPressed = false;
-//		}
-
-//		if (!isPointInView
-//			&& e.getAction() != MotionEvent.ACTION_UP
-//			&& e.getAction() != MotionEvent.ACTION_POINTER_UP
-//			&& e.getAction() != MotionEvent.ACTION_BUTTON_RELEASE
-//			&& e.getAction() != MotionEvent.ACTION_HOVER_EXIT
-//			&& e.getAction() != MotionEvent.ACTION_CANCEL
-//			&& e.getAction() != MotionEvent.ACTION_OUTSIDE)
-//		if (!isPointInView)
-//		{
-//			Log.i(LOGTAG, _indent + "BLOCKED [isPointInView: " + isPointInView + "]");
-//
-//			// The event was wrongly dispatched to this View (clipping / transform was not taken in consideration?)
-//			// so we just ignore it.
-//			return false;
-//		}
-
-		// if (!_isPointInView) {
-		// 	return false;
-		// }
-
-		// When we receive a pointer DOWN, we have to reset the down -> move -> up sequence,
-		// so the dispatch will re-evaluate the _customDispatchTouchTarget;
-		// Note: we do not support the MotionEvent splitting for the custom touch target,
-		//		 we expect that the children will properly split the events
-		if (e.getAction() == MotionEvent.ACTION_DOWN) {
-			_isCustomDispatchingTouchEvents = _childrenTransformations.size() != 0;
-			_customDispatchTouchTarget = null;
-		}
-
-		// Log.i(LOGTAG, _indent + "_isPointInView: " + _isPointInView);
-
-		// Note: Always dispatch the touch events, otherwise system controls may not behave
-		//		 properly, such as not displaying "material design" animation cues
-		//		 (e.g. the growing circles in buttons when keeping pressed (RippleEffect)).
-
-		boolean handled;
-		if (_isCustomDispatchingTouchEvents) {
-			Log.i(LOGTAG, _indent + "CUSTOM dispatch (" + _childrenTransformations.size() + " of " + getChildCount() + " children are transformed )");
-
-			handled = dispatchStaticTransformedMotionEvent(e, dispatch);
-		} else {
-			Log.i(LOGTAG, _indent + "SUPER dispatch (none of the " + getChildCount() + " children is transformed)");
-
-			// We don't have any child which has a static transform, so propagate the event through the 'super' logic
-
-			// _shouldBlockRequestFocus: This is a hacky way to prevent requestFocus() being incorrectly called for views whose parent is
-			// using the 'static transformation path.' The better fix would be for the static transformation code path to import more of
-			// ViewGroup's logic to only propagate dispatchTouchEvent() to children selectively.
-			//_shouldBlockRequestFocus = !isPointInView && e.getAction() == MotionEvent.ACTION_UP && hasTransformedSiblings();
-			handled = dispatch.ToSuper(e);
-			//_shouldBlockRequestFocus = false;
-		}
-
-		// final boolean didPointerExit = wasPointInView
-		// 	&& !_isPointInView
-		// 	&& (e.getActionMasked() == MotionEvent.ACTION_MOVE || e.getActionMasked() == MotionEvent.ACTION_CANCEL);
-
-		// final boolean isCurrentPointer = isCurrentPointer(e, _isPointInView);
-		//final boolean isCurrentPointer = false;
-
-//		if (!_isCurrentMotionDispatchedToAChildUnoViewGroup) // All children are native
-//		{
-//			// Log.i(LOGTAG, _indent + "!_childIsUnoViewGroup: " + !_childIsUnoViewGroup);
-//			_isCurrentMotionBlockedByAnyChild = _isCurrentMotionHandledByAnyChild = handled;
-//		}
-
-		// Note: There is a bug (#14712) where the UnoViewGroup receives the MOTION_DOWN,
-		// is collapsed (or the child who received the MOTION_DOWN) (e.g. VisualState concurrency issue)
-		// and doesn't receive the MOTION_UP. This is because the control is removed
-		// from the visual tree when it's collapsed and won't get the dispatchTouchEvent.
-		// To workaround this, simply put a transparent background on the clickable control
-		// so that it receives the touch (tryHandleTouchEvent) instead of its children.
-
-		// only executed if left-hand side is false (prevents event from being handled twice)
-		// gives the current view a chance to block/handle the touch event if none of its children have
-		boolean isBlockingTouchEvent = handled || nativeHitCheck();
-		boolean isHandlingTouchEvent = _isCurrentMotionHandledByAnyChild || (isBlockingTouchEvent /*ie HitTest*/ && tryHandleMotionEvent(e));
-
-		//Log.i(LOGTAG, _indent + "superDispatchTouchEvent: " + superDispatchTouchEvent);
-		//Log.i(LOGTAG, _indent + "_childBlockedTouchEvent: " + _childBlockedTouchEvent);
-		//Log.i(LOGTAG, _indent + "_childHandledTouchEvent: " + _childHandledTouchEvent);
-		//Log.i(LOGTAG, _indent + "isBlockingTouchEvent: " + isBlockingTouchEvent);
-		//Log.i(LOGTAG, _indent + "isHandlingTouchEvent: " + isHandlingTouchEvent);
-
-		ViewParent parent = getParent();
-		Uno.UI.UnoViewParent unoParent = null;
-		while(parent != null)
-		{
-			if (parent instanceof Uno.UI.UnoViewParent) {
-				unoParent = (Uno.UI.UnoViewParent)parent;
-				break;
-			}
-			parent = parent.getParent();
-		}
-
-//		Uno.UI.UnoViewParent parentUnoViewGroup = getParentUnoViewGroup();
-//		boolean parentIsUnoViewGroup = parentUnoViewGroup != null;
-		// Log.i(LOGTAG, _indent + "parentIsUnoViewGroup: " + parentIsUnoViewGroup);
-
-//		if (parentIsUnoViewGroup)
-//		{
-//			parentUnoViewGroup.setChildIsUnoViewGroup(true);
-//		}
-
-		// This is useless at this point, we won't win anything to do this instead of reporting the computed value
-		// if (!_isPointInView && !getIsPointerCaptured())
-		// {
-		// 	// Log.i(LOGTAG, _indent + "!_isPointInView: " + !_isPointInView);
-		// 	return false;
-		// }
-
-		// tryClearCapture(e);
-
-		if (unoParent == null) {
-			// The top element of the visual tree must always reply 'true' in order to receive all pointers events.
-			// (If we reply 'false' to an ACTION_DOWN, we won't receive the subsequent ACTION_MOVE nor ACTION_UP.)
-
-			Log.i(LOGTAG, _indent + "ROOT true [isTarget: " + isBlockingTouchEvent + " | isHandling: " + isHandlingTouchEvent + " | CHILDisHandling: " + _isCurrentMotionHandledByAnyChild + "]");
-
-			return true;
-		}
-		else if (isBlockingTouchEvent)
-		{
-			if (isHandlingTouchEvent) {
-				unoParent.setChildMotionEventResult(this, true, isHandlingTouchEvent);
-			}
-
-			Log.i(LOGTAG, _indent + "TARGET true [isTarget: " + isBlockingTouchEvent + " | isHandling: " + isHandlingTouchEvent + " | CHILDisHandling: " + _isCurrentMotionHandledByAnyChild + "]");
-
-			return true;
-		}
-		else
-		{
-			if (!isHandlingTouchEvent) {
-				Log.e(LOGTAG, _indent + "WHAT THE HELL *********************************************");
-			}
-
-			Log.i(LOGTAG, _indent + "OUT false [isTarget: " + isBlockingTouchEvent + " | isHandling: " + isHandlingTouchEvent + " | CHILDisHandling: " + _isCurrentMotionHandledByAnyChild + "]");
-
-			return false;
-		}
-
-//		else if (unoParent)
-//		{
-//			parentUnoViewGroup.setChildMotionEventResult(this, isBlockingTouchEvent, isHandlingTouchEvent);
-//			// parentUnoViewGroup.setChildHandledTouchEvent(isHandlingTouchEvent);
-//			// parentUnoViewGroup.setChildBlockedTouchEvent(isBlockingTouchEvent);
-//
-//			// Prevents siblings from receiving the touch event.
-//			// Won't actually be read by parent (which will prefer _childBlockedTouchEvent and _childHandledTouchEvent).
-//
-//			Log.i(LOGTAG, _indent + "MANAGED result: " + isBlockingTouchEvent);
-//
-//			// As soon as we are the "touch target", we must return "true" in order to receive future events
-//			// (Like move or up).
-//			return isBlockingTouchEvent; // WE MUST RETURN TRUE TO NATIVE PARENT IN ANY CASES
-//		}
-//		else // parent is native
-//		{
-//			Log.i(LOGTAG, _indent + "NATIVE result: " + isHandlingTouchEvent);
-//
-//			// Native views don't understand the difference between 'blocked' and 'handled',
-//			// and will assume true to mean that the touch event was handled (which can cause problems when nested inside native controls like ListViews).
-//			return isBlockingTouchEvent; // WE MUST RETURN TRUE TO NATIVE PARENT IN ANY CASES
-//		}
-	}
-
-	private boolean dispatchStaticTransformedMotionEvent(MotionEvent event, IDispatchStrategy dispatch) {
-		// As super ViewGroup won't apply the "StaticTransform" on the event (cf. https://android.googlesource.com/platform/frameworks/base/+/0e71b4f19ba602c8c646744e690ab01c69808b42/core/java/android/view/ViewGroup.java#2992)
-		// when it determines if the `MotionEvent` is "in the view" of the child (https://android.googlesource.com/platform/frameworks/base/+/0e71b4f19ba602c8c646744e690ab01c69808b42/core/java/android/view/ViewGroup.java#2975)
-		// the event will be filtered out and won't be propagated properly to all children (https://android.googlesource.com/platform/frameworks/base/+/0e71b4f19ba602c8c646744e690ab01c69808b42/core/java/android/view/ViewGroup.java#2665)
-		// As a result a UIElement which has a `RenderTransform` won't be able to handle tap properly.
-		// To workaround this, if we have some child transformation, we propagate the event by ourselves.
-		// Doing this we bypass a lot of logic done by the super ViewGroup, (https://android.googlesource.com/platform/frameworks/base/+/0e71b4f19ba602c8c646744e690ab01c69808b42/core/java/android/view/ViewGroup.java#2557)
-		// especially optimization of the TouchTarget resolving / tracking. (https://android.googlesource.com/platform/frameworks/base/+/0e71b4f19ba602c8c646744e690ab01c69808b42/core/java/android/view/ViewGroup.java#2654)
-		// We assume that events that are wronlgy dispatched to children are going to be filtered by children themselves
-		// and this support is sufficent enough for our current cases.
-		// Note: this is not fully complient with the UWP contract (cf. https://github.com/nventive/Uno/issues/649)
-
-		// Note: If this logic is called once, it has to be called for all MotionEvents in the same touch cycle, including Cancel, because if
-		// ViewGroup.dispatchTouchEvent() isn't called for Down then all subsequent events won't be handled correctly
-		// (because mFirstTouchTarget won't be set)
-
-		Matrix inverse = new Matrix(); // this is here only for perf considerations
-
-		if (dispatch.getIsTargetCachingSupported() && _customDispatchTouchTarget != null) {
-			// We already have a target for the events, just apply the static transform
-			// and dispatch the event.
-			// Note: We "assumeInView" as all the pointers of the same sequence (down -> move -> up) should be raised
-			//		 on the same element. This behavior a.k.a. "implicit capture" is not the UWP one, but the Android behavior.
-			//		 It will be "patched" to follow the UWP behavior in the managed code (cf. UIElement.CapturePointer).
-			return dispatchStaticTransformedMotionEvent(_customDispatchTouchTarget, event, dispatch, true, inverse);
-
-		} else {
-
-			// The target was not selected yet
-			for (int i = getChildCount() - 1; i >= 0; i--) { // Inverse enumeration in order to prioritize controls that are on top
-				View child = getChildAt(i);
-
-				// Same check as native "canViewReceivePointerEvents"
-				if (child.getVisibility() != View.VISIBLE || child.getAnimation() != null) {
-					continue;
-				}
-
-				if (dispatchStaticTransformedMotionEvent(child, event, dispatch, false, inverse)) {
-					_customDispatchTouchTarget = child;
-					return true; // Stop at the first child which is able to handle the event
-				}
-			}
-
-			return false;
-		}
-	}
-
-	private boolean dispatchStaticTransformedMotionEvent(View child, MotionEvent event, IDispatchStrategy dispatch, boolean assumeInView, Matrix inverseRef){
-		final Matrix transform = _childrenTransformations.get(child);
-		final float offsetX = getScrollX() - child.getLeft();
-		final float offsetY = getScrollY() - child.getTop();
-
-		boolean handled = false;
-		if (transform == null || transform.isIdentity()) {
-			// No meaningful transformation on this child, instead of cloning the MotionEvent,
-			// we only offset the current one, propagate it to the child and then offset it back to its original values.
-
-			event.offsetLocation(offsetX, offsetY);
-
-			// When we are searching for the target (i.e. !assumeInView),
-			// we make sure that the view is under the touch event.
-			if (assumeInView || isMotionInView(child, event)) {
-				handled = dispatch.ToChild(child, event);
-			}
-
-			event.offsetLocation(-offsetX, -offsetY);
-		} else {
-			// We have a valid static transform on this child, we have to transform the MotionEvent
-			// into the child coordinates.
-
-			final MotionEvent transformedEvent = MotionEvent.obtain(event);
-
-			transformedEvent.offsetLocation(offsetX, offsetY);
-			transform.invert(inverseRef);
-			transformedEvent.transform(inverseRef);
-
-			// When we are searching for the target (i.e. !assumeInView),
-			// we make sure that the view is under the touch event.
-			if (assumeInView || isMotionInView(child, transformedEvent)) {
-				handled = dispatch.ToChild(child, transformedEvent);
-			}
-
-			transformedEvent.recycle();
-		}
-
-		return handled;
-	}
-
-	/*
-	/**
-	 * Check if event corresponds to the 'current' pointer, and update current pointer if needed.
-	 * @param e The MotionEvent.
-	 * @param isPointInView Is the point within the bounds of this view.
-	 * @return Does this event correspond to the current pointer, ie the first pointer (finger) to touch this view during the current interaction.
-	 *   /
-	public boolean isCurrentPointer(MotionEvent e, boolean isPointInView) {
-		final int action = e.getActionMasked();
-
-		final int pointerId = e.getPointerId(e.getActionIndex());
-
-		switch (action) {
-			case MotionEvent.ACTION_CANCEL: {
-				// Unset currrent pointer
-				_currentPointerId = -1;
-				return true;
-			}
-			case MotionEvent.ACTION_DOWN:
-			case MotionEvent.ACTION_POINTER_DOWN: {
-				if (isPointInView && _currentPointerId == -1) {
-					// The first pointer we encounter during an interaction becomes the current pointer.
-					_currentPointerId = pointerId;
-					return true;
-				}
-				return false;
-			}
-			case MotionEvent.ACTION_UP:
-			case MotionEvent.ACTION_POINTER_UP: {
-				// True if this matches the pointer received during the down event.
-				final boolean isCurrentPointer = pointerId == _currentPointerId;
-				if (isCurrentPointer || action == MotionEvent.ACTION_UP) {
-					_currentPointerId = -1;
-				}
-				return isCurrentPointer;
-			}
-			default:
-				// Since ActionIndex isn't supplied for events other than up/down, we don't actually
-				// know which pointer this is coming from.
-				return true;
-		}
-	}
-	*/
-
-	private boolean _isNativeTouchEnabled = true;
+	private boolean _isNativeMotionEventsEnabled = true;
 
 	/**
 	 * Sets a boolean which indicates that this View should invoke the 'OnNativeTouch' or not
-	 * Remarks: The 'OnNativeMotionEvent' is the basic for the UWP pointer events, and this flag managed
+	 * Remarks: The 'tryRaiseNativeMotionEvent' is the basic for the UWP pointer events, and this flag managed
 	 * 			by the UIElement when subscribing to any Pointer or Gesture (eg. Tapped) event.
 	 */
-	protected void setIsNativeMotionEventEnabled(boolean isNativeTouchEnabled){
-		_isNativeTouchEnabled = isNativeTouchEnabled;
+	protected void setIsNativeMotionEventsEnabled(boolean isNativeMotionEventsEnabled){
+		_isNativeMotionEventsEnabled = isNativeMotionEventsEnabled;
 	}
+
 	/**
 	 * Gets a boolean which indicates that this View should invoke the 'OnNativeTouch' or not
-	 * Remarks: The 'OnNativeMotionEvent' is the basic for the UWP pointer events, and this flag managed
+	 * Remarks: The 'tryRaiseNativeMotionEvent' is the basic for the UWP pointer events, and this flag managed
 	 * 			by the UIElement when subscribing to any Pointer or Gesture (eg. Tapped) event.
 	 */
-	protected boolean getIsNativeMotionEventEnabled(){
-		return _isNativeTouchEnabled;
+	protected boolean getIsNativeMotionEventsEnabled(){
+		return _isNativeMotionEventsEnabled;
 	}
 
-	private boolean tryHandleMotionEvent(MotionEvent e)
-	{
-		// Log.i(LOGTAG, _indent + "Try to handle touch event | _isTouchEnabled:" + _isTouchEnabled);
-
-		// Note: if we didn't had to track 'blocking' vs 'handled', we could rely only the native 'onTouchEvent' which is
-		//		 already invoked by the 'super.dispatchTouchEvent()'.
-
-		return _isNativeTouchEnabled && OnNativeMotionEvent(e);
-
-		// return _gestureDetector != null && _gestureDetector.onTouchEvent(e, isPointInView, wasPointInView, getIsPointerCaptured(), isCurrentPointer);
-	}
-
-	protected boolean OnNativeMotionEvent(MotionEvent e) {
+	/**
+	 * This is method is invoked when a touch or hover event is bubbling in this View.
+	 * It will be invoked only if getIsNativeMotionEventsEnabled() == true.
+	 * @param event The native motion event
+	 * @param originalSource The original source of this motion event
+	 * @return A bool which indicates if the event was handled (in UWP meaning of "handled")
+	 */
+	protected boolean OnNativeMotionEvent(MotionEvent event, View originalSource) {
 		return false;
 	}
-
-	/*
-	Captures are handle by the managed code
-	private void tryClearCapture(MotionEvent e) {
-		int action = e.getAction();
-		if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP || action == MotionEvent.ACTION_CANCEL) {
-			clearCaptures();
-		}
-	}
-
-	protected void clearCaptures(){
-	}
-	*/
 
 	/**
 	 * Call this method if a view is to be laid out outside of a framework layout pass, to ensure that requestLayout() requests are captured
@@ -919,30 +484,6 @@ public abstract class UnoViewGroup
 		}
 	}
 
-	private Uno.UI.UnoViewParent getParentUnoViewGroup()
-	{
-		ViewParent parent = getParent();
-
-		return parent instanceof Uno.UI.UnoViewParent
-			? (Uno.UI.UnoViewParent)parent
-			: null;
-	}
-
-//	public final void setChildHandledTouchEvent(boolean childHandledTouchEvent)
-//	{
-//		_childHandledTouchEvent |= childHandledTouchEvent;
-//	}
-//
-//	public final void setChildBlockedTouchEvent(boolean childBlockedTouchEvent)
-//	{
-//		_childBlockedTouchEvent |= childBlockedTouchEvent;
-//	}
-//
-//	public final void setChildIsUnoViewGroup(boolean childIsUnoViewGroup)
-//	{
-//		_childIsUnoViewGroup |= childIsUnoViewGroup;
-//	}
-
 	public final void setNativeHitTestVisible(boolean hitTestVisible)
 	{
 		_isHitTestVisible = hitTestVisible;
@@ -951,21 +492,6 @@ public abstract class UnoViewGroup
 	public final void setNativeIsEnabled(boolean isEnabled)
 	{
 		_isEnabled = isEnabled;
-	}
-
-	/**
-	 * The x-coordinate of the current motion event in the view's local coordinate space (ie its top left corner is at (0,0).
-	 * @return
-	 */
-	public final float getTransformedTouchX() {
-		return _transformedTouchX;
-	}
-
-	/**
-	 * The y-coordinate of the current motion event in the view's local coordinate space (ie its top left corner is at (0,0).
-	 */
-	public final float getTransformedTouchY() {
-		return _transformedTouchY;
 	}
 
 	protected abstract boolean nativeHitCheck();
@@ -1041,14 +567,6 @@ public abstract class UnoViewGroup
 		return super.isEnabled();
 	}
 
-	/*public UnoGestureDetector getGestureDetector() {
-		return _gestureDetector;
-	}
-
-	public void setGestureDetector(UnoGestureDetector gestureDetector) {
-		_gestureDetector = gestureDetector;
-	}*/
-
 	@Override
 	public boolean requestFocus(int direction, Rect previouslyFocusedRect) {
 		if (_shouldBlockRequestFocus) {
@@ -1071,116 +589,6 @@ public abstract class UnoViewGroup
         return super.isFocusable();
     }
     */
-
-	/**
-	 * Checks if the given point in the view's local coordinate space is within its bounds, taking any clipping and ancestral clipping into account.
-	 * This will *only* return a valid value if the method has also been called for all visual ancestors for the same absolute (screen-space) point,
-	 * as occurs for UnoViewGroup.dispatchTouchEvent().
-	 * @param x X-coordinate in the view's local coordinate space.
-	 * @param y Y-coordinate in the view's local coordinate space.
-	 * @return True if the point is within the view's bounds, false otherwise.
-	 */
-	public boolean isLocalTouchPointInView(float x, float y) {
-		return x >= 0 && x < getWidth()
-			&& y >= 0 && y < getHeight()
-			&& isWithinClipBounds(x, y);
-
-			// We should not have to check the parent: the pointer should not have been invoked 
-			//&& getIsParentPointInView(getParent()); // Ensures parent clipping (if any) is taken into account.
-	}
-
-	private boolean isWithinClipBounds(float x, float y) {
-		Rect clipBounds = android.support.v4.view.ViewCompat.getClipBounds(this);
-		if (clipBounds != null) {
-			return x >= clipBounds.left && x < clipBounds.right && y >= clipBounds.top && y < clipBounds.bottom;
-		}
-		return true;
-	}
-
-	public static boolean isMotionInView(View view, MotionEvent e) {
-		final float x = e.getX();
-		final float y = e.getY();
-
-		return x >= 0 && x < view.getWidth()
-			&& y >= 0 && y < view.getHeight()
-			&& isWithinClipBounds(view, x, y);
-
-		// We should not have to check the parent: the pointer should not have been invoked
-		//&& getIsParentPointInView(getParent()); // Ensures parent clipping (if any) is taken into account.
-	}
-
-	private static boolean isWithinClipBounds(View view, float x, float y) {
-		Rect clipBounds = android.support.v4.view.ViewCompat.getClipBounds(view);
-		if (clipBounds != null) {
-			return x >= clipBounds.left && x < clipBounds.right && y >= clipBounds.top && y < clipBounds.bottom;
-		}
-		return true;
-	}
-
-//	private static boolean getIsParentPointInView(ViewParent vp) {
-//		if (vp instanceof UnoViewGroup) {
-//			return ((UnoViewGroup) vp).getIsPointInView();
-//		}
-//
-//		if (vp instanceof View) {
-//			return getIsParentPointInView(vp.getParent());
-//		}
-//
-//		// Reached Window
-//		return true;
-//	}
-//
-//	private void updateTransformedTouchCoordinate(MotionEvent e) {
-//		float[] coord = getTransformedTouchCoordinate(getParent(), e);
-//		calculateTransformedPoint(this, coord);
-//		_transformedTouchX = coord[0];
-//		_transformedTouchY = coord[1];
-//	}
-
-	/**
-	 * Transforms a point from the coordinate space of a view's parent to the view's coordinate space.
-	 *
-	 * The logic here is essentially the inverse of {@link #android.view.View.transformFromViewToWindowSpace(int[])} (which walks up the tree instead of down).
-	 * @param view The view to put the point in the coordinate space of.
-	 * @param point The point to be transformed as [x, y]
-	 */
-	private static void calculateTransformedPoint(View view, float[] point) {
-		ViewParent viewParent = view.getParent();
-		if (viewParent instanceof View) {
-			final View parent = (View) viewParent;
-			point[0] += parent.getScrollX();
-			point[1] += parent.getScrollY();
-		}
-
-		point[0] -= view.getLeft();
-		point[1] -= view.getTop();
-
-		// Check the render transform applied by the parent UnoViewGroup
-		Matrix inverse = new Matrix();
-		if (viewParent instanceof UnoViewGroup) {
-			Matrix parentMatrix = ((UnoViewGroup) viewParent).getChildStaticMatrix(view);
-			if (!parentMatrix.isIdentity()) {
-				parentMatrix.invert(inverse);
-				inverse.mapPoints(point);
-			}
-		}
-
-		// Then apply the transform defined directly on this view
-		Matrix localMatrix = view.getMatrix();
-		if (!localMatrix.isIdentity()) {
-			localMatrix.invert(inverse);
-			inverse.mapPoints(point);
-		}
-	}
-
-	private Matrix getChildStaticMatrix(View view) {
-		Matrix transform = _childrenTransformations.get(view);
-		if (transform == null) {
-			transform = new Matrix();
-		}
-
-		return transform;
-	}
 
 	/**
 	 * Sets the static transform matrix to apply to the given child view.
@@ -1276,54 +684,11 @@ public abstract class UnoViewGroup
 		return didFindTransform;
 	}
 
-	/**
-	 * Get touch coordinate transformed to a view's local space. If view is a UnoViewGroup, use already-calculated value;
-	 * interpolate offsets for any non-UnoViewGroups in the visual hierarchy, and use the raw absolute position at the
-	 * very top of the tree.
-	 */
-	private static float[] getTransformedTouchCoordinate(ViewParent view, MotionEvent e) {
-		// First try to get the transformed touches from the parent if it's a UIElement (UnoViewGroup)
-		if (view instanceof UnoViewGroup) {
-			// Just use cached value
-			float[] point = new float[2];
-			point[0] = ((UnoViewGroup) view).getTransformedTouchX();
-			point[1] = ((UnoViewGroup) view).getTransformedTouchY();
-			return point;
-		}
-
-		// Non-UIElement view, walk the tree up to the next UIElement
-		// (and adjust coordinate for each layer to include its location, i.e. Top, Left, etc.)
-		final ViewParent parent = view.getParent();
-		if (parent instanceof View) {
-			// Not at root, walk upward
-			float[] coords = getTransformedTouchCoordinate(parent, e);
-			calculateTransformedPoint((View) view, coords);
-			return coords;
-		}
-
-		// We reached the top of the tree
-		float[] point = new float[2];
-		point[0] = e.getRawX();
-		point[1] = e.getRawY();
-		if (view instanceof View) {
-			// Call getLocationOnScreen() to get window offsets which may be non-zero, eg in the case of a popup
-			int[] screenLocation = new int[2];
-			((View) view).getLocationOnScreen(screenLocation);
-			point[0] -= screenLocation[0];
-			point[1] -= screenLocation[1];
-		}
-		return point;
-	}
-
 	// Allows UI automation operations to look for a single 'Text' property for both ViewGroup and TextView elements.
 	// Is mapped to the UIAutomationText property
 	public String getText() {
 		return null;
 	}
-
-//	boolean getIsPointInView() {
-//		return _isPointInView;
-//	}
 
 	public boolean getIsAnimationInProgress() {
 		return _isAnimating;

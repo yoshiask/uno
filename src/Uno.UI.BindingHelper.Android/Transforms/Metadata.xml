@@ -22,4 +22,6 @@
 	<attr path="/api/package[@name='Uno.UI']/class[@name='UnoViewGroup']/method[@name='getIsPointerCaptured' and count(parameter)=0]" name="visibility">protected</attr>
 	<attr path="/api/package[@name='Uno.UI']/class[@name='UnoViewGroup']/method[@name='setIsPointerCaptured' and count(parameter)=1 and parameter[1][@type='boolean']]" name="visibility">protected</attr>
 
+	<!--<attr path="/api/package[@name='Uno.UI']/class[@name='UnoViewParent']" name="visibility">internal</attr>-->
+	<remove-node path="/api/package[@name='Uno.UI']/interface[@name='UnoViewParent']" />
 </metadata>

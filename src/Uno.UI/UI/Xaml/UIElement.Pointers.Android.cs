@@ -31,7 +31,7 @@ namespace Windows.UI.Xaml
 
 			/// <inheritdoc />
 			public bool OnTouch(View view, MotionEvent nativeEvent)
-				=> _target.OnNativeTouch(nativeEvent);
+				=> _target.OnNativeMotionEvent(nativeEvent, view);
 		}
 
 		//private class TouchListener : Java.Lang.Object, View.IOnTouchListener
@@ -62,7 +62,7 @@ namespace Windows.UI.Xaml
 		{
 			if (handlersCount == 1)
 			{
-				IsNativeTouchEnabled = true;
+				IsNativeMotionEventsEnabled = true;
 				// ??? this.SetOnTouchListener(TouchListener.Instance);
 
 				// TODO: Enable pointer events reporting
@@ -77,7 +77,7 @@ namespace Windows.UI.Xaml
 			}
 		}
 
-		protected sealed override bool OnNativeTouch(MotionEvent nativeEvent)
+		protected sealed override bool OnNativeMotionEvent(MotionEvent nativeEvent, View originalSource)
 		{
 			if (nativeEvent.PointerCount > 1)
 			{
