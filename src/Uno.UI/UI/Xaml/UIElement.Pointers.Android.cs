@@ -7,6 +7,7 @@ using Windows.UI.Input;
 using Windows.UI.Xaml.Input;
 using Android.Runtime;
 using Android.Views;
+using Microsoft.Extensions.Logging;
 using Uno.Extensions;
 using Uno.Logging;
 
@@ -31,7 +32,7 @@ namespace Windows.UI.Xaml
 
 			/// <inheritdoc />
 			public bool OnTouch(View view, MotionEvent nativeEvent)
-				=> _target.OnNativeMotionEvent(nativeEvent, view);
+				=> _target.OnNativeMotionEvent(nativeEvent, view, true);
 		}
 
 		//private class TouchListener : Java.Lang.Object, View.IOnTouchListener
@@ -77,7 +78,7 @@ namespace Windows.UI.Xaml
 			}
 		}
 
-		protected sealed override bool OnNativeMotionEvent(MotionEvent nativeEvent, View originalSource)
+		protected sealed override bool OnNativeMotionEvent(MotionEvent nativeEvent, View originalSource, bool isInView)
 		{
 			if (nativeEvent.PointerCount > 1)
 			{
@@ -114,14 +115,18 @@ namespace Windows.UI.Xaml
 				case MotionEventActions.PointerUp:
 					return OnNativePointerUp(args);
 
-				case MotionEventActions.Move: // when IsCaptured(args.Pointer) || IsInView(args.Pointer):
-				case MotionEventActions.HoverMove: //when IsCaptured(args.Pointer) || IsInView(args.Pointer):
+				case MotionEventActions.Move:
+				case MotionEventActions.HoverMove:
 					return OnNativePointerMove(args);
 
 				case MotionEventActions.Cancel:
-					return OnNativePointerCancel(args, isSwallowedBySystem: true /* TODO: Check if we can determine the real reason */);
+					return OnNativePointerCancel(args, isSwallowedBySystem: true);
 
 				default:
+					if (this.Log().IsEnabled(LogLevel.Warning))
+					{
+						this.Log().Warn($"We receive a native motion event of '{nativeEvent.ActionMasked}', but this is not supported and should have been filtered out in native code.");
+					}
 					return false;
 			}
 		}
@@ -136,7 +141,7 @@ namespace Windows.UI.Xaml
 
 		partial void OnIsHitTestVisibleChangedPartial(bool oldValue, bool newValue)
 		{
-			base.SetNativeHitTestVisible(newValue);
+			base.SetNativeIsHitTestVisible(newValue);
 		}
 
 		// This section is using the UnoViewGroup overrides for performance reasons

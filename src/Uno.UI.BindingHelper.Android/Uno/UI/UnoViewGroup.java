@@ -3,7 +3,6 @@ package Uno.UI;
 import android.graphics.Matrix;
 import android.view.*;
 import android.view.animation.Transformation;
-import android.graphics.Rect;
 import android.util.Log;
 
 import java.lang.*;
@@ -14,7 +13,7 @@ import java.util.HashMap;
 
 public abstract class UnoViewGroup
 	extends android.view.ViewGroup
-	implements Uno.UI.UnoViewParent {
+	implements Uno.UI.UnoMotionTarget {
 
 	private static final String LOGTAG = "UnoViewGroup";
 	private static boolean _isLayoutingFromMeasure = false;
@@ -23,24 +22,11 @@ public abstract class UnoViewGroup
 	private boolean _inLocalAddView, _inLocalRemoveView;
 	private boolean _isEnabled;
 	private boolean _isHitTestVisible;
-	// private UnoGestureDetector _gestureDetector;
-
-//	private boolean _childHandledTouchEvent;
-//	private boolean _childBlockedTouchEvent;
-//	private boolean _childIsUnoViewGroup;
 
 	private boolean _isManagedLoaded;
 	private boolean _needsLayoutOnAttachedToWindow;
 
-	//private boolean _isPointInView;
-
-	private boolean _shouldBlockRequestFocus;
-
-	private int _currentPointerId = -1;
-
 	private Map<View, Matrix> _childrenTransformations = new HashMap<View, Matrix>();
-	private float _transformedTouchX;
-	private float _transformedTouchY;
 
 	private boolean _isAnimating;
 
@@ -356,93 +342,33 @@ public abstract class UnoViewGroup
 		super.setAlpha(opacity);
 	}
 
-	private abstract class MotionTarget extends Uno.UI.DispatchMotionTarget {
-		protected MotionTarget() {
-			super(UnoViewGroup.this);
-		}
-
-		@Override
-		public ViewGroup getView() { return UnoViewGroup.this; }
-
-		@Override
-		public int getChildRenderTransformCount() { return UnoViewGroup.this._childrenTransformations.size(); }
-
-		@Override
-		public Matrix findRenderTransform(View child) { return UnoViewGroup.this._childrenTransformations.get(child); }
-
-		@Override
-		public boolean getIsHitTestVisible() { return UnoViewGroup.this._isHitTestVisible; }
-
-		@Override
-		public boolean nativeHitCheck() { return UnoViewGroup.this.nativeHitCheck(); }
-
-		@Override
-		public boolean getIsEnable() { return UnoViewGroup.this._isEnabled; }
-
-		@Override
-		public boolean tryRaiseNativeMotionEvent(MotionEvent event, View originalSource) {
-			return UnoViewGroup.this._isNativeMotionEventsEnabled && UnoViewGroup.this.OnNativeMotionEvent(event, originalSource);
-		}
-	}
-
-	private class DispatchTouchStrategy extends MotionTarget
+	private class TouchMotionTarget extends Uno.UI.TouchMotionTarget
 	{
-		@Override
-		public boolean getIsTargetCachingSupported() { return true; }
-
-		@Override
-		public boolean dispatchToSuper(MotionEvent event) { return UnoViewGroup.super.dispatchTouchEvent(event); }
-
-		@Override
-		public boolean dispatchToChild(View view, MotionEvent event) { return view.dispatchTouchEvent(event); }
+		TouchMotionTarget() { super(UnoViewGroup.this); }
+		@Override public boolean dispatchToSuper(MotionEvent event) { return Uno.UI.UnoViewGroup.super.dispatchTouchEvent(event); }
 	}
 
-	private class DispatchGenericMotionStrategy extends MotionTarget
+	private class GenericMotionTarget extends Uno.UI.GenericMotionTarget
 	{
-		@Override
-		public boolean getIsTargetCachingSupported() { return false; }
-
-		@Override
-		public boolean dispatchToSuper(MotionEvent event) { return UnoViewGroup.super.dispatchGenericMotionEvent(event); }
-
-		@Override
-		public boolean dispatchToChild(View view, MotionEvent event) { return view.dispatchGenericMotionEvent(event); }
+		GenericMotionTarget() { super(UnoViewGroup.this); }
+		@Override public boolean dispatchToSuper(MotionEvent event) { return Uno.UI.UnoViewGroup.super.dispatchGenericMotionEvent(event); }
 	}
 
-	private final Uno.UI.DispatchMotionTarget _thisAsTouchTarget = new DispatchTouchStrategy();
-	private final Uno.UI.DispatchMotionTarget _thisAsGenericMotionTarget = new DispatchGenericMotionStrategy();
+	private final Uno.UI.MotionTargetAdapter _thisAsTouchTarget = new TouchMotionTarget();
+	private final Uno.UI.MotionTargetAdapter _thisAsGenericMotionTarget = new GenericMotionTarget();
 
-	public boolean dispatchTouchEvent(MotionEvent event) { return Uno.UI.UnoMotionHelper.Instance.dispatchMotionEvent(_thisAsTouchTarget, event); }
-	public boolean dispatchGenericMotionEvent(MotionEvent event) { return Uno.UI.UnoMotionHelper.Instance.dispatchMotionEvent(_thisAsGenericMotionTarget, event); }
+	@Override public /* TODO: final */ boolean dispatchTouchEvent(MotionEvent event) {
+		return Uno.UI.UnoMotionHelper.Instance.dispatchMotionEvent(_thisAsTouchTarget, event);
+	}
+	@Override public final boolean dispatchGenericMotionEvent(MotionEvent event) {
+		return Uno.UI.UnoMotionHelper.Instance.dispatchMotionEvent(_thisAsGenericMotionTarget, event);
+	}
 
 	private boolean _isNativeMotionEventsEnabled = true;
+	@Override public /* protected in C# */ final boolean getIsNativeMotionEventsEnabled(){ return _isNativeMotionEventsEnabled; }
+	public /* protected in C# */ final void setIsNativeMotionEventsEnabled(boolean isNativeMotionEventsEnabled){ _isNativeMotionEventsEnabled = isNativeMotionEventsEnabled; }
 
-	/**
-	 * Sets a boolean which indicates that this View should invoke the 'OnNativeTouch' or not
-	 * Remarks: The 'tryRaiseNativeMotionEvent' is the basic for the UWP pointer events, and this flag managed
-	 * 			by the UIElement when subscribing to any Pointer or Gesture (eg. Tapped) event.
-	 */
-	protected void setIsNativeMotionEventsEnabled(boolean isNativeMotionEventsEnabled){
-		_isNativeMotionEventsEnabled = isNativeMotionEventsEnabled;
-	}
-
-	/**
-	 * Gets a boolean which indicates that this View should invoke the 'OnNativeTouch' or not
-	 * Remarks: The 'tryRaiseNativeMotionEvent' is the basic for the UWP pointer events, and this flag managed
-	 * 			by the UIElement when subscribing to any Pointer or Gesture (eg. Tapped) event.
-	 */
-	protected boolean getIsNativeMotionEventsEnabled(){
-		return _isNativeMotionEventsEnabled;
-	}
-
-	/**
-	 * This is method is invoked when a touch or hover event is bubbling in this View.
-	 * It will be invoked only if getIsNativeMotionEventsEnabled() == true.
-	 * @param event The native motion event
-	 * @param originalSource The original source of this motion event
-	 * @return A bool which indicates if the event was handled (in UWP meaning of "handled")
-	 */
-	protected boolean OnNativeMotionEvent(MotionEvent event, View originalSource) {
+	@Override public /* protected in C# */ boolean onNativeMotionEvent(MotionEvent event, View originalSource, boolean isInView) {
 		return false;
 	}
 
@@ -484,17 +410,13 @@ public abstract class UnoViewGroup
 		}
 	}
 
-	public final void setNativeHitTestVisible(boolean hitTestVisible)
-	{
-		_isHitTestVisible = hitTestVisible;
-	}
+	public final void setNativeIsHitTestVisible(boolean hitTestVisible) { _isHitTestVisible = hitTestVisible; }
+	public /* hidden to C# */ final boolean getNativeIsHitTestVisible() { return _isHitTestVisible; }
 
-	public final void setNativeIsEnabled(boolean isEnabled)
-	{
-		_isEnabled = isEnabled;
-	}
+	public final void setNativeIsEnabled(boolean isEnabled) { _isEnabled = isEnabled; }
+	public /* hidden to C# */ final boolean getNativeIsEnabled() { return _isEnabled; }
 
-	protected abstract boolean nativeHitCheck();
+	public /* protected in C# */ abstract boolean nativeHitCheck();
 
 	protected final void onAttachedToWindow()
 	{
@@ -567,16 +489,6 @@ public abstract class UnoViewGroup
 		return super.isEnabled();
 	}
 
-	@Override
-	public boolean requestFocus(int direction, Rect previouslyFocusedRect) {
-		if (_shouldBlockRequestFocus) {
-			// We return 'true' because otherwise performClick() gets called
-			return true;
-		}
-
-		return super.requestFocus(direction, previouslyFocusedRect);
-	}
-
     /*
     // Not supported because set is no virtual
     public final void setFocusable(boolean focusable)
@@ -592,12 +504,12 @@ public abstract class UnoViewGroup
 
 	/**
 	 * Sets the static transform matrix to apply to the given child view.
-	 * This will be used by the {@link #android.view.ViewGroup.getChildStaticTransformation()}
+	 * This will be used by the {@link #getChildStaticTransformation(View, Transformation)}
 	 *
 	 * @param child The view to which the matrix applies.
 	 * @param transform The transformation matrix to apply.
 	 */
-	protected void setChildRenderTransform(View child, Matrix transform) {
+	protected final void setChildRenderTransform(View child, Matrix transform) {
 		_childrenTransformations.put(child, transform);
 		if (_childrenTransformations.size() == 1) {
 			setStaticTransformationsEnabled(true);
@@ -609,7 +521,7 @@ public abstract class UnoViewGroup
 	 *
 	 * @param child The view to which the matrix applies.
 	 */
-	protected void removeChildRenderTransform(View child) {
+	protected final void removeChildRenderTransform(View child) {
 		_childrenTransformations.remove(child);
 		if (_childrenTransformations.size() == 0) {
 			setStaticTransformationsEnabled(false);
@@ -627,6 +539,9 @@ public abstract class UnoViewGroup
 
 		return true;
 	}
+
+	public /* hidden to C# */ int getChildrenRenderTransformCount() { return _childrenTransformations.size(); }
+	public /* hidden to C# */ Matrix findChildRenderTransform(View child) { return _childrenTransformations.get(child); }
 
 	private boolean hasTransformedChildren() {
 		return  _childrenTransformations.size() != 0;

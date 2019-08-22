@@ -345,20 +345,39 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Compile Update="BaseActivity.Callbacks.Implementation.Android.cs">
+	    <Generator>MSBuild:Compile</Generator>
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>BaseActivity.Callbacks.Implementation.Android.tt</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="BaseActivity.Callbacks.Implementation.Android.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>BaseActivity.Callbacks.Implementation.Android.tt</DependentUpon>
+	  </None>
 	  <None Update="BaseActivity.Callbacks.Implementation.Android.tt">
 	    <Generator>TextTemplatingFileGenerator</Generator>
+	    <LastGenOutput>BaseActivity.Callbacks.Implementation.Android.cs</LastGenOutput>
 	  </None>
 	  <None Update="Mixins\macOS\FrameworkElementMixins.tt">
 	    <Generator>TextTemplatingFileGenerator</Generator>
+	    <LastGenOutput>FrameworkElementMixins.g.cs</LastGenOutput>
 	  </None>
 	  <None Update="Mixins\macOS\VisualStatesMixins.tt">
 	    <Generator>TextTemplatingFileGenerator</Generator>
+	    <LastGenOutput>VisualStatesMixins.g.cs</LastGenOutput>
 	  </None>
 	  <None Update="Mixins\net461\VisualStatesMixins.tt">
 	    <Generator>TextTemplatingFileGenerator</Generator>
+	    <LastGenOutput>VisualStatesMixins.g.cs</LastGenOutput>
 	  </None>
 	  <None Update="Mixins\Wasm\VisualStatesMixins.tt">
 	    <Generator>TextTemplatingFileGenerator</Generator>
+	    <LastGenOutput>VisualStatesMixins.g.cs</LastGenOutput>
 	  </None>
 	</ItemGroup>
 
