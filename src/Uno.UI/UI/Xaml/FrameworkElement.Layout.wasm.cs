@@ -69,7 +69,7 @@ namespace Windows.UI.Xaml
 				|| double.IsInfinity(desiredSize.Height)
 			)
 			{
-				throw new InvalidOperationException($"{this}: Invalid measured size {desiredSize}. NaN or Infinity are invalid desired size.");
+				throw new InvalidOperationException($"{this}: Invalid measured size {desiredSize} (available is {availableSize}). NaN or Infinity are invalid desired size.");
 			}
 
 			desiredSize = desiredSize.AtLeast(minSize);

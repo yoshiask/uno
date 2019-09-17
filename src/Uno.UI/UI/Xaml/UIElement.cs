@@ -249,6 +249,18 @@ namespace Windows.UI.Xaml
 			return dp == null ? null : owner.GetValue(dp);
 		}
 
+		internal static bool SetDependencyPropertyValueInternal(DependencyObject owner, string dependencyPropertyName, string value)
+		{
+			var dp = DependencyProperty.GetProperty(owner.GetType(), dependencyPropertyName);
+			if(dp == null)
+			{
+				return false;
+			}
+
+			owner.SetValue(dp, value);
+			return true;
+		}
+
 		internal Rect LayoutSlot { get; set; } = default;
 
 #if !__WASM__

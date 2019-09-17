@@ -12,7 +12,7 @@
 			<SolidColorBrush x:Name="backColor" Color="LightPink"/>
 		</Grid.Background>
 		<VisualStateManager.VisualStateGroups>
-			<VisualStateGroup x:Name="sampleGrp">
+			<VisualStateGroup x:Name="sampleGrp" CurrentStateChanged="SampleGrp_OnCurrentStateChanged">
 				<VisualState x:Name="Small">
 					<VisualState.StateTriggers>
 						<AdaptiveTrigger MinWindowWidth="0" />
@@ -40,11 +40,20 @@
 			</VisualStateGroup>
 		</VisualStateManager.VisualStateGroups>
 		<TextBlock x:Name="txt" />
-		<u:StarStackPanel Orientation="Horizontal" Sizes="190,*" VerticalAlignment="Bottom">
-			<TextBlock>
-				Large width: <Run Text="{Binding Value, ElementName=slider}" />px
-			</TextBlock>
-			<Slider x:Name="slider" Minimum="100" Maximum="1500" StepFrequency="10" Value="500" />
-		</u:StarStackPanel>
+		<StackPanel VerticalAlignment="Bottom">
+			<u:StarStackPanel Orientation="Horizontal" Sizes="190,*">
+				<TextBlock>
+					Large width: <Run Text="{Binding Value, ElementName=slider}" />px
+				</TextBlock>
+				<Slider x:Name="slider" Minimum="100" Maximum="2500" StepFrequency="10" Value="500" />
+				<TextBlock Text="{Binding Value, ElementName=slider}" />
+			</u:StarStackPanel>
+			<u:StarStackPanel Orientation="Horizontal" Sizes="Auto" VerticalAlignment="Bottom" HorizontalAlignment="Left">
+				<TextBlock Text="Current State:" />
+				<TextBlock x:Name="currentState" FontWeight="Bold" />
+				<TextBlock Text=" / Current Width:" />
+				<TextBlock x:Name="currentWidth" FontWeight="Bold" />
+			</u:StarStackPanel>
+		</StackPanel>
 	</Grid>
 </Page>

@@ -28,5 +28,24 @@ namespace Uno.UI.Helpers
 				return "";
 			}
 		}
+		[Preserve]
+		public static string SetDependencyPropertyValue(int handle, string propertyName, string value)
+		{
+			// Dispatch to right object, if we can find it
+			if (UIElement.GetElementFromHandle(handle) is UIElement element)
+			{
+				if (UIElement.GetDependencyPropertyValueInternal(element, propertyName, value))
+				{
+					return "ok";
+				}
+				Console.Error.WriteLine($"Can't set property \"{propertyName}\" to \"{value}\" on \"{handle}\".");
+				return "err";
+			}
+			else
+			{
+				Console.Error.WriteLine($"No UIElement found for htmlId \"{handle}\"");
+				return "err";
+			}
+		}
 	}
 }
