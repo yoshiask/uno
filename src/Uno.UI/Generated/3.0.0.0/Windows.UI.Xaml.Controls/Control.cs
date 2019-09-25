@@ -653,27 +653,6 @@ namespace Windows.UI.Xaml.Controls
 			global::Windows.Foundation.Metadata.ApiInformation.TryRaiseNotImplemented("Windows.UI.Xaml.Controls.Control", "void Control.OnDrop(DragEventArgs e)");
 		}
 		#endif
-		#if __ANDROID__ || __IOS__ || NET461 || __WASM__ || __MACOS__
-		[global::Uno.NotImplemented]
-		protected virtual void OnPreviewKeyDown( global::Windows.UI.Xaml.Input.KeyRoutedEventArgs e)
-		{
-			global::Windows.Foundation.Metadata.ApiInformation.TryRaiseNotImplemented("Windows.UI.Xaml.Controls.Control", "void Control.OnPreviewKeyDown(KeyRoutedEventArgs e)");
-		}
-		#endif
-		#if __ANDROID__ || __IOS__ || NET461 || __WASM__ || __MACOS__
-		[global::Uno.NotImplemented]
-		protected virtual void OnPreviewKeyUp( global::Windows.UI.Xaml.Input.KeyRoutedEventArgs e)
-		{
-			global::Windows.Foundation.Metadata.ApiInformation.TryRaiseNotImplemented("Windows.UI.Xaml.Controls.Control", "void Control.OnPreviewKeyUp(KeyRoutedEventArgs e)");
-		}
-		#endif
-		#if __ANDROID__ || __IOS__ || NET461 || __WASM__ || __MACOS__
-		[global::Uno.NotImplemented]
-		protected virtual void OnCharacterReceived( global::Windows.UI.Xaml.Input.CharacterReceivedRoutedEventArgs e)
-		{
-			global::Windows.Foundation.Metadata.ApiInformation.TryRaiseNotImplemented("Windows.UI.Xaml.Controls.Control", "void Control.OnCharacterReceived(CharacterReceivedRoutedEventArgs e)");
-		}
-		#endif
 		// Forced skipping of method Windows.UI.Xaml.Controls.Control.BackgroundSizingProperty.get
 		// Forced skipping of method Windows.UI.Xaml.Controls.Control.CornerRadiusProperty.get
 		// Forced skipping of method Windows.UI.Xaml.Controls.Control.DefaultStyleResourceUriProperty.get

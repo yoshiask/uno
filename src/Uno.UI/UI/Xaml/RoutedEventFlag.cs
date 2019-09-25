@@ -18,6 +18,9 @@ namespace Uno.UI.Xaml
 		KeyDown = 1 << 9,
 		KeyUp = 1 << 10,
 		GotFocus = 1 << 11,
-		LostFocus = 1 << 12
+		LostFocus = 1 << 12,
+		PreviewKeyDown = 1 << 13, // Tunneling event
+		PreviewKeyUp = 1 << 14, // Tunneling event
+		CharacterReceived = 1 << 15
 	}
 }

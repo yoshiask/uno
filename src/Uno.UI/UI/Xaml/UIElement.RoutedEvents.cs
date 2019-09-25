@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Windows.Foundation;
 using Windows.UI.Xaml.Input;
 using Uno;
 using Uno.Extensions;
@@ -77,11 +78,17 @@ namespace Windows.UI.Xaml
 
 		public static RoutedEvent KeyDownEvent { get; } = new RoutedEvent(RoutedEventFlag.KeyDown);
 
+		public static RoutedEvent PreviewKeyDownEvent { get; } = new RoutedEvent(RoutedEventFlag.PreviewKeyDown, isTunneling: true);
+
 		public static RoutedEvent KeyUpEvent { get; } = new RoutedEvent(RoutedEventFlag.KeyUp);
+
+		public static RoutedEvent PreviewKeyUpEvent { get; } = new RoutedEvent(RoutedEventFlag.PreviewKeyUp, isTunneling: true);
 
 		internal static RoutedEvent GotFocusEvent { get; } = new RoutedEvent(RoutedEventFlag.GotFocus);
 
 		internal static RoutedEvent LostFocusEvent { get; } = new RoutedEvent(RoutedEventFlag.LostFocus);
+
+		public static RoutedEvent CharacterReceivedEvent { get; } = new RoutedEvent(RoutedEventFlag.CharacterReceived);
 
 		/// <summary>
 		/// Allow access to "native" tapped before bubbling starts
@@ -266,6 +273,24 @@ namespace Windows.UI.Xaml
 		{
 			add => AddHandler(KeyUpEvent, value, false);
 			remove => RemoveHandler(KeyUpEvent, value);
+		}
+
+		public event KeyEventHandler PreviewKeyDown
+		{
+			add => AddHandler(PreviewKeyDownEvent, value, false);
+			remove => RemoveHandler(PreviewKeyDownEvent, value);
+		}
+
+		public event KeyEventHandler PreviewKeyUp
+		{
+			add => AddHandler(PreviewKeyUpEvent, value, false);
+			remove => RemoveHandler(PreviewKeyUpEvent, value);
+		}
+
+		public event TypedEventHandler<UIElement, CharacterReceivedRoutedEventArgs> CharacterReceived
+		{
+			add => AddHandler(CharacterReceivedEvent, value, false);
+			remove => RemoveHandler(CharacterReceivedEvent, value);
 		}
 
 		public void AddHandler(RoutedEvent routedEvent, object handler, bool handledEventsToo)

@@ -215,6 +215,21 @@ namespace Windows.UI.Xaml.Controls
 			{
 				LostFocus += OnLostFocus;
 			}
+
+			if (implementedEvents.HasFlag(RoutedEventFlag.PreviewKeyDown))
+			{
+				PreviewKeyDown += OnPreviewKeyDown;
+			}
+
+			if (implementedEvents.HasFlag(RoutedEventFlag.PreviewKeyUp))
+			{
+				PreviewKeyUp += OnPreviewKeyUp;
+			}
+
+			if (implementedEvents.HasFlag(RoutedEventFlag.CharacterReceived))
+			{
+				CharacterReceived += OnCharacterReceived;
+			}
 		}
 
 		protected override void OnLoaded()
@@ -699,14 +714,8 @@ namespace Windows.UI.Xaml.Controls
 				CanBubbleNatively = false
 			};
 
-			if (newValue == FocusState.Unfocused)
-			{
-				RaiseEvent(LostFocusEvent, eventArgs);
-			}
-			else
-			{
-				RaiseEvent(GotFocusEvent, eventArgs);
-			}
+			var focusEvent = newValue == FocusState.Unfocused ? LostFocusEvent : GotFocusEvent;
+			RaiseEvent(focusEvent, eventArgs);
 		}
 
 		partial void OnFocusStateChangedPartial(FocusState oldValue, FocusState newValue);
@@ -724,6 +733,9 @@ namespace Windows.UI.Xaml.Controls
 		protected virtual void OnKeyUp(KeyRoutedEventArgs args) { }
 		protected virtual void OnGotFocus(RoutedEventArgs e) { }
 		protected virtual void OnLostFocus(RoutedEventArgs e) { }
+		protected virtual void OnPreviewKeyDown(KeyRoutedEventArgs args) { }
+		protected virtual void OnPreviewKeyUp(KeyRoutedEventArgs args) { }
+		protected virtual void OnCharacterReceived(CharacterReceivedRoutedEventArgs args) { }
 
 
 		private void OnPointerPressed(object sender, PointerRoutedEventArgs args)
@@ -790,6 +802,22 @@ namespace Windows.UI.Xaml.Controls
 		{
 			OnLostFocus(args);
 		}
+
+		private void OnPreviewKeyDown(object sender, KeyRoutedEventArgs args)
+		{
+			OnPreviewKeyDown(args);
+		}
+
+		private void OnPreviewKeyUp(object sender, KeyRoutedEventArgs args)
+		{
+			OnPreviewKeyUp(args);
+		}
+
+		private void OnCharacterReceived(object sender, CharacterReceivedRoutedEventArgs args)
+		{
+			OnCharacterReceived(args);
+		}
+
 
 		private static readonly Dictionary<Type, RoutedEventFlag> ImplementedRoutedEvents
 			= new Dictionary<Type, RoutedEventFlag>();
@@ -882,6 +910,16 @@ namespace Windows.UI.Xaml.Controls
 			if (GetIsEventOverrideImplemented(type, "OnGotFocus", routedArgs))
 			{
 				result |= RoutedEventFlag.GotFocus;
+			}
+
+			if (GetIsEventOverrideImplemented(type, "OnPreviewKeyDown", routedArgs))
+			{
+				result |= RoutedEventFlag.PreviewKeyDown;
+			}
+
+			if (GetIsEventOverrideImplemented(type, "OnPreviewKeyUp", routedArgs))
+			{
+				result |= RoutedEventFlag.PreviewKeyUp;
 			}
 
 			return ImplementedRoutedEvents[type] = result;

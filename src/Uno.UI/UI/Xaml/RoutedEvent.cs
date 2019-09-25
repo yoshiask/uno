@@ -11,6 +11,8 @@ namespace Windows.UI.Xaml
 
 		internal RoutedEventFlag Flag { get; }
 
+		internal bool IsTunneling { get; }
+
 		public RoutedEvent([CallerMemberName] string name = null)
 			: this(RoutedEventFlag.None, name)
 		{
@@ -18,10 +20,12 @@ namespace Windows.UI.Xaml
 
 		internal RoutedEvent(
 			RoutedEventFlag flag,
-			[CallerMemberName] string name = null)
+			[CallerMemberName] string name = null,
+			bool isTunneling = false)
 		{
 			Flag = flag;
 			Name = name;
+			IsTunneling = isTunneling;
 		}
 	}
 }

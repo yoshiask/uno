@@ -292,7 +292,7 @@ namespace Windows.UI.Xaml
 
 			private readonly UIElement _owner;
 			private readonly string _eventName;
-			private RoutedEvent _routedEvent;
+			private readonly RoutedEvent _routedEvent;
 			private readonly bool _canBubbleNatively;
 			private readonly Func<string, EventArgs> _payloadConverter;
 			private readonly Func<EventArgs, bool> _eventFilterManaged;
@@ -307,7 +307,6 @@ namespace Windows.UI.Xaml
 				UIElement owner,
 				string eventName,
 				RoutedEvent routedEvent,
-				bool onCapturePhase = false,
 				bool canBubbleNatively = false,
 				HtmlEventFilter? eventFilter = null,
 				HtmlEventExtractor? eventExtractor = null,
@@ -326,6 +325,8 @@ namespace Windows.UI.Xaml
 				}
 				else
 				{
+					var onCapturePhase = routedEvent?.IsTunneling ?? false;
+
 					_subscribeCommand = () =>
 						Uno.UI.Xaml.WindowManagerInterop.RegisterEventOnView(_owner.HtmlId, eventName, onCapturePhase, eventFilter?.ToString(), eventExtractor?.ToString());
 				}
@@ -443,7 +444,6 @@ namespace Windows.UI.Xaml
 			string eventName,
 			Delegate handler,
 			RoutedEvent routedEvent = null,
-			bool onCapturePhase = false,
 			bool canBubbleNatively = false,
 			HtmlEventFilter? eventFilter = null,
 			HtmlEventExtractor? eventExtractor = null,
@@ -455,7 +455,6 @@ namespace Windows.UI.Xaml
 					this,
 					eventName,
 					routedEvent,
-					onCapturePhase,
 					canBubbleNatively,
 					eventFilter,
 					eventExtractor,
@@ -856,7 +855,10 @@ namespace Windows.UI.Xaml
 				{ GotFocusEvent, (nameof(GotFocusEvent), "focus") },
 				{ LostFocusEvent, (nameof(LostFocusEvent), "focusout") },
 				{ TappedEvent, (nameof(TappedEvent), "click") },
-				{ DoubleTappedEvent, (nameof(DoubleTappedEvent), "dblclick") }
+				{ DoubleTappedEvent, (nameof(DoubleTappedEvent), "dblclick") },
+				{ PreviewKeyDownEvent, (nameof(PreviewKeyDownEvent), "keydown") },
+				{ PreviewKeyUpEvent, (nameof(PreviewKeyUpEvent), "keyup") },
+				{ CharacterReceivedEvent, (nameof(CharacterReceivedEvent), "input") },
 			};
 
 		// We keep track of registered routed events to avoid registering the same one twice (mainly because RemoveHandler is not implemented)
@@ -906,6 +908,8 @@ namespace Windows.UI.Xaml
 
 						case nameof(KeyDownEvent):
 						case nameof(KeyUpEvent):
+						case nameof(PreviewKeyDownEvent):
+						case nameof(PreviewKeyUpEvent):
 							eventFilter = null;
 							eventExtractor = HtmlEventExtractor.KeyboardEventExtractor;
 							payloadConverter = PayloadToKeyArgs;
@@ -932,7 +936,6 @@ namespace Windows.UI.Xaml
 						eventDescription.domEventName,
 						routedEvent: routedEvent,
 						handler: new RoutedEventHandlerWithHandled(RoutedEventHandler),
-						onCapturePhase: false,
 						canBubbleNatively: true,
 						eventFilter: eventFilter ?? HtmlEventFilter.Default,
 						eventExtractor: eventExtractor,
