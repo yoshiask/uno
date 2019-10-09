@@ -3699,8 +3699,6 @@ namespace Uno.UI.SourceGenerators.XamlGenerator
 		{
 			var closingPunctuation = string.IsNullOrWhiteSpace(closureName) ? "," : ";";
 
-			BuildStyleProperty(writer, objectDefinition, closingPunctuation);
-
 			var extendedProperties = GetExtendedProperties(objectDefinition);
 
 			var objectUid = GetObjectUid(objectDefinition);
@@ -3842,25 +3840,6 @@ namespace Uno.UI.SourceGenerators.XamlGenerator
 			}
 
 			return false;
-		}
-
-		private void BuildStyleProperty(IIndentedStringBuilder writer, XamlObjectDefinition objectDefinition, string closingPunctuation)
-		{
-			var styleMember = FindMember(objectDefinition, "Style");
-
-			if (styleMember != null)
-			{
-				if (styleMember.Objects.Any(o => o.Type.Name == "StaticResource" || o.Type.Name == "ThemeResource"))
-				{
-					// Skip here - Styles assigned as StaticResources don't receive special treatment.
-				}
-				else if (styleMember.Objects.FirstOrDefault(o => o.Type.Name == "Style") is XamlObjectDefinition literalStyle)
-				{
-					writer.AppendFormatInvariant($"Style = ");
-					BuildInlineStyle(writer, literalStyle);
-					writer.AppendLineInvariant(0, closingPunctuation);
-				}
-			}
 		}
 
 		private bool IsLocalizedString(INamedTypeSymbol propertyType, string objectUid)
