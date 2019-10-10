@@ -1,0 +1,18 @@
+﻿<Page
+    x:Class="UITests.Shared.Windows_Storage_ApplicationData.RoamingSettings"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+	<StackPanel>
+		<TextBlock x:Name="_containerName" />
+		<Button Tapped="Clear" Content="Clear" />
+		<Button Tapped="Add" Content="Add" />
+		<Button Tapped="Contains" Content="Contains" />
+		<Button Tapped="Remove" Content="Remove" />
+		<TextBlock x:Name="_output" />
+	</StackPanel>
+</Page>
