@@ -18,7 +18,7 @@ using Uno.UI.Samples.Controls;
 
 namespace UITests.Shared.Windows_Storage_ApplicationData
 {
-	[SampleControlInfo("Windows_Storage_ApplicationData", "LocalSettings")]
+	[SampleControlInfo("Windows.Storage.ApplicationData", "LocalSettings")]
 	public sealed partial class LocalSettings : Page
 	{
 		private const string key = nameof(key);

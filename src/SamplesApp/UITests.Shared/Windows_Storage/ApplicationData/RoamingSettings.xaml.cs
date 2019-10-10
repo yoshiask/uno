@@ -17,7 +17,7 @@ using Windows.Storage;
 
 namespace UITests.Shared.Windows_Storage_ApplicationData
 {
-	[SampleControlInfo("Windows_Storage_ApplicationData", "RoamingSettings")]
+	[SampleControlInfo("Windows.Storage.ApplicationData", "RoamingSettings")]
 	public sealed partial class RoamingSettings : Page
 	{
 		private const string key = nameof(key);

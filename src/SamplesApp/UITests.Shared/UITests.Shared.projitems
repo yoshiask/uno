@@ -77,7 +77,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="$(MSBuildThisFileDirectory)Windows_Storage\StorageFolderTests\Persistence.xaml">
+    <Page Include="$(MSBuildThisFileDirectory)Windows_Storage\StorageFolder\Persistence.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -2557,7 +2557,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Windows_Storage\ApplicationData\RoamingSettings.xaml.cs">
       <DependentUpon>RoamingSettings.xaml</DependentUpon>
     </Compile>
-    <Compile Include="$(MSBuildThisFileDirectory)Windows_Storage\StorageFolderTests\Persistence.xaml.cs">
+    <Compile Include="$(MSBuildThisFileDirectory)Windows_Storage\StorageFolder\Persistence.xaml.cs">
       <DependentUpon>Persistence.xaml</DependentUpon>
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Windows_System\Display\DisplayRequest.xaml.cs">
