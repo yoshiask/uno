@@ -8,11 +8,12 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
 	<StackPanel>
-		<TextBlock x:Name="_containerName" />
-		<Button Tapped="Clear" Content="Clear" />
-		<Button Tapped="Add" Content="Add" />
-		<Button Tapped="Contains" Content="Contains" />
-		<Button Tapped="Remove" Content="Remove" />
-		<TextBlock x:Name="_output" />
+		<TextBlock x:Name="ContainerName" />
+		<Button x:Name="ClearButton" Tapped="Clear" Content="Clear" />
+		<Button x:Name="AddButton" Tapped="Add" Content="Add" />
+		<Button x:Name="ContainsButton" Tapped="Contains" Content="Contains" />
+		<Button x:Name="RemoveButton" Tapped="Remove" Content="Remove" />
+		<TextBlock x:Name="Output" />
 	</StackPanel>
+
 </Page>

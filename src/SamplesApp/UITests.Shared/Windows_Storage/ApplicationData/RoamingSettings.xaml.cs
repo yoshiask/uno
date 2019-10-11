@@ -26,28 +26,29 @@ namespace UITests.Shared.Windows_Storage_ApplicationData
 		{
 			this.InitializeComponent();
 
-			_containerName.Text = $"ApplicationDataContainerName='{ApplicationData.Current.RoamingSettings.Name}'";
+			ContainerName.Text = ApplicationData.Current.LocalSettings.Name;
 		}
 
 		public void Clear(object sender, TappedRoutedEventArgs e)
 		{
-			ApplicationData.Current.RoamingSettings.Values.Clear();
+			ApplicationData.Current.LocalSettings.Values.Clear();
 			Count();
 		}
 
 		public void Add(object sender, TappedRoutedEventArgs e)
 		{
-			ApplicationData.Current.RoamingSettings.Values.Add(key, "value");
+			ApplicationData.Current.LocalSettings.Values.Add(key, "value");
 			Count();
 		}
 
-		public void Contains(object sender, TappedRoutedEventArgs e) => _output.Text = $"Key Exists='{ApplicationData.Current.RoamingSettings.Values.ContainsKey(key).ToString()}'";
+		public void Contains(object sender, TappedRoutedEventArgs e) => Output.Text = ApplicationData.Current.LocalSettings.Values.ContainsKey(key).ToString();
 
-		public void Count() => _output.Text = $"Count='{ApplicationData.Current.RoamingSettings.Values.Count.ToString()}'";
+		public void Count() => Output.Text = ApplicationData.Current.LocalSettings.Values.Count.ToString();
 		public void Remove(object sender, TappedRoutedEventArgs e)
 		{
-			ApplicationData.Current.RoamingSettings.Values.Remove(key);
+			ApplicationData.Current.LocalSettings.Values.Remove(key);
 			Count();
 		}
+
 	}
 }
