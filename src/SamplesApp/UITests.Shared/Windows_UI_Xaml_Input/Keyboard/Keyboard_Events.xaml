@@ -1,0 +1,20 @@
+﻿<Page
+	x:Class="UITests.Shared.Windows_UI_Xaml_Input.Keyboard.Keyboard_Events"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	mc:Ignorable="d"
+	Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <StackPanel>
+		<TextBox x:Name="input"/>
+		<CheckBox x:Name="filterPreviewKeyDown">Filter PreviewKeyDown</CheckBox>
+		<CheckBox x:Name="filterKeyDown">Filter KeyDown</CheckBox>
+		<CheckBox x:Name="filterPreviewKeyUp">Filter PreviewKeyUp</CheckBox>
+		<CheckBox x:Name="filterKeyUp">Filter KeyUp</CheckBox>
+		<ScrollViewer MaxHeight="400">
+			<TextBlock x:Name="output" />
+		</ScrollViewer>
+    </StackPanel>
+</Page>
