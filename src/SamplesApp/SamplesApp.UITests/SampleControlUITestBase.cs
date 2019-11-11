@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
@@ -86,7 +87,7 @@ namespace SamplesApp.UITests
 			Helpers.App = _app;
 		}
 
-		public void TakeScreenshot(string stepName)
+		public FileInfo TakeScreenshot(string stepName)
 		{
 			var title = $"{TestContext.CurrentContext.Test.Name}_{stepName}"
 				.Replace(" ", "_")
@@ -106,10 +107,54 @@ namespace SamplesApp.UITests
 				File.Move(fileInfo.FullName, destFileName);
 
 				TestContext.AddTestAttachment(destFileName, stepName);
+
+				return new FileInfo(destFileName);
 			}
 			else
 			{
 				TestContext.AddTestAttachment(fileInfo.FullName, stepName);
+
+				return fileInfo;
+			}
+		}
+
+		public void AssertScreenshotsAreEqual(FileInfo expected, FileInfo actual)
+		{
+			using (var expectedBitmap = new Bitmap(expected.FullName))
+			using (var actualBitmap = new Bitmap(actual.FullName))
+			{
+				Assert.AreEqual(expectedBitmap.Size.Width, actualBitmap.Size.Width, "Width");
+				Assert.AreEqual(expectedBitmap.Size.Height, actualBitmap.Size.Height, "Height");
+
+				for (var x = 0; x < expectedBitmap.Size.Width; x++)
+				for (var y = 0; y < expectedBitmap.Size.Height; y++)
+				{
+					Assert.AreEqual(expectedBitmap.GetPixel(x, y), actualBitmap.GetPixel(x, y), $"Pixel {x},{y}");
+				}
+			}
+		}
+
+		public void AssertScreenshotsAreNotEqual(FileInfo expected, FileInfo actual)
+		{
+			using (var expectedBitmap = new Bitmap(expected.FullName))
+			using (var actualBitmap = new Bitmap(actual.FullName))
+			{
+				if (expectedBitmap.Size.Width != actualBitmap.Size.Width
+					|| expectedBitmap.Size.Height != actualBitmap.Size.Height)
+				{
+					return;
+				}
+
+				for (var x = 0; x < expectedBitmap.Size.Width; x++)
+				for (var y = 0; y < expectedBitmap.Size.Height; y++)
+				{
+					if (expectedBitmap.GetPixel(x, y) != actualBitmap.GetPixel(x, y))
+					{
+						return;
+					}
+				}
+
+				Assert.Fail("Screenshots are equals.");
 			}
 		}
 
