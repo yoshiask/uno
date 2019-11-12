@@ -2,10 +2,10 @@
 class WindowManagerPointerEventArgs_Return
 {
 	/* Pack=8 */
+	Timestamp : number;
 	Event : number;
 	SourceHandle : number;
 	OriginalSourceHandle : number;
-	Timestamp : number;
 	PointerId : number;
 	PointerType : number;
 	RawX : number;
@@ -17,10 +17,10 @@ class WindowManagerPointerEventArgs_Return
 	IsOver : boolean;
 	public marshal(pData:number)
 	{
-		Module.setValue(pData + 0, this.Event, "i32");
-		Module.setValue(pData + 8, this.SourceHandle, "i32");
-		Module.setValue(pData + 16, this.OriginalSourceHandle, "i32");
-		Module.setValue(pData + 24, this.Timestamp, "double");
+		Module.setValue(pData + 0, this.Timestamp, "double");
+		Module.setValue(pData + 8, this.Event, "i32");
+		Module.setValue(pData + 16, this.SourceHandle, "i32");
+		Module.setValue(pData + 24, this.OriginalSourceHandle, "i32");
 		Module.setValue(pData + 32, this.PointerId, "i32");
 		Module.setValue(pData + 40, this.PointerType, "i32");
 		Module.setValue(pData + 48, this.RawX, "double");

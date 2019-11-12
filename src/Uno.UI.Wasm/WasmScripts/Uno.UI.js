@@ -837,6 +837,7 @@ var Uno;
             }
             static toManagedArgs(event) {
                 const args = new WindowManagerPointerEventArgs_Return();
+                args.Event = 0;
                 args.SourceHandle = +event.currentTarget.id; // Should be equals to params.HtmlId
                 let originalSource = event.target;
                 while (originalSource) {
@@ -866,26 +867,26 @@ var Uno;
                         args.PointerType = 0; // PointerDeviceType.Touch;
                         break;
                 }
+                args.IsOver_HasValue = false;
+                args.IsOver = false;
                 return args;
             }
             static dispatchPointerEvent(args) {
-                args.marshal(WindowManager.pointerEventArgs);
+                args.marshal(WindowManager.PointerEventArgs);
                 WindowManager.dispatchPointerEventMethod();
-                const result = WindowManagerPointerEventResult_Params.unmarshal(WindowManager.pointerEventResult);
+                const result = WindowManagerPointerEventResult_Params.unmarshal(WindowManager.PointerEventResult);
                 if (result.Handled) {
                     event.stopPropagation();
                 }
             }
-            static set pointerEventArgs(pArgs) {
+            initPointerEventsProperties(pArgs, pResult) {
                 WindowManager._pointerEventArgs = pArgs;
-            }
-            static get pointerEventArgs() {
-                return WindowManager._pointerEventArgs;
-            }
-            static set pointerEventResult(pResult) {
                 WindowManager._pointerEventResult = pResult;
             }
-            static get pointerEventResult() {
+            static get PointerEventArgs() {
+                return WindowManager._pointerEventArgs;
+            }
+            static get PointerEventResult() {
                 return WindowManager._pointerEventResult;
             }
             /**
@@ -1979,10 +1980,10 @@ class WindowManagerPointerEventArgs {
 /* TSBindingsGenerator Generated code -- this code is regenerated on each build */
 class WindowManagerPointerEventArgs_Return {
     marshal(pData) {
-        Module.setValue(pData + 0, this.Event, "i32");
-        Module.setValue(pData + 8, this.SourceHandle, "i32");
-        Module.setValue(pData + 16, this.OriginalSourceHandle, "i32");
-        Module.setValue(pData + 24, this.Timestamp, "double");
+        Module.setValue(pData + 0, this.Timestamp, "double");
+        Module.setValue(pData + 8, this.Event, "i32");
+        Module.setValue(pData + 16, this.SourceHandle, "i32");
+        Module.setValue(pData + 24, this.OriginalSourceHandle, "i32");
         Module.setValue(pData + 32, this.PointerId, "i32");
         Module.setValue(pData + 40, this.PointerType, "i32");
         Module.setValue(pData + 48, this.RawX, "double");

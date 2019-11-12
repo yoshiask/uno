@@ -116,40 +116,40 @@ namespace Uno.Foundation.Interop
 			}
 		}
 
-		public static void RegisterJSCallback<TRegisterParam, TCallbackArgs>(
-			string registerMethodName,
-			TRegisterParam registerMethodParamStruct,
-			Property<TCallbackArgs> callbackArgs,
-			[System.Runtime.CompilerServices.CallerMemberName]
-			string memberName = null)
-		{
-			if (_logger.Value.IsEnabled(LogLevel.Debug))
-			{
-				_logger.Value.LogDebug($"RegisterJSCallback for {memberName}/{typeof(TRegisterParam)}");
-			}
+		//public static void InvokeJs<TRegisterParam, TCallbackArgs>(
+		//	string registerMethodName,
+		//	TRegisterParam registerMethodParamStruct,
+		//	Property<TCallbackArgs> callbackArgs,
+		//	[System.Runtime.CompilerServices.CallerMemberName]
+		//	string memberName = null)
+		//{
+		//	if (_logger.Value.IsEnabled(LogLevel.Debug))
+		//	{
+		//		_logger.Value.LogDebug($"RegisterJSCallback for {memberName}/{typeof(TRegisterParam)}");
+		//	}
 
-			var pParms = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(TRegisterParam)));
+		//	var pParms = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(TRegisterParam)));
 
-			try
-			{
-				Marshal.StructureToPtr(registerMethodParamStruct, pParms, false);
+		//	try
+		//	{
+		//		Marshal.StructureToPtr(registerMethodParamStruct, pParms, false);
 
-				var ret = WebAssemblyRuntime.InvokeJSUnmarshalled(registerMethodName, pParms, callbackArgs.Handle);
-			}
-			catch (Exception e)
-			{
-				if (_logger.Value.IsEnabled(LogLevel.Error))
-				{
-					_logger.Value.LogError($"Failed RegisterJSCallback for {memberName}/{typeof(TRegisterParam)}: {e}");
-				}
-				throw;
-			}
-			finally
-			{
-				Marshal.DestroyStructure(pParms, typeof(TRegisterParam));
-				Marshal.FreeHGlobal(pParms);
-			}
-		}
+		//		var ret = WebAssemblyRuntime.InvokeJSUnmarshalled(registerMethodName, pParms, callbackArgs.Handle);
+		//	}
+		//	catch (Exception e)
+		//	{
+		//		if (_logger.Value.IsEnabled(LogLevel.Error))
+		//		{
+		//			_logger.Value.LogError($"Failed RegisterJSCallback for {memberName}/{typeof(TRegisterParam)}: {e}");
+		//		}
+		//		throw;
+		//	}
+		//	finally
+		//	{
+		//		Marshal.DestroyStructure(pParms, typeof(TRegisterParam));
+		//		Marshal.FreeHGlobal(pParms);
+		//	}
+		//}
 
 		public static Property<T> AllocJSProperty<T>(
 			string setPropertyMethod,
@@ -160,11 +160,11 @@ namespace Uno.Foundation.Interop
 				_logger.Value.LogDebug($"AllocJSProperty for {memberName}/{typeof(T)}");
 			}
 
-			var args = new Property<T>();
+			var prop = new Property<T>();
 
 			try
 			{
-				var ret = WebAssemblyRuntime.InvokeJSUnmarshalled(setPropertyMethod, args.Handle);
+				var ret = WebAssemblyRuntime.InvokeJSUnmarshalled(setPropertyMethod, prop.Handle);
 			}
 			catch (Exception e)
 			{
@@ -172,11 +172,40 @@ namespace Uno.Foundation.Interop
 				{
 					_logger.Value.LogError($"Failed AllocJSProperty for {memberName}/{typeof(T)}: {e}");
 				}
-				args.Dispose();
+				prop.Dispose();
 				throw;
 			}
 
-			return args;
+			return prop;
+		}
+
+		public static (Property<TProp1>, Property<TProp2>) AllocJSProperties<TProp1, TProp2>(
+			string setPropertyMethod,
+			[System.Runtime.CompilerServices.CallerMemberName] string memberName = null)
+		{
+			if (_logger.Value.IsEnabled(LogLevel.Debug))
+			{
+				_logger.Value.LogDebug($"AllocJSProperties for {memberName}/{typeof(TProp1)}");
+			}
+
+			var prop1 = new Property<TProp1>();
+			var prop2 = new Property<TProp2>();
+
+			try
+			{
+				var ret = WebAssemblyRuntime.InvokeJSUnmarshalled(setPropertyMethod, prop1.Handle, prop2.Handle);
+			}
+			catch (Exception e)
+			{
+				if (_logger.Value.IsEnabled(LogLevel.Error))
+				{
+					_logger.Value.LogError($"Failed AllocJSProperties for {memberName}/{typeof(TProp1)}: {e}");
+				}
+				prop1.Dispose();
+				throw;
+			}
+
+			return (prop1, prop2);
 		}
 
 		public class Property<T> : IDisposable
@@ -184,6 +213,11 @@ namespace Uno.Foundation.Interop
 			private int _state = 0;
 
 			internal IntPtr Handle { get; } = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(T)));
+
+			public Property()
+			{
+				Console.WriteLine($"++++++++++++++++++++++++++++++++++++++++++++++ Created property of {typeof(T).Name} at {Handle.ToInt64()} of {Marshal.SizeOf(typeof(T))} bytes long.");
+			}
 
 			public T Value
 			{

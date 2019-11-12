@@ -332,8 +332,9 @@ declare namespace Uno.UI {
         private static dispatchPointerEvent;
         private static _pointerEventArgs;
         private static _pointerEventResult;
-        static pointerEventArgs: number;
-        static pointerEventResult: number;
+        initPointerEventsProperties(pArgs: number, pResult: number): void;
+        static readonly PointerEventArgs: number;
+        static readonly PointerEventResult: number;
         /**
             * Add an event handler to a html element.
             *
@@ -628,10 +629,10 @@ declare class WindowManagerPointerEventArgs {
     IsOver: boolean;
 }
 declare class WindowManagerPointerEventArgs_Return {
+    Timestamp: number;
     Event: number;
     SourceHandle: number;
     OriginalSourceHandle: number;
-    Timestamp: number;
     PointerId: number;
     PointerType: number;
     RawX: number;

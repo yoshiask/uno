@@ -69,108 +69,103 @@ namespace Windows.UI.Xaml
 			}
 
 			EnabledNativePointerEvents();
-
-			//// In order to ensure valid pressed and over state, we ** must ** subscribe to all the related events
-			//// before subscribing to other pointer events.
-			//if (!_registeredRoutedEvents.HasFlag(RoutedEventFlag.PointerEntered))
-			//{
-			//	AddPointerHandlerCore(PointerEnteredEvent);
-			//	AddPointerHandlerCore(PointerExitedEvent);
-			//	AddPointerHandlerCore(PointerPressedEvent);
-			//	AddPointerHandlerCore(PointerReleasedEvent);
-			//}
-
-			//AddPointerHandlerCore(routedEvent);
 		}
 
 		private void EnabledNativePointerEvents()
 		{
 			if (!_registeredRoutedEvents.HasFlag(RoutedEventFlag.PointerEntered))
 			{
-				TSInteropMarshaller.RegisterJSCallback(
-					"Uno:enablePointerEvents",
-					new WindowManagerEnablePointerEventsParams { HtmlId = Handle, IsEnabled = true },
-					_pointerEventArgs);
+				InitEventArgs();
+
+				try
+				{
+					unsafe
+					{
+						Console.WriteLine($"++++++++++++++++++++++++++++++++++++++++++++++ Created property should be of size typeof: {Marshal.SizeOf(typeof(WindowManagerPointerEventArgs_Return))} | generic: {Marshal.SizeOf<WindowManagerPointerEventArgs_Return>()} | sizeof: {sizeof(WindowManagerPointerEventArgs_Return)} bytes long.");
+					}
+
+					Console.WriteLine("******************************** ENABLE EVENTS");
+					TSInteropMarshaller.InvokeJS("Uno:enablePointerEvents", new WindowManagerEnablePointerEventsParams {HtmlId = Handle, IsEnabled = true});
+					Console.WriteLine("******************************** ENABLE EVENTS ------------------- OK :)");
+				}
+				catch (Exception e)
+				{
+					Console.WriteLine(e);
+				}
 
 				// In order to ensure valid pressed and over state, we ** must ** subscribe to all pointer events at once.
 				_registeredRoutedEvents |= RoutedEventFlagHelper.Pointers;
 			}
 		}
 
-		//private void AddPointerHandlerCore(RoutedEvent routedEvent)
-		//{
-		//	if (_registeredRoutedEvents.HasFlag(routedEvent.Flag))
-		//	{
-		//		return;
-		//	}
+		private static void InitEventArgs()
+		{
+			if (_pointerEventArgs == null)
+			{
+				try
+				{
+					Console.WriteLine("******************************** INITIALIZING EVENT ARGS");
+					(_pointerEventArgs, _pointerEventResult) = TSInteropMarshaller.AllocJSProperties<WindowManagerPointerEventArgs_Return, WindowManagerPointerEventResult_Params>("Uno:initPointerEventsProperties");
 
-		//	if (routedEvent == PointerCaptureLostEvent)
-		//	{
-		//		// Captures are handled in managed code only
-		//		_registeredRoutedEvents |= routedEvent.Flag;
-		//		return;
-		//	}
+					Console.WriteLine("******************************** INITIALIZING EVENT ARGS ------------------- OK :)");
+				}
+				catch(Exception e)
+				{
+					Console.Error.WriteLine(e);
+				}
+			}
+		}
 
-		//	if (!_pointerHandlers.TryGetValue(routedEvent, out var evt))
-		//	{
-		//		Application.Current.RaiseRecoverableUnhandledException(new NotImplementedException($"Pointer event {routedEvent.Name} is not supported on this platform"));
-		//		return;
-		//	}
-
-		//	_registeredRoutedEvents |= routedEvent.Flag;
-
-		//	RegisterEventHandler(
-		//		evt.domEventName,
-		//		handler: evt.handler,
-		//		onCapturePhase: false,
-		//		canBubbleNatively: true,
-		//		eventFilter: HtmlEventFilter.Default,
-		//		eventExtractor: HtmlEventExtractor.PointerEventExtractor,
-		//		payloadConverter: evt.argsParser
-		//	);
-		//}
-
-		private static readonly TSInteropMarshaller.Property<WindowManagerPointerEventArgs_Return> _pointerEventArgs
-			= TSInteropMarshaller.AllocJSProperty<WindowManagerPointerEventArgs_Return>("Uno:setPointerEventArgs");
-		private static readonly TSInteropMarshaller.Property<WindowManagerPointerEventResult_Params> _pointerEventResult
-			= TSInteropMarshaller.AllocJSProperty<WindowManagerPointerEventResult_Params>("Uno:setPointerEventResult");
+		private static TSInteropMarshaller.Property<WindowManagerPointerEventArgs_Return> _pointerEventArgs;
+		private static TSInteropMarshaller.Property<WindowManagerPointerEventResult_Params> _pointerEventResult;
 
 		[Preserve]
 		public static void DispatchPointerEvent()
 		{
-			if (_pointerEventArgs.TryRead(out var args))
+			try
 			{
-				var sender = GetElementFromHandle(args.SourceHandle);
-				var routedArgs = new PointerRoutedEventArgs(sender, args);
-
-				bool handled;
-				switch ((NativePointerEvent)args.Event)
+				if (_pointerEventArgs.TryRead(out var args))
 				{
-					case NativePointerEvent.PointerEnter:
-						handled = sender.OnNativePointerEnter(routedArgs);
-						break;
-					case NativePointerEvent.PointerLeave:
-						handled = sender.OnNativePointerExited(routedArgs);
-						break;
-					case NativePointerEvent.PointerDown:
-						handled = sender.OnNativePointerDown(routedArgs);
-						break;
-					case NativePointerEvent.PointerUp:
-						handled = sender.OnNativePointerUp(routedArgs);
-						break;
-					case NativePointerEvent.PointerMove:
-						handled = args.IsOver_HasValue
-							? sender.OnNativePointerMoveWithOverCheck(routedArgs, args.IsOver)
-							: sender.OnNativePointerMove(routedArgs);
-						break;
-					case NativePointerEvent.PointerCancel:
-						handled = sender.OnNativePointerCancel(routedArgs, isSwallowedBySystem: true);
-						break;
-					default:
-						throw new ArgumentOutOfRangeException($"The event {args.Event} is not supported.");
-				}
+					Console.WriteLine("RECEIVED ARGS: " + args);
 
-				_pointerEventResult.Write(new WindowManagerPointerEventResult_Params { Handled = handled});
+					var sender = GetElementFromHandle(args.SourceHandle);
+					var routedArgs = new PointerRoutedEventArgs(sender, args);
+
+					bool handled;
+					switch ((NativePointerEvent)args.Event)
+					{
+						case NativePointerEvent.PointerEnter:
+							handled = sender.OnNativePointerEnter(routedArgs);
+							break;
+						case NativePointerEvent.PointerLeave:
+							handled = sender.OnNativePointerExited(routedArgs);
+							break;
+						case NativePointerEvent.PointerDown:
+							handled = sender.OnNativePointerDown(routedArgs);
+							break;
+						case NativePointerEvent.PointerUp:
+							handled = sender.OnNativePointerUp(routedArgs);
+							break;
+						case NativePointerEvent.PointerMove:
+							handled = args.IsOver_HasValue
+								? sender.OnNativePointerMoveWithOverCheck(routedArgs, args.IsOver)
+								: sender.OnNativePointerMove(routedArgs);
+							break;
+						case NativePointerEvent.PointerCancel:
+							handled = sender.OnNativePointerCancel(routedArgs, isSwallowedBySystem: true);
+							break;
+						default:
+							throw new ArgumentOutOfRangeException($"The event {args.Event} is not supported.");
+					}
+
+					_pointerEventResult.Write(new WindowManagerPointerEventResult_Params {Handled = handled});
+
+					Console.WriteLine("SUVVSCFULLY DISPATCHED: handled=" + handled);
+				}
+			}
+			catch (Exception e)
+			{
+				Console.Error.WriteLine("FAILED TO DISPATCH POINTER: " + e);
 			}
 		}
 
@@ -193,29 +188,39 @@ namespace Windows.UI.Xaml
 			public bool IsEnabled;
 		}
 
-		[TSInteropMessage]
-		[StructLayout(LayoutKind.Sequential, Pack = 8)]
+		//[TSInteropMessage]
+		[StructLayout(LayoutKind.Explicit, Pack = 8, Size = 13 * 8)]
 		internal struct WindowManagerPointerEventArgs_Return // This us suffixed "_Return" to get the "marshal" method ... we need to fix the generator!
 		{
-			public int Event; // NativePointerEvent
+			[FieldOffset( 0 * 8)] public double Timestamp;
+			[FieldOffset( 1 * 8)] public int Event; // NativePointerEvent
+			[FieldOffset( 2 * 8)] public int SourceHandle;
+			[FieldOffset( 3 * 8)] public int OriginalSourceHandle;
+			[FieldOffset( 4 * 8)] public int PointerId;
+			[FieldOffset( 5 * 8)] public int PointerType; // PointerDeviceType
+			[FieldOffset( 6 * 8)] public double RawX;
+			[FieldOffset( 7 * 8)] public double RawY;
+			[FieldOffset( 8 * 8)] public bool IsCtrlPressed;
+			[FieldOffset( 9 * 8)] public bool IsShiftPressed;
+			[FieldOffset(10 * 8)] public int PressedButton;
+			[FieldOffset(11 * 8)] public bool IsOver_HasValue;
+			[FieldOffset(12 * 8)] public bool IsOver;
 
-			public int SourceHandle;
-			public int OriginalSourceHandle;
-
-			public double Timestamp;
-
-			public int PointerId;
-			public int PointerType; // PointerDeviceType
-
-			public double RawX;
-			public double RawY;
-
-			public bool IsCtrlPressed;
-			public bool IsShiftPressed;
-			public int PressedButton;
-
-			public bool IsOver_HasValue;
-			public bool IsOver;
+			/// <inheritdoc />
+			public override string ToString()
+				=> $"Event:{(NativePointerEvent)Event}"
+					+ $"| SourceHandle : {SourceHandle}"
+					+ $"| OriginalSourceHandle : {OriginalSourceHandle}"
+					+ $"| Timestamp : {Timestamp}"
+					+ $"| PointerId : {PointerId}"
+					+ $"| PointerType: {(PointerDeviceType)PointerType}"
+					+ $"| RawX : {RawX}"
+					+ $"| RawY : {RawY}"
+					+ $"| IsCtrlPressed : {IsCtrlPressed}"
+					+ $"| IsShiftPressed : {IsShiftPressed}"
+					+ $"| PressedButton : {PressedButton}"
+					+ $"| IsOver_HasValue : {IsOver_HasValue}"
+					+ $"| IsOver : {IsOver}";\
 		}
 
 		[TSInteropMessage]

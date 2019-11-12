@@ -671,7 +671,7 @@
 			* @param eventName The name of the event
 			* @param onCapturePhase true means "on trickle down" (going down to target), false means "on bubble up" (bubbling back to ancestors). Default is false.
 			*/
-		public enablePointerEvents(pParams: number): void {
+		public enablePointerEvents(pParams: number) {
 			const params = WindowManagerEnablePointerEventsParams.unmarshal(pParams);
 			const element = this.getView(params.HtmlId) as HTMLElement;
 			
@@ -789,7 +789,7 @@
 
 		private static toManagedArgs(event: PointerEvent): WindowManagerPointerEventArgs_Return {
 			const args = new WindowManagerPointerEventArgs_Return();
-
+			args.Event = 0;
 			args.SourceHandle = +(event.currentTarget as HTMLElement | SVGElement).id; // Should be equals to params.HtmlId
 			let originalSource = event.target as HTMLElement | SVGElement;
 			while (originalSource) {
@@ -822,15 +822,18 @@
 				break;
 			}
 
+			args.IsOver_HasValue = false;
+			args.IsOver = false;
+
 			return args;
 		}
 
 		private static dispatchPointerEvent(args: WindowManagerPointerEventArgs_Return) {
-			args.marshal(WindowManager.pointerEventArgs);
+			args.marshal(WindowManager.PointerEventArgs);
 
 			WindowManager.dispatchPointerEventMethod();
 
-			const result = WindowManagerPointerEventResult_Params.unmarshal(WindowManager.pointerEventResult);
+			const result = WindowManagerPointerEventResult_Params.unmarshal(WindowManager.PointerEventResult);
 			if (result.Handled) {
 				event.stopPropagation();
 			}
@@ -838,16 +841,16 @@
 
 		private static _pointerEventArgs: number;
 		private static _pointerEventResult: number;
-		public static set pointerEventArgs(pArgs: number) {
+
+		public initPointerEventsProperties(pArgs: number, pResult: number) {
 			WindowManager._pointerEventArgs = pArgs;
-		}
-		public static get pointerEventArgs(): number {
-			return WindowManager._pointerEventArgs;
-		}
-		public static set pointerEventResult(pResult: number) {
 			WindowManager._pointerEventResult = pResult;
 		}
-		public static get pointerEventResult(): number {
+
+		public static get PointerEventArgs(): number {
+			return WindowManager._pointerEventArgs;
+		}
+		public static get PointerEventResult(): number {
 			return WindowManager._pointerEventResult;
 		}
 
