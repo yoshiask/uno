@@ -49,11 +49,7 @@ namespace Windows.UI.Xaml.Controls.Primitives
 			InitializeProperties();
 		}
 
-		public new bool IsPointerOver
-		{
-			get => base.IsPointerOver;
-			set => base.IsPointerOver = value;
-		}
+		public new bool IsPointerOver => base.IsPointerOver;
 
 		private void InitializeProperties()
 		{
@@ -214,7 +210,12 @@ namespace Windows.UI.Xaml.Controls.Primitives
 			{
 				// The click is raised as soon as the release occurs over the button,
 				// no matter the distance from the pressed location nor the delay since pressed.
-				var location = args.GetCurrentPoint(this).Position;
+				var point = args.GetCurrentPoint(this);
+				var location = point.Position;
+
+
+				Console.WriteLine($"BUTTON RELEASE: @{location} (eaw: {point.RawPosition}) w: {ActualWidth} h: {ActualHeight}");
+
 				if (location.X >= 0 && location.Y >= 0
 					&& location.X <= ActualWidth && location.Y <= ActualHeight)
 				{

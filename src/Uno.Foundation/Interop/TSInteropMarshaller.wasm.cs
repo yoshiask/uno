@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
+using Uno.Disposables;
 using Uno.Extensions;
 using Uno.Foundation;
 
@@ -114,5 +116,125 @@ namespace Uno.Foundation.Interop
 			}
 		}
 
+		public static void RegisterJSCallback<TRegisterParam, TCallbackArgs>(
+			string registerMethodName,
+			TRegisterParam registerMethodParamStruct,
+			Property<TCallbackArgs> callbackArgs,
+			[System.Runtime.CompilerServices.CallerMemberName]
+			string memberName = null)
+		{
+			if (_logger.Value.IsEnabled(LogLevel.Debug))
+			{
+				_logger.Value.LogDebug($"RegisterJSCallback for {memberName}/{typeof(TRegisterParam)}");
+			}
+
+			var pParms = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(TRegisterParam)));
+
+			try
+			{
+				Marshal.StructureToPtr(registerMethodParamStruct, pParms, false);
+
+				var ret = WebAssemblyRuntime.InvokeJSUnmarshalled(registerMethodName, pParms, callbackArgs.Handle);
+			}
+			catch (Exception e)
+			{
+				if (_logger.Value.IsEnabled(LogLevel.Error))
+				{
+					_logger.Value.LogError($"Failed RegisterJSCallback for {memberName}/{typeof(TRegisterParam)}: {e}");
+				}
+				throw;
+			}
+			finally
+			{
+				Marshal.DestroyStructure(pParms, typeof(TRegisterParam));
+				Marshal.FreeHGlobal(pParms);
+			}
+		}
+
+		public static Property<T> AllocJSProperty<T>(
+			string setPropertyMethod,
+			[System.Runtime.CompilerServices.CallerMemberName] string memberName = null)
+		{
+			if (_logger.Value.IsEnabled(LogLevel.Debug))
+			{
+				_logger.Value.LogDebug($"AllocJSProperty for {memberName}/{typeof(T)}");
+			}
+
+			var args = new Property<T>();
+
+			try
+			{
+				var ret = WebAssemblyRuntime.InvokeJSUnmarshalled(setPropertyMethod, args.Handle);
+			}
+			catch (Exception e)
+			{
+				if (_logger.Value.IsEnabled(LogLevel.Error))
+				{
+					_logger.Value.LogError($"Failed AllocJSProperty for {memberName}/{typeof(T)}: {e}");
+				}
+				args.Dispose();
+				throw;
+			}
+
+			return args;
+		}
+
+		public class Property<T> : IDisposable
+		{
+			private int _state = 0;
+
+			internal IntPtr Handle { get; } = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(T)));
+
+			public T Value
+			{
+				get => Read();
+				set => Write(value);
+			}
+
+			public T Read()
+				=> _state == 0
+					? (T)Marshal.PtrToStructure(Handle, typeof(T))
+					: default;
+
+			public bool TryRead(out T args)
+			{
+				if (_state == 0)
+				{
+					args = (T)Marshal.PtrToStructure(Handle, typeof(T));
+					return true;
+				}
+				else
+				{
+					args = default;
+					return false;
+				}
+			}
+
+			public void Write(T args)
+			{
+				if (_state != 0)
+				{
+					return;
+				}
+
+				Marshal.StructureToPtr(args, Handle, true);
+			}
+
+			/// <inheritdoc />
+			public void Dispose()
+			{
+				if (Interlocked.CompareExchange(ref _state, 1, 0) == 0)
+				{
+					Marshal.DestroyStructure(Handle, typeof(T));
+					Marshal.FreeHGlobal(Handle);
+				}
+			}
+
+			~Property()
+			{
+				Dispose();
+				GC.SuppressFinalize(this);
+			}
+		}
 	}
 }

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Windows.Devices.Input
 {
-	public enum PointerDeviceType
+	public enum PointerDeviceType : int
 	{
 		/// <summary>
 		/// A touch-enabled device

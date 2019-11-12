@@ -63,9 +63,9 @@ namespace Uno.UI.Xaml
 		// ContextCanceled  = 1UL << 62, => Reserved for future use (even if it is not an actual standard RoutedEvent)
 	}
 
-	internal static class RoutedEventFlagExtensions
+	internal static class RoutedEventFlagHelper
 	{
-		private const RoutedEventFlag _isPointer = // 0b0000_0000_0000_0000___0000_0000_0000_0000___0000_0000_0000_0000___0000_0000_1111_1111
+		public const RoutedEventFlag Pointers = // 0b0000_0000_0000_0000___0000_0000_0000_0000___0000_0000_0000_0000___0000_0000_1111_1111
 			  RoutedEventFlag.PointerPressed
 			| RoutedEventFlag.PointerReleased
 			| RoutedEventFlag.PointerEntered
@@ -75,62 +75,62 @@ namespace Uno.UI.Xaml
 			| RoutedEventFlag.PointerCaptureLost;
 			//| RoutedEventFlag.PointerWheelChanged;
 
-		private const RoutedEventFlag _isKey = // 0b0000_0000_0000_0000___0000_0000_0000_0000___0000_0000_0001_1111___1111_0000_0000_0000
+		public const RoutedEventFlag Keys = // 0b0000_0000_0000_0000___0000_0000_0000_0000___0000_0000_0001_1111___1111_0000_0000_0000
 			  RoutedEventFlag.KeyDown
 			| RoutedEventFlag.KeyUp;
 
-		private const RoutedEventFlag _isFocus = // 0b0000_0000_0000_0000___0000_0000_0000_0000___0011_1111_0000_0000___0000_0000_0000_0000
+		public const RoutedEventFlag Focus = // 0b0000_0000_0000_0000___0000_0000_0000_0000___0011_1111_0000_0000___0000_0000_0000_0000
 			  RoutedEventFlag.GotFocus
 			| RoutedEventFlag.LostFocus;
 
-		private const RoutedEventFlag _isDragAndDrop = (RoutedEventFlag)0b0000_0000_0000_0000___0000_0000_0001_1111___0000_0000_0000_0000___0000_0000_0000_0000;
+		public const RoutedEventFlag DragAndDrop = (RoutedEventFlag)0b0000_0000_0000_0000___0000_0000_0001_1111___0000_0000_0000_0000___0000_0000_0000_0000;
 			//  RoutedEventFlag.DragEnter
 			//| RoutedEventFlag.DragLeave
 			//| RoutedEventFlag.DragOver
 			//| RoutedEventFlag.Drop
 			//| RoutedEventFlag.DropCompleted;
 
-		private const RoutedEventFlag _isManipulation = // 0b0000_0000_0000_0000___0001_1111_0000_0000___0000_0000_0000_0000___0000_0000_0000_0000
+		public const RoutedEventFlag Manipulations = // 0b0000_0000_0000_0000___0001_1111_0000_0000___0000_0000_0000_0000___0000_0000_0000_0000
 			  RoutedEventFlag.ManipulationStarting
 			| RoutedEventFlag.ManipulationStarted
 			| RoutedEventFlag.ManipulationDelta
 			| RoutedEventFlag.ManipulationInertiaStarting
 			| RoutedEventFlag.ManipulationCompleted;
 
-		private const RoutedEventFlag _isGesture = // 0b0000_0000_0001_1111___0000_0000_0000_0000___0000_0000_0000_0000___0000_0000_0000_0000
+		public const RoutedEventFlag Gestures = // 0b0000_0000_0001_1111___0000_0000_0000_0000___0000_0000_0000_0000___0000_0000_0000_0000
 			  RoutedEventFlag.Tapped
 			| RoutedEventFlag.DoubleTapped;
 
-		private const RoutedEventFlag _isContextMenu = (RoutedEventFlag)0b0011_0000_0000_0000___0000_0000_0000_0000___0000_0000_0000_0000___0000_0000_0000_0000;
+		public const RoutedEventFlag ContextMenu = (RoutedEventFlag)0b0011_0000_0000_0000___0000_0000_0000_0000___0000_0000_0000_0000___0000_0000_0000_0000;
 			//   RoutedEventFlag.ContextRequested
 			// | RoutedEventFlag.ContextCanceled;
 
 		[Pure]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsPointerEvent(this RoutedEventFlag flag) => (flag & _isPointer) != 0;
+		public static bool IsPointerEvent(this RoutedEventFlag flag) => (flag & Pointers) != 0;
 
 		[Pure]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsKeyEvent(this RoutedEventFlag flag) => (flag & _isKey) != 0;
+		public static bool IsKeyEvent(this RoutedEventFlag flag) => (flag & Keys) != 0;
 
 		[Pure]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsFocusEvent(this RoutedEventFlag flag) => (flag & _isFocus) != 0;
+		public static bool IsFocusEvent(this RoutedEventFlag flag) => (flag & Focus) != 0;
 
 		[Pure]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsDragAndDropEvent(this RoutedEventFlag flag) => (flag & _isDragAndDrop) != 0;
+		public static bool IsDragAndDropEvent(this RoutedEventFlag flag) => (flag & DragAndDrop) != 0;
 
 		[Pure]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsManipulationEvent(this RoutedEventFlag flag) => (flag & _isManipulation) != 0;
+		public static bool IsManipulationEvent(this RoutedEventFlag flag) => (flag & Manipulations) != 0;
 
 		[Pure]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsGestureEvent(this RoutedEventFlag flag) => (flag & _isGesture) != 0;
+		public static bool IsGestureEvent(this RoutedEventFlag flag) => (flag & Gestures) != 0;
 
 		[Pure]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsContextEvent(this RoutedEventFlag flag) => (flag & _isContextMenu) != 0;
+		public static bool IsContextEvent(this RoutedEventFlag flag) => (flag & ContextMenu) != 0;
 	}
 }

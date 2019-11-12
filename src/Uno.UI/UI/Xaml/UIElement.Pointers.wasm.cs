@@ -21,6 +21,7 @@ using Uno.Collections;
 using Uno.UI;
 using System.Numerics;
 using Windows.UI.Input;
+using Uno.Foundation.Interop;
 using Uno.UI.Xaml;
 
 namespace Windows.UI.Xaml
@@ -31,31 +32,33 @@ namespace Windows.UI.Xaml
 		// https://www.w3.org/TR/pointerevents/
 		// https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent
 
-		private static readonly Dictionary<RoutedEvent, (string domEventName, EventArgsParser argsParser, RoutedEventHandlerWithHandled handler)> _pointerHandlers
-			= new Dictionary<RoutedEvent, (string, EventArgsParser, RoutedEventHandlerWithHandled)>
-			{
-				// Note: we use 'pointerenter' and 'pointerleave' which are not bubbling natively
-				//		 as on UWP, even if the event are RoutedEvents, PointerEntered and PointerExited
-				//		 are routed only in some particular cases (entering at once on multiple controls),
-				//		 it's easier to handle this in managed code.
-				{PointerEnteredEvent, ("pointerenter", PayloadToEnteredPointerArgs, (snd, args) => ((UIElement)snd).OnNativePointerEnter((PointerRoutedEventArgs)args))},
-				{PointerExitedEvent, ("pointerleave", PayloadToExitedPointerArgs, (snd, args) => ((UIElement)snd).OnNativePointerExited((PointerRoutedEventArgs)args))},
-				{PointerPressedEvent, ("pointerdown", PayloadToPressedPointerArgs, (snd, args) => ((UIElement)snd).OnNativePointerDown((PointerRoutedEventArgs)args))},
-				{PointerReleasedEvent, ("pointerup", PayloadToReleasedPointerArgs, (snd, args) => ((UIElement)snd).OnNativePointerUp((PointerRoutedEventArgs)args))},
+		//private static readonly Dictionary<RoutedEvent, (string domEventName, EventArgsParser argsParser, RoutedEventHandlerWithHandled handler)> _pointerHandlers
+		//	= new Dictionary<RoutedEvent, (string, EventArgsParser, RoutedEventHandlerWithHandled)>
+		//	{
+		//		// Note: we use 'pointerenter' and 'pointerleave' which are not bubbling natively
+		//		//		 as on UWP, even if the event are RoutedEvents, PointerEntered and PointerExited
+		//		//		 are routed only in some particular cases (entering at once on multiple controls),
+		//		//		 it's easier to handle this in managed code.
+		//		{PointerEnteredEvent, ("pointerenter", PayloadToEnteredPointerArgs, (snd, args) => ((UIElement)snd).OnNativePointerEnter((PointerRoutedEventArgs)args))},
+		//		{PointerExitedEvent, ("pointerleave", PayloadToExitedPointerArgs, (snd, args) => ((UIElement)snd).OnNativePointerExited((PointerRoutedEventArgs)args))},
+		//		{PointerPressedEvent, ("pointerdown", PayloadToPressedPointerArgs, (snd, args) => ((UIElement)snd).OnNativePointerDown((PointerRoutedEventArgs)args))},
+		//		{PointerReleasedEvent, ("pointerup", PayloadToReleasedPointerArgs, (snd, args) => ((UIElement)snd).OnNativePointerUp((PointerRoutedEventArgs)args))},
 
-				{PointerMovedEvent, ("pointermove", PayloadToMovedPointerArgs, (snd, args) => ((UIElement)snd).OnNativePointerMove((PointerRoutedEventArgs)args))},
-				{PointerCanceledEvent, ("pointercancel", PayloadToCancelledPointerArgs, (snd, args) => ((UIElement)snd).OnNativePointerCancel((PointerRoutedEventArgs)args, isSwallowedBySystem: true))}, //https://www.w3.org/TR/pointerevents/#the-pointercancel-event
-			};
+		//		{PointerMovedEvent, ("pointermove", PayloadToMovedPointerArgs, (snd, args) => ((UIElement)snd).OnNativePointerMove((PointerRoutedEventArgs)args))},
+		//		{PointerCanceledEvent, ("pointercancel", PayloadToCancelledPointerArgs, (snd, args) => ((UIElement)snd).OnNativePointerCancel((PointerRoutedEventArgs)args, isSwallowedBySystem: true))}, //https://www.w3.org/TR/pointerevents/#the-pointercancel-event
+		//	};
 
 		partial void OnGestureRecognizerInitialized(GestureRecognizer recognizer)
 		{
 			// When a gesture recognizer is initialized, we subscribe to pointer events in order to feed it.
 			// Note: We subscribe to * all * pointer events in order to maintain a logical internal state of pointers over / press / capture
 
-			foreach (var pointerEvent in _pointerHandlers.Keys)
-			{
-				AddPointerHandlerCore(pointerEvent);
-			}
+			//foreach (var pointerEvent in _pointerHandlers.Keys)
+			//{
+			//	AddPointerHandlerCore(pointerEvent);
+			//}
+
+			EnabledNativePointerEvents();
 		}
 
 		partial void AddPointerHandler(RoutedEvent routedEvent, int handlersCount, object handler, bool handledEventsToo)
@@ -65,139 +68,251 @@ namespace Windows.UI.Xaml
 				return;
 			}
 
-			// In order to ensure valid pressed and over state, we ** must ** subscribe to all the related events
-			// before subscribing to other pointer events.
+			EnabledNativePointerEvents();
+
+			//// In order to ensure valid pressed and over state, we ** must ** subscribe to all the related events
+			//// before subscribing to other pointer events.
+			//if (!_registeredRoutedEvents.HasFlag(RoutedEventFlag.PointerEntered))
+			//{
+			//	AddPointerHandlerCore(PointerEnteredEvent);
+			//	AddPointerHandlerCore(PointerExitedEvent);
+			//	AddPointerHandlerCore(PointerPressedEvent);
+			//	AddPointerHandlerCore(PointerReleasedEvent);
+			//}
+
+			//AddPointerHandlerCore(routedEvent);
+		}
+
+		private void EnabledNativePointerEvents()
+		{
 			if (!_registeredRoutedEvents.HasFlag(RoutedEventFlag.PointerEntered))
 			{
-				AddPointerHandlerCore(PointerEnteredEvent);
-				AddPointerHandlerCore(PointerExitedEvent);
-				AddPointerHandlerCore(PointerPressedEvent);
-				AddPointerHandlerCore(PointerReleasedEvent);
-			}
+				TSInteropMarshaller.RegisterJSCallback(
+					"Uno:enablePointerEvents",
+					new WindowManagerEnablePointerEventsParams { HtmlId = Handle, IsEnabled = true },
+					_pointerEventArgs);
 
-			AddPointerHandlerCore(routedEvent);
+				// In order to ensure valid pressed and over state, we ** must ** subscribe to all pointer events at once.
+				_registeredRoutedEvents |= RoutedEventFlagHelper.Pointers;
+			}
 		}
 
-		private void AddPointerHandlerCore(RoutedEvent routedEvent)
+		//private void AddPointerHandlerCore(RoutedEvent routedEvent)
+		//{
+		//	if (_registeredRoutedEvents.HasFlag(routedEvent.Flag))
+		//	{
+		//		return;
+		//	}
+
+		//	if (routedEvent == PointerCaptureLostEvent)
+		//	{
+		//		// Captures are handled in managed code only
+		//		_registeredRoutedEvents |= routedEvent.Flag;
+		//		return;
+		//	}
+
+		//	if (!_pointerHandlers.TryGetValue(routedEvent, out var evt))
+		//	{
+		//		Application.Current.RaiseRecoverableUnhandledException(new NotImplementedException($"Pointer event {routedEvent.Name} is not supported on this platform"));
+		//		return;
+		//	}
+
+		//	_registeredRoutedEvents |= routedEvent.Flag;
+
+		//	RegisterEventHandler(
+		//		evt.domEventName,
+		//		handler: evt.handler,
+		//		onCapturePhase: false,
+		//		canBubbleNatively: true,
+		//		eventFilter: HtmlEventFilter.Default,
+		//		eventExtractor: HtmlEventExtractor.PointerEventExtractor,
+		//		payloadConverter: evt.argsParser
+		//	);
+		//}
+
+		private static readonly TSInteropMarshaller.Property<WindowManagerPointerEventArgs_Return> _pointerEventArgs
+			= TSInteropMarshaller.AllocJSProperty<WindowManagerPointerEventArgs_Return>("Uno:setPointerEventArgs");
+		private static readonly TSInteropMarshaller.Property<WindowManagerPointerEventResult_Params> _pointerEventResult
+			= TSInteropMarshaller.AllocJSProperty<WindowManagerPointerEventResult_Params>("Uno:setPointerEventResult");
+
+		[Preserve]
+		public static void DispatchPointerEvent()
 		{
-			if (_registeredRoutedEvents.HasFlag(routedEvent.Flag))
+			if (_pointerEventArgs.TryRead(out var args))
 			{
-				return;
-			}
+				var sender = GetElementFromHandle(args.SourceHandle);
+				var routedArgs = new PointerRoutedEventArgs(sender, args);
 
-			if (routedEvent == PointerCaptureLostEvent)
-			{
-				// Captures are handled in managed code only
-				_registeredRoutedEvents |= routedEvent.Flag;
-				return;
-			}
-
-			if (!_pointerHandlers.TryGetValue(routedEvent, out var evt))
-			{
-				Application.Current.RaiseRecoverableUnhandledException(new NotImplementedException($"Pointer event {routedEvent.Name} is not supported on this platform"));
-				return;
-			}
-
-			_registeredRoutedEvents |= routedEvent.Flag;
-
-			RegisterEventHandler(
-				evt.domEventName,
-				handler: evt.handler,
-				onCapturePhase: false,
-				canBubbleNatively: true,
-				eventFilter: HtmlEventFilter.Default,
-				eventExtractor: HtmlEventExtractor.PointerEventExtractor,
-				payloadConverter: evt.argsParser
-			);
-		}
-
-		private static PointerRoutedEventArgs PayloadToEnteredPointerArgs(object snd, string payload) => PayloadToPointerArgs(snd, payload, isInContact: false, canBubble: false);
-		private static PointerRoutedEventArgs PayloadToPressedPointerArgs(object snd, string payload) => PayloadToPointerArgs(snd, payload, isInContact: true, pressed: true);
-		private static PointerRoutedEventArgs PayloadToMovedPointerArgs(object snd, string payload) => PayloadToPointerArgs(snd, payload, isInContact: true);
-		private static PointerRoutedEventArgs PayloadToReleasedPointerArgs(object snd, string payload) => PayloadToPointerArgs(snd, payload, isInContact: true, pressed: false);
-		private static PointerRoutedEventArgs PayloadToExitedPointerArgs(object snd, string payload) => PayloadToPointerArgs(snd, payload, isInContact: false, canBubble: false);
-		private static PointerRoutedEventArgs PayloadToCancelledPointerArgs(object snd, string payload) => PayloadToPointerArgs(snd, payload, isInContact: false, pressed: false);
-
-		private static PointerRoutedEventArgs PayloadToPointerArgs(object snd, string payload, bool isInContact, bool canBubble = true, bool? pressed = null)
-		{
-			var parts = payload?.Split(';');
-			if (parts?.Length != 9)
-			{
-				return null;
-			}
-
-			var pointerId = uint.Parse(parts[0], CultureInfo.InvariantCulture);
-			var x = double.Parse(parts[1], CultureInfo.InvariantCulture);
-			var y = double.Parse(parts[2], CultureInfo.InvariantCulture);
-			var ctrl = parts[3] == "1";
-			var shift = parts[4] == "1";
-			var button = int.Parse(parts[5], CultureInfo.InvariantCulture); // -1: none, 0:main, 1:middle, 2:other (commonly main=left, other=right)
-			var typeStr = parts[6];
-			var srcHandle = int.Parse(parts[7]);
-			var timestamp = double.Parse(parts[8], CultureInfo.InvariantCulture);
-
-			var position = new Point(x, y);
-			var pointerType = ConvertPointerTypeString(typeStr);
-			var key =
-				button == 0 ? VirtualKey.LeftButton
-				: button == 1 ? VirtualKey.MiddleButton
-				: button == 2 ? VirtualKey.RightButton
-				: VirtualKey.None; // includes -1 == none
-			var keyModifiers = VirtualKeyModifiers.None;
-			if (ctrl) keyModifiers |= VirtualKeyModifiers.Control;
-			if (shift) keyModifiers |= VirtualKeyModifiers.Shift;
-			var update = PointerUpdateKind.Other;
-			if (pressed.HasValue)
-			{
-				if (pressed.Value)
+				bool handled;
+				switch ((NativePointerEvent)args.Event)
 				{
-					update = key == VirtualKey.LeftButton ? PointerUpdateKind.LeftButtonPressed
-						: key == VirtualKey.MiddleButton ? PointerUpdateKind.MiddleButtonPressed
-						: key == VirtualKey.RightButton ? PointerUpdateKind.RightButtonPressed
-						: PointerUpdateKind.Other;
+					case NativePointerEvent.PointerEnter:
+						handled = sender.OnNativePointerEnter(routedArgs);
+						break;
+					case NativePointerEvent.PointerLeave:
+						handled = sender.OnNativePointerExited(routedArgs);
+						break;
+					case NativePointerEvent.PointerDown:
+						handled = sender.OnNativePointerDown(routedArgs);
+						break;
+					case NativePointerEvent.PointerUp:
+						handled = sender.OnNativePointerUp(routedArgs);
+						break;
+					case NativePointerEvent.PointerMove:
+						handled = args.IsOver_HasValue
+							? sender.OnNativePointerMoveWithOverCheck(routedArgs, args.IsOver)
+							: sender.OnNativePointerMove(routedArgs);
+						break;
+					case NativePointerEvent.PointerCancel:
+						handled = sender.OnNativePointerCancel(routedArgs, isSwallowedBySystem: true);
+						break;
+					default:
+						throw new ArgumentOutOfRangeException($"The event {args.Event} is not supported.");
 				}
-				else
-				{
-					update = key == VirtualKey.LeftButton ? PointerUpdateKind.LeftButtonReleased
-						: key == VirtualKey.MiddleButton ? PointerUpdateKind.MiddleButtonReleased
-						: key == VirtualKey.RightButton ? PointerUpdateKind.RightButtonReleased
-						: PointerUpdateKind.Other;
-				}
-			}
-			var src = GetElementFromHandle(srcHandle) ?? (UIElement)snd;
 
-			return new PointerRoutedEventArgs(
-				timestamp,
-				pointerId,
-				pointerType,
-				position,
-				isInContact,
-				key,
-				keyModifiers,
-				update,
-				src,
-				canBubble);
+				_pointerEventResult.Write(new WindowManagerPointerEventResult_Params { Handled = handled});
+			}
 		}
 
-		private static PointerDeviceType ConvertPointerTypeString(string typeStr)
+		internal enum NativePointerEvent : int
 		{
-			PointerDeviceType type;
-			switch (typeStr.ToUpper())
-			{
-				case "MOUSE":
-				default:
-					type = PointerDeviceType.Mouse;
-					break;
-				case "PEN":
-					type = PointerDeviceType.Pen;
-					break;
-				case "TOUCH":
-					type = PointerDeviceType.Touch;
-					break;
-			}
-
-			return type;
+			PointerEnter = 0,
+			PointerLeave = 1,
+			PointerDown = 2,
+			PointerUp = 3,
+			PointerMove = 4,
+			PointerCancel = 16,
 		}
+
+		[TSInteropMessage]
+		[StructLayout(LayoutKind.Sequential, Pack = 4)]
+		private struct WindowManagerEnablePointerEventsParams
+		{
+			public IntPtr HtmlId;
+
+			public bool IsEnabled;
+		}
+
+		[TSInteropMessage]
+		[StructLayout(LayoutKind.Sequential, Pack = 8)]
+		internal struct WindowManagerPointerEventArgs_Return // This us suffixed "_Return" to get the "marshal" method ... we need to fix the generator!
+		{
+			public int Event; // NativePointerEvent
+
+			public int SourceHandle;
+			public int OriginalSourceHandle;
+
+			public double Timestamp;
+
+			public int PointerId;
+			public int PointerType; // PointerDeviceType
+
+			public double RawX;
+			public double RawY;
+
+			public bool IsCtrlPressed;
+			public bool IsShiftPressed;
+			public int PressedButton;
+
+			public bool IsOver_HasValue;
+			public bool IsOver;
+		}
+
+		[TSInteropMessage]
+		[StructLayout(LayoutKind.Sequential, Pack = 4)]
+		private struct WindowManagerPointerEventResult_Params
+		{
+			public bool Handled;
+		}
+
+		//private static PointerRoutedEventArgs PayloadToEnteredPointerArgs(object snd, string payload) => PayloadToPointerArgs(snd, payload, isInContact: false, canBubble: false);
+		//private static PointerRoutedEventArgs PayloadToPressedPointerArgs(object snd, string payload) => PayloadToPointerArgs(snd, payload, isInContact: true, pressed: true);
+		//private static PointerRoutedEventArgs PayloadToMovedPointerArgs(object snd, string payload) => PayloadToPointerArgs(snd, payload, isInContact: true);
+		//private static PointerRoutedEventArgs PayloadToReleasedPointerArgs(object snd, string payload) => PayloadToPointerArgs(snd, payload, isInContact: true, pressed: false);
+		//private static PointerRoutedEventArgs PayloadToExitedPointerArgs(object snd, string payload) => PayloadToPointerArgs(snd, payload, isInContact: false, canBubble: false);
+		//private static PointerRoutedEventArgs PayloadToCancelledPointerArgs(object snd, string payload) => PayloadToPointerArgs(snd, payload, isInContact: false, pressed: false);
+
+		//private static PointerRoutedEventArgs PayloadToPointerArgs(object snd, string payload, bool isInContact, bool canBubble = true, bool? pressed = null)
+		//{
+		//	var parts = payload?.Split(';');
+		//	if (parts?.Length != 10)
+		//	{
+		//		return null;
+		//	}
+
+		//	var pointerId = uint.Parse(parts[0], CultureInfo.InvariantCulture);
+		//	var x = double.Parse(parts[1], CultureInfo.InvariantCulture);
+		//	var y = double.Parse(parts[2], CultureInfo.InvariantCulture);
+		//	var ctrl = parts[3] == "1";
+		//	var shift = parts[4] == "1";
+		//	var button = int.Parse(parts[5], CultureInfo.InvariantCulture); // -1: none, 0:main, 1:middle, 2:other (commonly main=left, other=right)
+		//	var typeStr = parts[6];
+		//	var srcHandle = int.Parse(parts[7]);
+		//	var timestamp = double.Parse(parts[8], CultureInfo.InvariantCulture);
+		//	var isOver = parts[9] == "null" ? default(bool?) : bool.Parse(parts[9]);
+
+		//	var position = new Point(x, y);
+		//	var pointerType = ConvertPointerTypeString(typeStr);
+		//	var key =
+		//		button == 0 ? VirtualKey.LeftButton
+		//		: button == 1 ? VirtualKey.MiddleButton
+		//		: button == 2 ? VirtualKey.RightButton
+		//		: VirtualKey.None; // includes -1 == none
+		//	var keyModifiers = VirtualKeyModifiers.None;
+		//	if (ctrl) keyModifiers |= VirtualKeyModifiers.Control;
+		//	if (shift) keyModifiers |= VirtualKeyModifiers.Shift;
+		//	var update = PointerUpdateKind.Other;
+		//	if (pressed.HasValue)
+		//	{
+		//		if (pressed.Value)
+		//		{
+		//			update = key == VirtualKey.LeftButton ? PointerUpdateKind.LeftButtonPressed
+		//				: key == VirtualKey.MiddleButton ? PointerUpdateKind.MiddleButtonPressed
+		//				: key == VirtualKey.RightButton ? PointerUpdateKind.RightButtonPressed
+		//				: PointerUpdateKind.Other;
+		//		}
+		//		else
+		//		{
+		//			update = key == VirtualKey.LeftButton ? PointerUpdateKind.LeftButtonReleased
+		//				: key == VirtualKey.MiddleButton ? PointerUpdateKind.MiddleButtonReleased
+		//				: key == VirtualKey.RightButton ? PointerUpdateKind.RightButtonReleased
+		//				: PointerUpdateKind.Other;
+		//		}
+		//	}
+		//	var src = GetElementFromHandle(srcHandle) ?? (UIElement)snd;
+
+		//	return new PointerRoutedEventArgs(
+		//		timestamp,
+		//		pointerId,
+		//		pointerType,
+		//		position,
+		//		isInContact,
+		//		key,
+		//		keyModifiers,
+		//		update,
+		//		src,
+		//		canBubble);
+		//}
+
+		//private static PointerDeviceType ConvertPointerTypeString(string typeStr)
+		//{
+		//	PointerDeviceType type;
+		//	switch (typeStr.ToUpper())
+		//	{
+		//		case "MOUSE":
+		//		default:
+		//			type = PointerDeviceType.Mouse;
+		//			break;
+		//		case "PEN":
+		//			type = PointerDeviceType.Pen;
+		//			break;
+		//		case "TOUCH":
+		//			type = PointerDeviceType.Touch;
+		//			break;
+		//	}
+
+		//	return type;
+		//}
 
 		#region Capture
 		partial void OnManipulationModeChanged(ManipulationModes _, ManipulationModes newMode)

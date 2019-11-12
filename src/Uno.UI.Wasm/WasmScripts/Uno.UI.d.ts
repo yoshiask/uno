@@ -151,6 +151,7 @@ declare namespace Uno.UI {
         private allActiveElementsById;
         private static resizeMethod;
         private static dispatchEventMethod;
+        private static dispatchPointerEventMethod;
         private static getDependencyPropertyValueMethod;
         private constructor();
         /**
@@ -316,6 +317,23 @@ declare namespace Uno.UI {
             * @param onCapturePhase true means "on trickle down" (going down to target), false means "on bubble up" (bubbling back to ancestors). Default is false.
             */
         registerEventOnView(elementId: number, eventName: string, onCapturePhase?: boolean, eventFilterName?: string, eventExtractorName?: string): string;
+        /**
+            * Add an event handler to a html element.
+            *
+            * @param eventName The name of the event
+            * @param onCapturePhase true means "on trickle down" (going down to target), false means "on bubble up" (bubbling back to ancestors). Default is false.
+            */
+        enablePointerEvents(pParams: number): void;
+        private static pointerEnterEventHandler;
+        private static pointerLeaveEventHandler;
+        private static pointerMoveEventHandler;
+        private static pointerEventHandler;
+        private static toManagedArgs;
+        private static dispatchPointerEvent;
+        private static _pointerEventArgs;
+        private static _pointerEventResult;
+        static pointerEventArgs: number;
+        static pointerEventResult: number;
         /**
             * Add an event handler to a html element.
             *
@@ -551,6 +569,11 @@ declare class WindowManagerDestroyViewParams {
     HtmlId: number;
     static unmarshal(pData: number): WindowManagerDestroyViewParams;
 }
+declare class WindowManagerEnablePointerEventsParams {
+    HtmlId: number;
+    IsEnabled: boolean;
+    static unmarshal(pData: number): WindowManagerEnablePointerEventsParams;
+}
 declare class WindowManagerGetBBoxParams {
     HtmlId: number;
     static unmarshal(pData: number): WindowManagerGetBBoxParams;
@@ -588,6 +611,45 @@ declare class WindowManagerMeasureViewReturn {
     DesiredWidth: number;
     DesiredHeight: number;
     marshal(pData: number): void;
+}
+declare class WindowManagerPointerEventArgs {
+    Event: number;
+    SourceId: number;
+    OriginalSourceId: number;
+    Timestamp: number;
+    PointerId: number;
+    PointerType: number;
+    RawX: number;
+    RawY: number;
+    IsCtrlPressed: boolean;
+    IsShiftPressed: boolean;
+    PressedButton: number;
+    IsOver_HasValue: boolean;
+    IsOver: boolean;
+}
+declare class WindowManagerPointerEventArgs_Return {
+    Event: number;
+    SourceHandle: number;
+    OriginalSourceHandle: number;
+    Timestamp: number;
+    PointerId: number;
+    PointerType: number;
+    RawX: number;
+    RawY: number;
+    IsCtrlPressed: boolean;
+    IsShiftPressed: boolean;
+    PressedButton: number;
+    IsOver_HasValue: boolean;
+    IsOver: boolean;
+    marshal(pData: number): void;
+}
+declare class WindowManagerPointerEventResult_Args {
+    Handled: boolean;
+    marshal(pData: number): void;
+}
+declare class WindowManagerPointerEventResult_Params {
+    Handled: boolean;
+    static unmarshal(pData: number): WindowManagerPointerEventResult_Params;
 }
 declare class WindowManagerRegisterEventOnViewParams {
     HtmlId: number;

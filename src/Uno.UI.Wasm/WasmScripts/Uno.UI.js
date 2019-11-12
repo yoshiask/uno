@@ -813,6 +813,85 @@ var Uno;
                 * Add an event handler to a html element.
                 *
                 * @param eventName The name of the event
+                * @param onCapturePhase true means "on trickle down" (going down to target), false means "on bubble up" (bubbling back to ancestors). Default is false.
+                */
+            enablePointerEvents(pParams) {
+                const params = WindowManagerEnablePointerEventsParams.unmarshal(pParams);
+                const element = this.getView(params.HtmlId);
+                if (params.IsEnabled) {
+                    element.addEventListener("pointerenter", WindowManager.pointerEnterEventHandler);
+                    element.addEventListener("pointerleave", WindowManager.pointerLeaveEventHandler);
+                    element.addEventListener("pointerdown", WindowManager.pointerEventHandler);
+                    element.addEventListener("pointerup", WindowManager.pointerEventHandler);
+                    element.addEventListener("pointermove", WindowManager.pointerMoveEventHandler);
+                    element.addEventListener("pointercancel", WindowManager.pointerEventHandler);
+                }
+                else {
+                    element.removeEventListener("pointerenter", WindowManager.pointerEnterEventHandler);
+                    element.removeEventListener("pointerleave", WindowManager.pointerLeaveEventHandler);
+                    element.removeEventListener("pointerdown", WindowManager.pointerEventHandler);
+                    element.removeEventListener("pointerup", WindowManager.pointerEventHandler);
+                    element.removeEventListener("pointermove", WindowManager.pointerMoveEventHandler);
+                    element.removeEventListener("pointercancel", WindowManager.pointerEventHandler);
+                }
+            }
+            static toManagedArgs(event) {
+                const args = new WindowManagerPointerEventArgs_Return();
+                args.SourceHandle = +event.currentTarget.id; // Should be equals to params.HtmlId
+                let originalSource = event.target;
+                while (originalSource) {
+                    const handle = originalSource.getAttribute("XamlHandle");
+                    if (handle) {
+                        args.OriginalSourceHandle = +handle;
+                        break;
+                    }
+                    originalSource = originalSource.parentElement;
+                }
+                args.Timestamp = event.timeStamp;
+                args.PointerId = event.pointerId;
+                args.RawX = event.clientX;
+                args.RawY = event.clientY;
+                args.PressedButton = event.button;
+                args.IsCtrlPressed = event.ctrlKey;
+                args.IsShiftPressed = event.shiftKey;
+                switch (event.pointerType.toUpperCase()) {
+                    case "MOUSE":
+                    default:
+                        args.PointerType = 2; // PointerDeviceType.Mouse;
+                        break;
+                    case "PEN":
+                        args.PointerType = 1; // PointerDeviceType.Pen;
+                        break;
+                    case "TOUCH":
+                        args.PointerType = 0; // PointerDeviceType.Touch;
+                        break;
+                }
+                return args;
+            }
+            static dispatchPointerEvent(args) {
+                args.marshal(WindowManager.pointerEventArgs);
+                WindowManager.dispatchPointerEventMethod();
+                const result = WindowManagerPointerEventResult_Params.unmarshal(WindowManager.pointerEventResult);
+                if (result.Handled) {
+                    event.stopPropagation();
+                }
+            }
+            static set pointerEventArgs(pArgs) {
+                WindowManager._pointerEventArgs = pArgs;
+            }
+            static get pointerEventArgs() {
+                return WindowManager._pointerEventArgs;
+            }
+            static set pointerEventResult(pResult) {
+                WindowManager._pointerEventResult = pResult;
+            }
+            static get pointerEventResult() {
+                return WindowManager._pointerEventResult;
+            }
+            /**
+                * Add an event handler to a html element.
+                *
+                * @param eventName The name of the event
                 * @param onCapturePhase true means "on trickle down", false means "on bubble up". Default is false.
                 */
             registerEventOnViewNative(pParams) {
@@ -862,8 +941,7 @@ var Uno;
                             // which is unexpected as the "pointerenter" should not bubble.
                             // So we have to validate that this event is effectively due to the pointer entering the control.
                             // We achieve this by browsing up the elements under the pointer (** not the visual tree**) 
-                            const evt = event;
-                            for (let elt of document.elementsFromPoint(evt.pageX, evt.pageY)) {
+                            for (let elt of document.elementsFromPoint(event.pageX, event.pageY)) {
                                 if (elt == element) {
                                     // We found our target element, we can raise the event and stop the loop
                                     eventHandler(event);
@@ -928,6 +1006,16 @@ var Uno;
                         }
                     };
                     element.addEventListener(eventName, leavePointerHandler, onCapturePhase);
+                }
+                else if (eventName == "pointermove") {
+                    const movePointerHandler = (event) => {
+                        const eventPayload = this.pointerEventExtractor(event);
+                        const handled = this.dispatchEvent(element, eventName, eventPayload);
+                        if (handled) {
+                            event.stopPropagation();
+                        }
+                    };
+                    element.addEventListener(eventName, movePointerHandler, onCapturePhase);
                 }
                 else {
                     element.addEventListener(eventName, eventHandler, onCapturePhase);
@@ -1477,6 +1565,9 @@ var Uno;
                     if (!WindowManager.dispatchEventMethod) {
                         WindowManager.dispatchEventMethod = Module.mono_bind_static_method("[Uno.UI] Windows.UI.Xaml.UIElement:DispatchEvent");
                     }
+                    if (!WindowManager.dispatchPointerEventMethod) {
+                        WindowManager.dispatchPointerEventMethod = Module.mono_bind_static_method("[Uno.UI] Windows.UI.Xaml.UIElement:DispatchPointerEvent");
+                    }
                 }
             }
             initDom() {
@@ -1542,6 +1633,90 @@ var Uno;
             WindowManager.initMethods();
             UI.HtmlDom.initPolyfills();
         })();
+        WindowManager.pointerEnterEventHandler = (event) => {
+            const e = event;
+            const element = event.currentTarget;
+            if (e.explicitOriginalTarget) { // FF only
+                // It happens on FF that when another control which is over the 'element' has been updated, like text or visibility changed,
+                // we receive a pointer enter/leave of an element which is under an element that is capable to handle pointers,
+                // which is unexpected as the "pointerenter" should not bubble.
+                // So we have to validate that this event is effectively due to the pointer entering the control.
+                // We achieve this by browsing up the elements under the pointer (** not the visual tree**) 
+                for (let elt of document.elementsFromPoint(event.pageX, event.pageY)) {
+                    if (elt == element) {
+                        // We found our target element, we can raise the event and stop the loop
+                        WindowManager.pointerEventHandler(event);
+                        return;
+                    }
+                    let htmlElt = elt;
+                    if (htmlElt.style.pointerEvents != "none") {
+                        // This 'htmlElt' is handling the pointers events, this mean that we can stop the loop.
+                        // However, if this 'htmlElt' is one of our child it means that the event was legitimate
+                        // and we have to raise it for the 'element'.
+                        while (htmlElt.parentElement) {
+                            htmlElt = htmlElt.parentElement;
+                            if (htmlElt == element) {
+                                WindowManager.pointerEventHandler(event);
+                                return;
+                            }
+                        }
+                        // We found an element this is capable to handle the pointers but which is not one of our child
+                        // (probably a sibling which is covering the element). It means that the pointerEnter/Leave should
+                        // not have bubble to the element, and we can mute it.
+                        return;
+                    }
+                }
+            }
+            else {
+                WindowManager.pointerEventHandler(event);
+            }
+        };
+        WindowManager.pointerLeaveEventHandler = (event) => {
+            const e = event;
+            const element = event.currentTarget;
+            const elementId = element.id;
+            if (e.explicitOriginalTarget // FF only
+                && e.explicitOriginalTarget !== event.currentTarget
+                && event.isOver(element)) {
+                // If the event was re-targeted, it's suspicious as the leave event should not bubble
+                // This happens on FF when another control which is over the 'element' has been updated, like text or visibility changed.
+                // So we have to validate that this event is effectively due to the pointer leaving the element.
+                // We achieve that by buffering it until the next few 'pointermove' on document for which we validate the new pointer location.
+                // It's common to get a move right after the leave with the same pointer's location,
+                // so we wait up to 3 pointer move before dropping the leave event.
+                var attempt = 3;
+                WindowManager.current.ensurePendingLeaveEventProcessing();
+                WindowManager.current.processPendingLeaveEvent = (move) => {
+                    if (!move.isOverDeep(element)) {
+                        console.log("Raising deferred pointerleave on element " + elementId);
+                        WindowManager.pointerEventHandler(event);
+                        WindowManager.current.processPendingLeaveEvent = null;
+                    }
+                    else if (--attempt <= 0) {
+                        console.log("Drop deferred pointerleave on element " + elementId);
+                        WindowManager.current.processPendingLeaveEvent = null;
+                    }
+                    else {
+                        console.log("Requeue deferred pointerleave on element " + elementId);
+                    }
+                };
+            }
+            else {
+                WindowManager.pointerEventHandler(event);
+            }
+        };
+        WindowManager.pointerMoveEventHandler = (event) => {
+            const element = event.currentTarget;
+            const args = WindowManager.toManagedArgs(event);
+            if (element.hasPointerCapture(event.pointerId)) {
+                args.IsOver_HasValue = true;
+                args.IsOver = event.isOver(element);
+            }
+            WindowManager.dispatchPointerEvent(args);
+        };
+        WindowManager.pointerEventHandler = (event) => {
+            WindowManager.dispatchPointerEvent(WindowManager.toManagedArgs(event));
+        };
         WindowManager.MAX_WIDTH = `${Number.MAX_SAFE_INTEGER}vw`;
         WindowManager.MAX_HEIGHT = `${Number.MAX_SAFE_INTEGER}vh`;
         UI.WindowManager = WindowManager;
@@ -1712,6 +1887,19 @@ class WindowManagerDestroyViewParams {
     }
 }
 /* TSBindingsGenerator Generated code -- this code is regenerated on each build */
+class WindowManagerEnablePointerEventsParams {
+    static unmarshal(pData) {
+        let ret = new WindowManagerEnablePointerEventsParams();
+        {
+            ret.HtmlId = Number(Module.getValue(pData + 0, "*"));
+        }
+        {
+            ret.IsEnabled = Boolean(Module.getValue(pData + 4, "i32"));
+        }
+        return ret;
+    }
+}
+/* TSBindingsGenerator Generated code -- this code is regenerated on each build */
 class WindowManagerGetBBoxParams {
     static unmarshal(pData) {
         let ret = new WindowManagerGetBBoxParams();
@@ -1783,6 +1971,43 @@ class WindowManagerMeasureViewReturn {
     marshal(pData) {
         Module.setValue(pData + 0, this.DesiredWidth, "double");
         Module.setValue(pData + 8, this.DesiredHeight, "double");
+    }
+}
+/* TSBindingsGenerator Generated code -- this code is regenerated on each build */
+class WindowManagerPointerEventArgs {
+}
+/* TSBindingsGenerator Generated code -- this code is regenerated on each build */
+class WindowManagerPointerEventArgs_Return {
+    marshal(pData) {
+        Module.setValue(pData + 0, this.Event, "i32");
+        Module.setValue(pData + 8, this.SourceHandle, "i32");
+        Module.setValue(pData + 16, this.OriginalSourceHandle, "i32");
+        Module.setValue(pData + 24, this.Timestamp, "double");
+        Module.setValue(pData + 32, this.PointerId, "i32");
+        Module.setValue(pData + 40, this.PointerType, "i32");
+        Module.setValue(pData + 48, this.RawX, "double");
+        Module.setValue(pData + 56, this.RawY, "double");
+        Module.setValue(pData + 64, this.IsCtrlPressed, "i32");
+        Module.setValue(pData + 72, this.IsShiftPressed, "i32");
+        Module.setValue(pData + 80, this.PressedButton, "i32");
+        Module.setValue(pData + 88, this.IsOver_HasValue, "i32");
+        Module.setValue(pData + 96, this.IsOver, "i32");
+    }
+}
+/* TSBindingsGenerator Generated code -- this code is regenerated on each build */
+class WindowManagerPointerEventResult_Args {
+    marshal(pData) {
+        Module.setValue(pData + 0, this.Handled, "i32");
+    }
+}
+/* TSBindingsGenerator Generated code -- this code is regenerated on each build */
+class WindowManagerPointerEventResult_Params {
+    static unmarshal(pData) {
+        let ret = new WindowManagerPointerEventResult_Params();
+        {
+            ret.Handled = Boolean(Module.getValue(pData + 0, "i32"));
+        }
+        return ret;
     }
 }
 /* TSBindingsGenerator Generated code -- this code is regenerated on each build */

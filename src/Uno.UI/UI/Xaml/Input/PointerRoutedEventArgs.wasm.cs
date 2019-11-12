@@ -18,6 +18,73 @@ namespace Windows.UI.Xaml.Input
 		private readonly VirtualKey _button;
 		private readonly PointerUpdateKind _updateKind;
 
+		internal PointerRoutedEventArgs(UIElement sender, UIElement.WindowManagerPointerEventArgs_Return nativeArgs)
+		{
+			_timestamp = nativeArgs.Timestamp;
+			_absolutePosition = new Point(nativeArgs.RawX, nativeArgs.RawY);
+			_button = nativeArgs.PressedButton == 0 ? VirtualKey.LeftButton
+				: nativeArgs.PressedButton == 1 ? VirtualKey.MiddleButton
+				: nativeArgs.PressedButton == 2 ? VirtualKey.RightButton
+				: VirtualKey.None; // includes -1 == none
+
+			var frameId = ToFrameId(_timestamp);
+			var pointerId = (uint)nativeArgs.PointerId;
+			var pointerType = (PointerDeviceType)nativeArgs.PointerType;
+
+			var keyModifiers = VirtualKeyModifiers.None;
+			if (nativeArgs.IsCtrlPressed) keyModifiers |= VirtualKeyModifiers.Control;
+			if (nativeArgs.IsShiftPressed) keyModifiers |= VirtualKeyModifiers.Shift;
+
+			bool isInContact, canBubbleNatively = true;
+			switch ((UIElement.NativePointerEvent)nativeArgs.Event)
+			{
+				case UIElement.NativePointerEvent.PointerEnter:
+				case UIElement.NativePointerEvent.PointerLeave:
+					isInContact = false;
+					canBubbleNatively = false;
+					break;
+
+				case UIElement.NativePointerEvent.PointerDown:
+					_updateKind = _button == VirtualKey.LeftButton ? PointerUpdateKind.LeftButtonPressed
+						: _button == VirtualKey.MiddleButton ? PointerUpdateKind.MiddleButtonPressed
+						: _button == VirtualKey.RightButton ? PointerUpdateKind.RightButtonPressed
+						: PointerUpdateKind.Other;
+					isInContact = true;
+					break;
+
+				case UIElement.NativePointerEvent.PointerMove:
+					isInContact = true;
+					break;
+
+				case UIElement.NativePointerEvent.PointerUp:
+					_updateKind = _button == VirtualKey.LeftButton ? PointerUpdateKind.LeftButtonReleased
+						: _button == VirtualKey.MiddleButton ? PointerUpdateKind.MiddleButtonReleased
+						: _button == VirtualKey.RightButton ? PointerUpdateKind.RightButtonReleased
+						: PointerUpdateKind.Other;
+					isInContact = true;
+					break;
+
+				case UIElement.NativePointerEvent.PointerCancel:
+					_updateKind = _button == VirtualKey.LeftButton ? PointerUpdateKind.LeftButtonReleased
+						: _button == VirtualKey.MiddleButton ? PointerUpdateKind.MiddleButtonReleased
+						: _button == VirtualKey.RightButton ? PointerUpdateKind.RightButtonReleased
+						: PointerUpdateKind.Other;
+					isInContact = false;
+					break;
+
+				default:
+					throw new ArgumentOutOfRangeException(nameof(nativeArgs.Event));
+			}
+
+			var originalSource = UIElement.GetElementFromHandle(nativeArgs.OriginalSourceHandle) ?? sender;
+
+			FrameId = frameId;
+			Pointer = new Pointer(pointerId, pointerType, isInContact, isInRange: true);
+			KeyModifiers = keyModifiers;
+			OriginalSource = originalSource;
+			CanBubbleNatively = canBubbleNatively;
+		}
+
 		internal PointerRoutedEventArgs(
 			double timestamp,
 			uint pointerId,

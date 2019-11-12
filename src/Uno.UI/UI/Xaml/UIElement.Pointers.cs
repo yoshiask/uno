@@ -450,7 +450,6 @@ namespace Windows.UI.Xaml
 			var isOverOrCaptured = ValidateAndUpdateCapture(args, out var isOver);
 
 			handledInManaged |= SetPressed(args, false, muteEvent: !isOverOrCaptured);
-
 			
 			// Note: We process the UpEvent between Release and Exited as the gestures like "Tap"
 			//		 are fired between those events.
@@ -677,6 +676,7 @@ namespace Windows.UI.Xaml
 
 		public IReadOnlyList<Pointer> PointerCaptures => (IReadOnlyList<Pointer>)this.GetValue(PointerCapturesProperty);
 
+		internal bool HasCapture => HasExplicitCapture;
 		internal bool IsCaptured(Pointer pointer)
 			=> HasExplicitCapture
 				&& PointerCapture.TryGet(pointer, out var capture)
