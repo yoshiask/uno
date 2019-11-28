@@ -83,12 +83,13 @@ namespace Windows.UI.Xaml
 			return new Rect(double.Parse(sizeParts[0]), double.Parse(sizeParts[1]), double.Parse(sizeParts[2]), double.Parse(sizeParts[3]));
 		}
 
-		public UIElement(string htmlTag = "div", bool isSvg = false)
+		public UIElement(string htmlTag = "div", bool isSvg = false, bool isNonVisual = false)
 		{
 			_gcHandle = GCHandle.Alloc(this, GCHandleType.Weak);
 			_isFrameworkElement = this is FrameworkElement;
 			HtmlTag = htmlTag;
 			HtmlTagIsSvg = isSvg;
+			HtmlTagIsNonVisual = isNonVisual;
 
 			var type = GetType();
 
@@ -133,6 +134,8 @@ namespace Windows.UI.Xaml
 
 		public bool HtmlTagIsSvg { get; }
 
+        public bool HtmlTagIsNonVisual { get; }
+
 		protected internal void SetStyle(string name, string value)
 		{
 			Uno.UI.Xaml.WindowManagerInterop.SetStyles(HtmlId, new[] { (name, value) });
@@ -176,7 +179,12 @@ namespace Windows.UI.Xaml
 		/// <param name="clipRect">The Clip rect to set, if any</param>
 		protected internal void ArrangeElementNative(Rect rect, bool clipToBounds, Rect? clipRect)
 		{
-			_nativeLayoutSlot = rect;
+            if(HtmlTagIsNonVisual)
+            {
+	            return;
+            }
+
+            _nativeLayoutSlot = rect;
 			Uno.UI.Xaml.WindowManagerInterop.ArrangeElement(HtmlId, rect, clipToBounds, clipRect);
 
 #if DEBUG

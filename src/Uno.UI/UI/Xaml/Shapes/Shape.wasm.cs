@@ -48,8 +48,21 @@ namespace Windows.UI.Xaml.Shapes
 		}
 
 		private readonly UIElementCollection _svgChildren;
+		private SvgDefsElement _defs;
 
 		public UIElementCollection SvgChildren => _svgChildren;
+
+
+		private SvgDefsElement GetDefs()
+		{
+			if(_defs == null)
+			{
+				_defs = new SvgDefsElement();
+				SvgChildren.Add(_defs);
+			}
+
+			return _defs;
+		}
 
 		protected abstract SvgElement GetMainSvgElement();
 
@@ -70,6 +83,11 @@ namespace Windows.UI.Xaml.Shapes
 					break;
 				case ImageBrush ib:
 					break;
+				case LinearGradientBrush lgb:
+					var svgGradient = new SvgLinearGradient(lgb);
+					GetDefs().Defs.Add(svgGradient);
+					svgElement.SetStyle("fill", $"url(#{svgGradient.HtmlId})");
+					break;
 				default:
 					svgElement.ResetStyle("fill");
 					break;
@@ -84,6 +102,11 @@ namespace Windows.UI.Xaml.Shapes
 			{
 				case SolidColorBrush scb:
 					svgElement.SetStyle("stroke", scb.Color.ToCssString());
+					break;
+				case LinearGradientBrush lgb:
+					var svgGradient = new SvgLinearGradient(lgb);
+					GetDefs().Defs.Add(svgGradient);
+					svgElement.SetStyle("stroke", $"url(#{svgGradient.HtmlId})");
 					break;
 				default:
 					svgElement.ResetStyle("stroke");
