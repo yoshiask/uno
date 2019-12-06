@@ -438,6 +438,10 @@ namespace Windows.UI.Xaml.Controls
 				return;
 			}
 			frame = ApplyMarginAndAlignments(view, frame);
+			if (view is UIElement elt)
+			{
+				elt.LayoutSlotWithMarginsAndAlignments = frame;
+			}
 
 			ArrangeChildOverride(view, frame);
 
