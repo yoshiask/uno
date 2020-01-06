@@ -68,6 +68,9 @@ namespace Windows.UI.Xaml.Controls
 			MotionEventSplittingEnabled = false;
 
 			_shouldRecalibrateFlingVelocity = (int)Android.OS.Build.VERSION.SdkInt >= 28; // Android.OS.BuildVersionCodes.P
+
+			// // This is required for animations not to be cut off by transformed ancestor views. (#1333)
+			SetClipChildren(false);
 		}
 
 		partial void InitializeSnapHelper();
@@ -84,6 +87,11 @@ namespace Windows.UI.Xaml.Controls
 			else
 			{
 				InitializeScrollbars(null);
+
+				if(FeatureConfiguration.ScrollViewer.AndroidScrollbarFadeDelay != null)
+				{
+					ScrollBarDefaultDelayBeforeFade = (int)FeatureConfiguration.ScrollViewer.AndroidScrollbarFadeDelay.Value.TotalMilliseconds;
+				}
 			}
 		}
 

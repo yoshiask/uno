@@ -22,13 +22,6 @@ namespace Windows.UI.Xaml
 {
 	public partial class UIElement : BindableNSView
 	{
-#if DEBUG
-		/// <summary>
-		/// Provides the ability to disable clipping for an object provided by the selector.
-		/// </summary>
-		public static Func<object, bool> CanClipSelector { get; set; }
-#endif
-
 		internal bool IsPointerCaptured { get; set; }
 
 		#region Logs
@@ -45,31 +38,13 @@ namespace Windows.UI.Xaml
 
 		public UIElement()
 		{
-			InitializeCapture();
+			InitializePointers();
 		}
 
-		partial void InitializeCapture();
 
-		partial void EnsureClip(Rect rect)
-		{
-			if (rect.IsEmpty
-				|| double.IsPositiveInfinity(rect.X)
-				|| double.IsPositiveInfinity(rect.Y)
-				|| double.IsPositiveInfinity(rect.Width)
-				|| double.IsPositiveInfinity(rect.Height)
-			)
-			{
-				this.Layer.Mask = null;
-				return;
-			}
-			this.WantsLayer = true;
-			this.Layer.Mask = new CAShapeLayer
-			{
-				Path = CGPath.FromRect(ToCGRect(rect))
-			};
-		}
+		internal bool ClippingIsSetByCornerRadius { get; set; } = false;
 
-		partial void OnOpacityChanged(DependencyPropertyChangedEventArgs args)
+        partial void OnOpacityChanged(DependencyPropertyChangedEventArgs args)
 		{
 			// Don't update the internal value if the value is being animated.
 			// The value is being animated by the platform itself.
@@ -168,41 +143,6 @@ namespace Windows.UI.Xaml
 
 			// TODO: UWP returns a MatrixTransform here. For now TransformToVisual doesn't support rotations, scalings, etc.
 			return new TranslateTransform { X = transformed.X, Y = transformed.Y };
-		}
-
-
-		/// <summary>
-		/// Gets the parent view for the <paramref name="owner"/> which clips its content.
-		/// </summary>
-		/// <returns>A tuple of the clipping parent, and the view that let to this parent.</returns>
-		private static (NSView child, NSView clippingParent) GetClippingParent(NSView owner)
-		{
-			(NSView child, NSView clippingParent) GetClippingParent(NSView child, NSView parent)
-			{
-				if (parent is FrameworkElement pfe)
-				{
-					if (!pfe.ClipChildrenToBounds)
-					{
-						return GetClippingParent(pfe, pfe.Superview);
-					}
-					else
-					{
-						return (child, parent);
-					}
-				}
-				else
-				{
-					return (child, parent);
-				}
-			}
-
-
-			if (owner.Superview is FrameworkElement sfe && !sfe.ClipChildrenToBounds)
-			{
-				return GetClippingParent(owner, owner.Superview);
-			}
-
-			return (owner, owner.Superview);
 		}
 
 		/// <summary>
@@ -394,7 +334,6 @@ namespace Windows.UI.Xaml
 
 				IsPointerPressed = false;
 				IsPointerOver = false;
-				_pointCaptures.Clear();
 			}
 			catch (Exception e)
 			{

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Windows.Foundation;
 using Windows.UI.Xaml;
@@ -10,26 +12,43 @@ namespace Uno.UI
 {
 	internal static class LayoutHelper
 	{
-		internal static (Size min, Size max) GetMinMax(this FrameworkElement e)
+		[Pure]
+		internal static Size GetMinSize(this IFrameworkElement e) => new Size(e.MinWidth, e.MinHeight).NumberOrDefault(new Size(0, 0));
+
+		[Pure]
+		internal static Size GetMaxSize(this IFrameworkElement e) => new Size(e.MaxWidth, e.MaxHeight).NumberOrDefault(new Size(PositiveInfinity, PositiveInfinity));
+
+		[Pure]
+		internal static (Size min, Size max) GetMinMax(this IFrameworkElement e)
 		{
 			var size = new Size(e.Width, e.Height);
-			var minSize = new Size(e.MinWidth, e.MinHeight);
-			var maxSize = new Size(e.MaxWidth, e.MaxHeight);
+			var minSize = e.GetMinSize();
+			var maxSize = e.GetMaxSize();
 
 			minSize = size
 				.NumberOrDefault(new Size(0, 0))
 				.AtMost(maxSize)
-				.AtLeast(minSize);
+				.AtLeast(minSize); // UWP is applying "min" after "max", so if "min" > "max", "min" wins
 
 			maxSize = size
 				.NumberOrDefault(new Size(PositiveInfinity, PositiveInfinity))
 				.AtMost(maxSize)
-				.AtLeast(minSize);
+				.AtLeast(minSize); // UWP is applying "min" after "max", so if "min" > "max", "min" wins
 
 			return (minSize, maxSize);
 		}
 
-		internal static Size GetMarginSize(this FrameworkElement frameworkElement)
+		[Pure]
+		internal static Size ApplySizeConstraints(this IFrameworkElement e, Size forSize)
+		{
+			var (min, max) = e.GetMinMax();
+			return forSize
+				.AtMost(max)
+				.AtLeast(min); // UWP is applying "min" after "max", so if "min" > "max", "min" wins
+		}
+
+		[Pure]
+		internal static Size GetMarginSize(this IFrameworkElement frameworkElement)
 		{
 			var margin = frameworkElement.Margin;
 			var marginWidth = margin.Left + margin.Right;
@@ -37,7 +56,8 @@ namespace Uno.UI
 			return new Size(marginWidth, marginHeight);
 		}
 
-		internal static Point GetAlignmentOffset(this FrameworkElement e, Size clientSize, Size renderSize)
+		[Pure]
+		internal static Point GetAlignmentOffset(this IFrameworkElement e, Size clientSize, Size renderSize)
 		{
 			// Start with Bottom-Right alignment, multiply by 0/0.5/1 for Top-Left/Center/Bottom-Right alignment
 			var offset = new Point(
@@ -78,6 +98,7 @@ namespace Uno.UI
 			return offset;
 		}
 
+		[Pure]
 		internal static Size Min(Size val1, Size val2)
 		{
 			return new Size(
@@ -86,6 +107,7 @@ namespace Uno.UI
 			);
 		}
 
+		[Pure]
 		internal static Size Max(Size val1, Size val2)
 		{
 			return new Size(
@@ -94,6 +116,7 @@ namespace Uno.UI
 			);
 		}
 
+		[Pure]
 		internal static Size Add(this Size left, Size right)
 		{
 			return new Size(
@@ -102,6 +125,16 @@ namespace Uno.UI
 			);
 		}
 
+		[Pure]
+		internal static Size Add(this Size left, Thickness right)
+		{
+			return new Size(
+				left.Width + right.Left + right.Right,
+				left.Height + right.Top + right.Bottom
+			);
+		}
+
+		[Pure]
 		internal static Size Subtract(this Size left, Size right)
 		{
 			return new Size(
@@ -110,6 +143,16 @@ namespace Uno.UI
 			);
 		}
 
+		[Pure]
+		internal static Size Subtract(this Size left, Thickness right)
+		{
+			return new Size(
+				left.Width - right.Left - right.Right,
+				left.Height - right.Top - right.Bottom
+			);
+		}
+
+		[Pure]
 		internal static double NumberOrDefault(this double value, double defaultValue)
 		{
 			return IsNaN(value)
@@ -117,6 +160,7 @@ namespace Uno.UI
 				: value;
 		}
 
+		[Pure]
 		internal static Size NumberOrDefault(this Size value, Size defaultValue)
 		{
 			return new Size(
@@ -125,11 +169,12 @@ namespace Uno.UI
 			);
 		}
 
-		internal static double AtMost(this double value, double most)
-		{
-			return Math.Min(value, most);
-		}
+		[Pure]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static double AtMost(this double value, double most) => Math.Min(value, most);
 
+		[Pure]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static Size AtMost(this Size value, Size most)
 		{
 			return new Size(
@@ -138,11 +183,15 @@ namespace Uno.UI
 			);
 		}
 
-		internal static double AtLeast(this double value, double least)
-		{
-			return Math.Max(value, least);
-		}
+		[Pure]
+		internal static Rect AtMost(this Rect value, Size most) => new Rect(value.Location, value.Size.AtMost(most));
 
+		[Pure]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static double AtLeast(this double value, double least) => Math.Max(value, least);
+
+		[Pure]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static Size AtLeast(this Size value, Size least)
 		{
 			return new Size(
@@ -151,19 +200,124 @@ namespace Uno.UI
 			);
 		}
 
-		internal static Rect GetBoundsRectRelativeTo(this UIElement element, UIElement relativeTo)
+		[Pure]
+		internal static Rect AtLeast(this Rect value, Size least) => new Rect(value.Location, value.Size.AtLeast(least));
+
+		/// <summary>
+		/// Test if a Rect "fits" totally in another one.
+		/// </summary>
+		[Pure]
+		internal static bool IsEnclosedBy(this Rect enclosee, Rect encloser)
 		{
-			var elementRect = new Rect(default, element.RenderSize);
-			if (element.RenderTransform != null)
+			if (enclosee.Equals(encloser))
 			{
-				elementRect = element.RenderTransform.TransformBounds(elementRect);
+				return true;
 			}
 
-			var transformToRoot = element.TransformToVisual(relativeTo);
-			var rect = transformToRoot.TransformBounds(elementRect);
-			return rect;
+			return enclosee.Left >= encloser.Left
+				&& enclosee.Right <= encloser.Right
+				&& enclosee.Top >= encloser.Top
+				&& enclosee.Bottom <= encloser.Bottom;
 		}
 
+		[Pure]
+		internal static double AspectRatio(this Rect rect) => rect.Size.AspectRatio();
+
+		[Pure]
+		internal static double AspectRatio(this Size size)
+		{
+			var w = size.Width;
+			var h = size.Height;
+
+			switch (w)
+			{
+				case NegativeInfinity:
+					return -1;
+				case PositiveInfinity:
+					return 1;
+				case NaN:
+					return 1;
+				case 0.0d:
+					return 1;
+			}
+
+			switch (h)
+			{
+				case NegativeInfinity:
+					return -1;
+				case PositiveInfinity:
+					return 1;
+				case NaN:
+					return 1;
+				case 0.0d:
+					return 1; // special case
+				case 1.0d:
+					return w;
+			}
+
+			return w / h;
+		}
+
+#if __IOS__ || __MACOS__
+		[Pure]
+		internal static double AspectRatio(this CoreGraphics.CGSize size)
+		{
+			var w = size.Width;
+			var h = size.Height;
+
+			if (w == nfloat.NegativeInfinity)
+			{
+				return -1;
+			}
+			else if (w == nfloat.PositiveInfinity)
+			{
+				return 1;
+			}
+			else if (w == nfloat.NaN)
+			{
+				return 1;
+			}
+			else if (w == 0.0d)
+			{
+				return 1;
+			}
+
+			if (h == nfloat.NegativeInfinity)
+			{
+				return -1;
+			}
+			else if (h == nfloat.PositiveInfinity)
+			{
+				return 1;
+			}
+			else if (h == nfloat.NaN)
+			{
+				return 1;
+			}
+			else if (h == 0.0d)
+			{
+				return 1; // special case
+			}
+			else if (h == 1.0d)
+			{
+				return w;
+			}
+
+			return w / h;
+		}
+#endif
+
+		[Pure]
+		internal static Rect GetBoundsRectRelativeTo(this UIElement element, UIElement relativeTo)
+		{
+			var elementToTarget = element.TransformToVisual(relativeTo);
+			var elementRect = new Rect(default, element.RenderSize);
+			var elementRectRelToTarget = elementToTarget.TransformBounds(elementRect);
+
+			return elementRectRelToTarget;
+		}
+
+		[Pure]
 		internal static Rect GetAbsoluteBoundsRect(this UIElement element)
 		{
 			var root = Window.Current.Content;

@@ -13,17 +13,12 @@ using System.Text;
 using System.Drawing;
 using Uno.UI;
 using Microsoft.Extensions.Logging;
-using static Uno.UI.MathEx;
+using static Uno.Extensions.MathEx;
 
 namespace Windows.UI.Xaml.Controls
 {
-	public partial class ScrollViewer : ContentControl
+	public partial class ScrollViewer : ContentControl, ICustomClippingElement
 	{
-		partial void InitializePartial()
-		{
-			base.EnableAndroidClipping();
-		}
-
 		internal static int GetMeasureValue(int value, ScrollBarVisibility scrollBarVisibility)
 		{
 			switch (scrollBarVisibility)
@@ -156,5 +151,8 @@ namespace Windows.UI.Xaml.Controls
 				_sv.BringIntoViewOnFocusChange = newValue;
 			}
 		}
+
+		bool ICustomClippingElement.AllowClippingToLayoutSlot => true;
+		bool ICustomClippingElement.ForceClippingToLayoutSlot => true; // force scrollviewer to always clip
 	}
 }

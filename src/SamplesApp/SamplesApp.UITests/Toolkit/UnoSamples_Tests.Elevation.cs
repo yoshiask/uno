@@ -17,7 +17,8 @@ namespace SamplesApp.UITests.Toolkit
 	{
 
 		[Test]
-		[ActivePlatforms(Platform.Android, Platform.iOS)]
+		[AutoRetry]
+		[ActivePlatforms(Platform.iOS)] // Android is disabled https://github.com/unoplatform/uno/issues/1635
 		public void Elevation_Validation()
 		{
 			Run("UITests.Shared.Toolkit.Elevation");
@@ -27,12 +28,12 @@ namespace SamplesApp.UITests.Toolkit
 			var turnElevation_ON_Button = _app.Marked("TurnElevation_ON_Button");
 			
 			// Take ScreenShot with no elevation
-			var screenshot_NoElevation = _app.Screenshot("Elevation - No Elevation");
+			var screenshot_NoElevation = TakeScreenshot("Elevation - No Elevation");
 
 			turnElevation_ON_Button.Tap();
 
 			// Take ScreenShot of with elevation
-			var screenshot_WithElevation = _app.Screenshot("Elevation - With Elevation");
+			var screenshot_WithElevation = TakeScreenshot("Elevation - With Elevation");
 
 			Bitmap img1 = new Bitmap(screenshot_NoElevation.ToString());
 			Bitmap img2 = new Bitmap(screenshot_WithElevation.ToString());

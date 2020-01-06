@@ -229,11 +229,11 @@ namespace Windows.UI.Xaml.Controls
 						}
 
 						FrameworkElement.InitializePhaseBinding(selectorItem);
-                        
-                        // Ensure the item has a parent, since it's added to the native collection view
-                        // which does not automatically sets the parent DependencyObject.
-                        selectorItem.SetParent(Owner?.XamlParent);
-                    }
+
+						// Ensure the item has a parent, since it's added to the native collection view
+						// which does not automatically sets the parent DependencyObject.
+						selectorItem.SetParent(Owner?.XamlParent);
+					}
 					else if (this.Log().IsEnabled(Microsoft.Extensions.Logging.LogLevel.Debug))
 					{
 						this.Log().Debug($"Reusing view at indexPath={indexPath}, previously bound to {selectorItem.DataContext}.");
@@ -569,7 +569,7 @@ namespace Windows.UI.Xaml.Controls
 			//TODO: this should take an available breadth
 			CGSize size;
 
-			// Cache the sizes to avoid creating new templates everytime.
+			// Cache the sizes to avoid creating new templates every time.
 			if (!_templateCache.TryGetValue(dataTemplate ?? _nullDataTemplateKey, out size))
 			{
 				var container = CreateContainerForElementKind(elementKind);
@@ -699,7 +699,7 @@ namespace Windows.UI.Xaml.Controls
 			}
 			else
 			{
-				// We need to excplicitly remove the content before being disposed
+				// We need to explicitly remove the content before being disposed
 				// otherwise, the children will try to reference ContentView which 
 				// will have been disposed.
 
@@ -792,7 +792,7 @@ namespace Windows.UI.Xaml.Controls
 				return null;
 			}
 
-			if(Content == null)
+			if (Content == null)
 			{
 				this.Log().Error("Empty ListViewBaseInternalContainer content.");
 				return null;
@@ -840,13 +840,13 @@ namespace Windows.UI.Xaml.Controls
 						// cachedAttributes may be null if we have modified the collection with DeleteItems
 						var frame = cachedAttributes?.Frame ?? layoutAttributes.Frame;
 						SetExtent(ref frame, _measuredContentSize.Value);
-						if (this.Log().IsEnabled(Microsoft.Extensions.Logging.LogLevel.Debug))
-						{
-							this.Log().Debug($"Adjusting layout attributes for item at {layoutAttributes.IndexPath}({layoutAttributes.RepresentedElementKind}), Content={Content?.Content}. Previous frame={layoutAttributes.Frame}, new frame={frame}.");
-						}
 						var sizesAreDifferent = frame.Size != layoutAttributes.Frame.Size;
 						if (sizesAreDifferent)
 						{
+							if (this.Log().IsEnabled(Microsoft.Extensions.Logging.LogLevel.Debug))
+							{
+								this.Log().Debug($"Adjusting layout attributes for item at {layoutAttributes.IndexPath}({layoutAttributes.RepresentedElementKind}), Content={Content?.Content}. Previous frame={layoutAttributes.Frame}, new frame={frame}.");
+							}
 							Owner.NativeLayout.HasDynamicElementSizes = true;
 							this.Frame = frame;
 							SetNeedsLayout();

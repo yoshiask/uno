@@ -13,11 +13,11 @@ namespace Windows.UI.Xaml.Controls
 {
 	public partial class Popup
 	{
-		private readonly PopupWindow _popupWindow;
+		private PopupWindow _popupWindow;
 
 		internal FlyoutPlacementMode Placement { get; set; }
 
-		public Popup()
+		partial void InitializePartial()
 		{
 			_popupWindow = new PopupWindow(this, WindowManagerLayoutParams.MatchParent, WindowManagerLayoutParams.MatchParent, true);
 
@@ -33,11 +33,8 @@ namespace Windows.UI.Xaml.Controls
 			PopupPanel = new PopupPanel(this);
 		}
 
-		partial void OnPopupPanelChanged(DependencyPropertyChangedEventArgs e)
+		partial void OnPopupPanelChangedPartial(PopupPanel previousPanel, PopupPanel newPanel)
 		{
-			var previousPanel = e.OldValue as PopupPanel;
-			var newPanel = e.NewValue as PopupPanel;
-
 			previousPanel?.Children.Clear();
 
 			if (PopupPanel != null)
@@ -48,14 +45,6 @@ namespace Windows.UI.Xaml.Controls
 				}
 			}
 
-			if (previousPanel != null)
-			{
-				previousPanel.PointerPressed -= Panel_PointerPressed;
-			}
-			if (newPanel != null)
-			{
-				newPanel.PointerPressed += Panel_PointerPressed;
-			}
 			_popupWindow.ContentView = newPanel;
 
 			UpdatePopupPanelDismissibleBackground(IsLightDismissEnabled);
@@ -127,14 +116,7 @@ namespace Windows.UI.Xaml.Controls
 				return; // nothing to do
 			}
 
-			if (isLightDismiss)
-			{
-				PopupPanel.Background = new SolidColorBrush(Colors.Transparent);
-			}
-			else
-			{
-				PopupPanel.Background = null;
-			}
+			PopupPanel.Background = GetPanelBackground();
 		}
 
 		protected override void OnMeasure(int widthMeasureSpec, int heightMeasureSpec)

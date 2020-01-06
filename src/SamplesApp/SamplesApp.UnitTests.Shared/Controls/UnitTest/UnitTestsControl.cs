@@ -2,14 +2,17 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Uno.Extensions;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -24,12 +27,23 @@ namespace Uno.UI.Samples.Tests
 	{
 		private Task _runner;
 		private CancellationTokenSource _cts = new CancellationTokenSource();
+		private readonly TimeSpan DefaultUnitTestTimeout = TimeSpan.FromSeconds(60);
+
+		private enum TestResult
+		{
+			Sucesss,
+			Failed,
+			Error,
+			Ignored,
+		}
 
 		public UnitTestsControl()
 		{
 			this.InitializeComponent();
 
-			DataContext = this;
+			Private.Infrastructure.TestServices.WindowHelper.RootControl = unitTestContentRoot;
+
+			DataContext = null;
 		}
 
 		private void OnRunTests(object sender, RoutedEventArgs e)
@@ -43,9 +57,19 @@ namespace Uno.UI.Samples.Tests
 			var t = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => runStatus.Text = message);
 		}
 
+		private void ReportRunTestCount(string message)
+		{
+			var t = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => runTestCount.Text = message);
+		}
+
 		private void ReportFailedTests(int failedCount)
 		{
-			var t = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => failedTests.Text = failedCount.ToString());
+			void Update()
+			{
+				failedTests.Text = failedCount.ToString();
+			}
+
+			var t = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, Update);
 		}
 
 		private void ReportTestClass(TypeInfo testClass)
@@ -64,34 +88,66 @@ namespace Uno.UI.Samples.Tests
 			);
 		}
 
-		private void ReportTestResult(string testName, bool failed, string errorMessage = "")
+		private void ReportTestResult(string testName, TestResult testResult, Exception error = null, string message = null)
 		{
+			void Update()
+			{
+				var testResultBlock = new TextBlock()
+				{
+					Text = testName,
+					TextWrapping = TextWrapping.Wrap,
+					FontFamily = new FontFamily("Courier New"),
+					Foreground = new SolidColorBrush(GetTestResultColor(testResult))
+				};
+
+				if (message != null)
+				{
+					testResultBlock.Text += ", " + message;
+				}
+
+				if (error != null)
+				{
+					testResultBlock.Text += ", " + error.Message;
+
+					if (testResult == TestResult.Failed || testResult == TestResult.Error)
+					{
+						failedTestDetails.Text += $"{testResult}: {testName} [{error.GetType()}] \n {error}\n\n";
+					}
+				}
+
+				testResults.Children.Insert(0, testResultBlock);
+			}
+
 			var t = Dispatcher.RunAsync(
 				Windows.UI.Core.CoreDispatcherPriority.Normal,
-				() =>
-				{
-					var testResult = new TextBlock()
-					{
-						Text = testName,
-						FontFamily = new FontFamily("Courier New"),
-						Foreground = new SolidColorBrush(failed ? Colors.Red : Colors.Green)
-					};
+				Update);
+		}
 
-					if (errorMessage.HasValue())
-					{
-						testResult.Text += ", " + errorMessage;
-					}
+		private Color GetTestResultColor(TestResult testResult)
+		{
+			switch (testResult)
+			{
+				default:
+				case TestResult.Error:
+					return Colors.DarkRed;
 
-					testResults.Children.Insert(0, testResult);
-				}
-			);
+				case TestResult.Failed:
+					return Colors.Red;
+
+				case TestResult.Ignored:
+					return Colors.DarkOrange;
+
+				case TestResult.Sucesss:
+					return Colors.Green;
+			}
 		}
 
 		private async Task RunTests(CancellationToken cts)
 		{
 			try
 			{
-				int failedTests = 0;
+				var failedTests = 0;
+				var runTests = 0;
 
 				ReportMessage("Enumerating tests");
 
@@ -110,36 +166,85 @@ namespace Uno.UI.Samples.Tests
 					{
 						string testName = testMethod.Name;
 
-						ReportMessage($"Running test {testName}");
-
-						try
+						if (IsIgnored(testMethod, out var ignoreMessage))
 						{
-							type.init?.Invoke(instance, new object[0]);
-
-							var returnValue = testMethod.Invoke(instance, new object[0]);
-
-							if (testMethod.ReturnType == typeof(Task))
-							{
-								var task = (Task)returnValue;
-								await task;
-							}
-
-							ReportTestResult(testName, false);
+							ReportTestResult(testName, TestResult.Ignored, message: ignoreMessage);
+							continue;
 						}
-						catch (Exception e)
+
+						ReportMessage($"Running test {testName}");
+						ReportRunTestCount($"Run tests: {++runTests}");
+
+						var runsOnUIThread = testMethod.GetCustomAttribute(typeof(Uno.UI.RuntimeTests.RunsOnUIThreadAttribute)) != null;
+						var dataRows = testMethod.GetCustomAttributes<DataRowAttribute>();
+						if (dataRows.Any())
 						{
-							failedTests++;
-							if (e is AggregateException agg)
+							foreach (var row in dataRows)
 							{
-								e = agg.InnerExceptions.FirstOrDefault();
+								var d = row.Data;
+								await InvokeTestMethod(d);
+							}
+						}
+						else
+						{
+							await InvokeTestMethod(new object[0]);
+						}
+
+						async Task InvokeTestMethod(object[] parameters)
+						{
+							var fullTestName = $"{testName}({parameters.Select(p => p.ToString()).JoinBy(", ")})";
+							try
+							{
+								type.init?.Invoke(instance, new object[0]);
+
+								object returnValue = null;
+								if (runsOnUIThread)
+								{
+									await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+									{
+										returnValue = testMethod.Invoke(instance, parameters);
+									});
+								}
+								else
+								{
+									returnValue = testMethod.Invoke(instance, parameters);
+								}
+
+								if (testMethod.ReturnType == typeof(Task))
+								{
+									var task = (Task)returnValue;
+									var timeoutTask = Task.Delay(DefaultUnitTestTimeout);
+
+									var resultingTask = await Task.WhenAny(task, timeoutTask);
+
+									if (resultingTask == timeoutTask)
+									{
+										throw new TimeoutException($"Test execution timed out after {DefaultUnitTestTimeout}");
+									}
+
+									if (resultingTask.Exception != null)
+									{
+										throw resultingTask.Exception;
+									}
+								}
+								ReportTestResult(fullTestName, TestResult.Sucesss);
+							}
+							catch (Exception e)
+							{
+								failedTests++;
+								if (e is AggregateException agg)
+								{
+									e = agg.InnerExceptions.FirstOrDefault();
+								}
+
+								if (e is TargetInvocationException tie)
+								{
+									e = tie.InnerException;
+								}
+
+								ReportTestResult(fullTestName, TestResult.Failed, e);
 							}
 
-							if (e is TargetInvocationException tie)
-							{
-								e = tie.InnerException;
-							}
-
-							ReportTestResult(testName, true, e.Message);
 						}
 						try
 						{
@@ -147,7 +252,7 @@ namespace Uno.UI.Samples.Tests
 						}
 						catch (Exception e)
 						{
-							ReportTestResult(testName + " Cleanup", true, e.Message);
+							ReportTestResult(testName + " Cleanup", TestResult.Failed, e);
 						}
 					}
 				}
@@ -155,11 +260,25 @@ namespace Uno.UI.Samples.Tests
 				ReportMessage("Tests finished running.");
 				ReportFailedTests(failedTests);
 			}
-			catch(Exception e)
+			catch (Exception e)
 			{
 				ReportMessage($"Tests runner failed {e}");
 				ReportFailedTests(-1);
 			}
+		}
+
+		private bool IsIgnored(MethodInfo testMethod, out string ignoreMessage)
+		{
+			var ignoreAttribute = testMethod.GetCustomAttribute<Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute>();
+
+			if (ignoreAttribute != null)
+			{
+				ignoreMessage = string.IsNullOrEmpty(ignoreAttribute.IgnoreMessage) ? "Test is marked as ignored" : ignoreAttribute.IgnoreMessage;
+				return true;
+			}
+
+			ignoreMessage = "";
+			return false;
 		}
 
 		private IEnumerable<(Type type, MethodInfo[] tests, MethodInfo init, MethodInfo cleanup)> InitializeTests()

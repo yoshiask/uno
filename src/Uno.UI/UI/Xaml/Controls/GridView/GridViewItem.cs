@@ -6,7 +6,7 @@ using Windows.UI.Xaml.Controls.Primitives;
 namespace Windows.UI.Xaml.Controls
 {
     public partial class GridViewItem : SelectorItem
-    {
+	{
 		public GridViewItem()
 		{
 			Initialize();

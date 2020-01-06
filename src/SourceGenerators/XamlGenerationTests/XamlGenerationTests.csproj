@@ -50,9 +50,20 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <None Remove="NamedColorsTest.xaml" />
 	  <None Remove="NonDPAssignableTest.xaml" />
+	  <None Remove="StoryboardTargetTest.xaml" />
 	  <None Remove="ThemeResourcesTest.xaml" />
+	  <None Remove="VSM.SetterComplexValue.xaml" />
 	  <None Remove="xNameResources.xaml" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Page Remove="StoryboardTargetTest.xaml" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Include="StoryboardTargetTest.xaml" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -82,6 +93,9 @@
 		
 	<ItemGroup>
 	  <None Update="ColorCodesTest - Copy.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </None>
+	  <None Update="CreateFromString.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </None>
 	  <None Update="FieldModifiers.xaml">

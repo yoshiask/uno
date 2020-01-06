@@ -25,6 +25,7 @@
 
 		private static readonly unoRootClassName = "uno-root-element";
 		private static readonly unoUnarrangedClassName = "uno-unarranged";
+		private static readonly unoClippedToBoundsClassName = "uno-clippedToBounds";
 
 		private static _cctor = (() => {
 			WindowManager.initMethods();
@@ -127,11 +128,14 @@
 		private containerElement: HTMLDivElement;
 		private rootContent: HTMLElement;
 
+		private cursorStyleElement: HTMLElement;
+
 		private allActiveElementsById: { [id: number]: HTMLElement | SVGElement } = {};
 
 		private static resizeMethod: any;
 		private static dispatchEventMethod: any;
 		private static getDependencyPropertyValueMethod: any;
+		private static setDependencyPropertyValueMethod: any;
 
 		private constructor(private containerElementId: string, private loadingElementId: string) {
 			this.initDom();
@@ -357,6 +361,28 @@
 		}
 
 		/**
+			* Removes an attribute for an element.
+			*/
+		public removeAttribute(elementId: number, name: string): string {
+			const element = this.getView(elementId);
+			element.removeAttribute(name);
+
+			return "ok";
+		}
+
+		/**
+			* Removes an attribute for an element.
+			*/
+		public removeAttributeNative(pParams: number): boolean {
+
+			const params = WindowManagerRemoveAttributeParams.unmarshal(pParams);
+			const element = this.getView(params.HtmlId);
+			element.removeAttribute(params.Name);
+
+			return true;
+		}
+
+		/**
 			* Get an attribute for an element.
 			*/
 		public getAttribute(elementId: number, name: string): any {
@@ -427,7 +453,7 @@
 			* To remove a value, set it to empty string.
 			* @param styles A dictionary of styles to apply on html element.
 			*/
-		public setStyle(elementId: number, styles: { [name: string]: string }, setAsArranged: boolean = false): string {
+		public setStyle(elementId: number, styles: { [name: string]: string }, setAsArranged: boolean = false, clipToBounds?: boolean): string {
 			const element = this.getView(elementId);
 
 			for (const style in styles) {
@@ -438,6 +464,9 @@
 
 			if (setAsArranged) {
 				this.setAsArranged(element);
+			}
+			if (typeof clipToBounds === "boolean") {
+				this.setClipToBounds(element, clipToBounds);
 			}
 
 			return "ok";
@@ -467,6 +496,8 @@
 			if (params.SetAsArranged) {
 				this.setAsArranged(element);
 			}
+
+			this.setClipToBounds(element, params.ClipToBounds);
 
 			return true;
 		}
@@ -562,6 +593,7 @@
 			}
 
 			this.setAsArranged(element);
+			this.setClipToBounds(element, params.ClipToBounds);
 
 			return true;
 		}
@@ -573,6 +605,14 @@
 
 		private setAsUnarranged(element: HTMLElement | SVGElement) {
 			element.classList.add(WindowManager.unoUnarrangedClassName);
+		}
+
+		private setClipToBounds(element: HTMLElement | SVGElement, clipToBounds: boolean) {
+			if (clipToBounds) {
+				element.classList.add(WindowManager.unoClippedToBoundsClassName);
+			} else {
+				element.classList.remove(WindowManager.unoClippedToBoundsClassName);
+			}
 		}
 
 		/**
@@ -664,6 +704,30 @@
 			return true;
 		}
 
+		private processPendingLeaveEvent: (evt: PointerEvent) => void;
+
+		private _isPendingLeaveProcessingEnabled: boolean;
+
+		/**
+		 * Ensure that any pending leave event are going to be processed (cf @see processPendingLeaveEvent )
+		 */
+		private ensurePendingLeaveEventProcessing() {
+			if (this._isPendingLeaveProcessingEnabled) {
+				return;
+			}
+
+			// Register an event listener on move in order to process any pending event (leave).
+			document.addEventListener(
+				"pointermove",
+				evt => {
+					if (this.processPendingLeaveEvent) {
+						this.processPendingLeaveEvent(evt as PointerEvent);
+					}
+				},
+				true); // in the capture phase to get it as soon as possible, and to make sure to respect the events ordering
+			this._isPendingLeaveProcessingEnabled = true;
+		}
+
 		/**
 			* Add an event handler to a html element.
 			*
@@ -678,19 +742,11 @@
 			eventExtractorName?: string
 		): void {
 			const element = this.getView(elementId);
-
-			const eventFilter = this.getEventFilter(eventFilterName);
 			const eventExtractor = this.getEventExtractor(eventExtractorName);
-
 			const eventHandler = (event: Event) => {
-				if (eventFilter && !eventFilter(event)) {
-					return;
-				}
-
-				const eventPayload =
-					eventExtractor
-						? `${eventExtractor(event)}`
-						: "";
+				const eventPayload = eventExtractor
+					? `${eventExtractor(event)}`
+					: "";
 
 				var handled = this.dispatchEvent(element, eventName, eventPayload);
 				if (handled) {
@@ -698,7 +754,93 @@
 				}
 			};
 
-			element.addEventListener(eventName, eventHandler, onCapturePhase);
+			if (eventName == "pointerenter") {
+				const enterPointerHandler = (event: Event) => {
+					const e = event as any;
+
+					if (e.explicitOriginalTarget) { // FF only
+
+						// It happens on FF that when another control which is over the 'element' has been updated, like text or visibility changed,
+						// we receive a pointer enter/leave of an element which is under an element that is capable to handle pointers,
+						// which is unexpected as the "pointerenter" should not bubble.
+						// So we have to validate that this event is effectively due to the pointer entering the control.
+						// We achieve this by browsing up the elements under the pointer (** not the visual tree**) 
+
+						const evt = event as PointerEvent;
+						for (let elt of document.elementsFromPoint(evt.pageX, evt.pageY)) {
+							if (elt == element) {
+								// We found our target element, we can raise the event and stop the loop
+								eventHandler(event);
+								return;
+							}
+
+							let htmlElt = elt as HTMLElement;
+							if (htmlElt.style.pointerEvents != "none") {
+								// This 'htmlElt' is handling the pointers events, this mean that we can stop the loop.
+								// However, if this 'htmlElt' is one of our child it means that the event was legitimate
+								// and we have to raise it for the 'element'.
+								while (htmlElt.parentElement) {
+									htmlElt = htmlElt.parentElement;
+									if (htmlElt == element) {
+										eventHandler(event);
+										return;
+									}
+								}
+
+								// We found an element this is capable to handle the pointers but which is not one of our child
+								// (probably a sibling which is covering the element). It means that the pointerEnter/Leave should
+								// not have bubble to the element, and we can mute it.
+								return;
+							}
+						}
+					} else {
+						eventHandler(event);
+					}
+				}
+
+				element.addEventListener(eventName, enterPointerHandler, onCapturePhase);
+			} else if (eventName == "pointerleave") {
+				const leavePointerHandler = (event: Event) => {
+					const e = event as any;
+
+					if (e.explicitOriginalTarget // FF only
+						&& e.explicitOriginalTarget !== event.currentTarget
+						&& (event as PointerEvent).isOver(element)) {
+
+						// If the event was re-targeted, it's suspicious as the leave event should not bubble
+						// This happens on FF when another control which is over the 'element' has been updated, like text or visibility changed.
+						// So we have to validate that this event is effectively due to the pointer leaving the element.
+						// We achieve that by buffering it until the next few 'pointermove' on document for which we validate the new pointer location.
+
+						// It's common to get a move right after the leave with the same pointer's location,
+						// so we wait up to 3 pointer move before dropping the leave event.
+						var attempt = 3;
+
+						this.ensurePendingLeaveEventProcessing();
+						this.processPendingLeaveEvent = (move: PointerEvent) => {
+							if (!move.isOverDeep(element)) {
+								console.log("Raising deferred pointerleave on element " + elementId);
+								eventHandler(event);
+
+								this.processPendingLeaveEvent = null;
+							} else if (--attempt <= 0) {
+								console.log("Drop deferred pointerleave on element " + elementId);
+
+								this.processPendingLeaveEvent = null;
+							} else {
+								console.log("Requeue deferred pointerleave on element " + elementId);
+							}
+						};
+
+					} else {
+						eventHandler(event);
+					}
+				}
+
+				element.addEventListener(eventName, leavePointerHandler, onCapturePhase);
+			} else {
+				element.addEventListener(eventName, eventHandler, onCapturePhase);
+			}
 		}
 
 		/**
@@ -743,9 +885,23 @@
 		 * @param evt
 		 */
 		private pointerEventExtractor(evt: PointerEvent): string {
-			return evt
-				? `${evt.pointerId};${evt.clientX};${evt.clientY};${(evt.ctrlKey ? "1" : "0")};${(evt.shiftKey ? "1" : "0")};${evt.button};${evt.pointerType}`
-				: "";
+			if (!evt) {
+				return "";
+			}
+
+			let src = evt.target as HTMLElement | SVGElement;
+			let srcHandle = "0";
+			while (src) {
+				let handle = src.getAttribute("XamlHandle");
+				if (handle) {
+					srcHandle = handle;
+					break;
+				}
+
+				src = src.parentElement;
+			}
+
+			return `${evt.pointerId};${evt.clientX};${evt.clientY};${(evt.ctrlKey ? "1" : "0")};${(evt.shiftKey ? "1" : "0")};${evt.buttons};${evt.button};${evt.pointerType};${srcHandle};${evt.timeStamp}`;
 		}
 
 		/**
@@ -1079,6 +1235,18 @@
 		private static MAX_WIDTH = `${Number.MAX_SAFE_INTEGER}vw`;
 		private static MAX_HEIGHT = `${Number.MAX_SAFE_INTEGER}vh`;
 
+		private measureElement(element: HTMLElement): [number, number] {
+
+			const offsetWidth = element.offsetWidth;
+			const offsetHeight = element.offsetHeight;
+
+			const resultWidth = offsetWidth ? offsetWidth : element.clientWidth;
+			const resultHeight = offsetHeight ? offsetHeight : element.clientHeight;
+
+			// +1 is added to take rounding/flooring into account
+			return [resultWidth + 1, resultHeight];
+		}
+
 		private measureViewInternal(viewId: number, maxWidth: number, maxHeight: number): [number, number] {
 			const element = this.getView(viewId) as HTMLElement;
 
@@ -1086,7 +1254,13 @@
 			const originalStyleCssText = elementStyle.cssText;
 			let parentElement: HTMLElement = null;
 			let parentElementWidthHeight: { width: string, height: string } = null;
-			let unconnectedRoot = null;
+			let unconnectedRoot: HTMLElement = null;
+
+			let cleanupUnconnectedRoot = function (owner: HTMLDivElement) {
+				if (unconnectedRoot !== null) {
+					owner.removeChild(unconnectedRoot);
+				}
+			}
 
 			try {
 				if (!element.isConnected) {
@@ -1155,15 +1329,27 @@
 					const imgElement = element as HTMLImageElement;
 					return [imgElement.naturalWidth, imgElement.naturalHeight];
 				}
+				else if (element instanceof HTMLInputElement) {
+					const inputElement = element as HTMLInputElement;
+
+					cleanupUnconnectedRoot(this.containerElement);
+
+					// Create a temporary element that will contain the input's content
+					var textOnlyElement = document.createElement("p") as HTMLParagraphElement;
+					textOnlyElement.style.cssText = updatedStyleString;
+					textOnlyElement.innerText = inputElement.value;
+
+					unconnectedRoot = textOnlyElement;
+					this.containerElement.appendChild(unconnectedRoot);
+
+					var textSize = this.measureElement(textOnlyElement);
+					var inputSize = this.measureElement(element);
+
+					// Take the width of the inner text, but keep the height of the input element.
+					return [textSize[0], inputSize[1]];
+				}
 				else {
-					const offsetWidth = element.offsetWidth;
-					const offsetHeight = element.offsetHeight;
-
-					const resultWidth = offsetWidth ? offsetWidth : element.clientWidth;
-					const resultHeight = offsetHeight ? offsetHeight : element.clientHeight;
-
-					// +0.5 is added to take rounding into account
-					return [resultWidth + 0.5, resultHeight];
+					return this.measureElement(element);
 				}
 			}
 			finally {
@@ -1174,10 +1360,23 @@
 					parentElement.style.height = parentElementWidthHeight.height;
 				}
 
-				if (unconnectedRoot !== null) {
-					this.containerElement.removeChild(unconnectedRoot);
-				}
+				cleanupUnconnectedRoot(this.containerElement);
 			}
+		}
+
+		public scrollTo(pParams: number): boolean {
+
+			const params = WindowManagerScrollToOptionsParams.unmarshal(pParams);
+			const elt = this.getView(params.HtmlId);
+			const opts = <ScrollToOptions>({
+				left: params.HasLeft ? params.Left : undefined,
+				top: params.HasTop ? params.Top : undefined,
+				behavior: <ScrollBehavior>(params.DisableAnimation ? "auto" : "smooth")
+			});
+
+			elt.scrollTo(opts);
+
+			return true;
 		}
 
 		public setImageRawData(viewId: number, dataPtr: number, width: number, height: number): string {
@@ -1355,6 +1554,22 @@
 		}
 
 		/**
+		 * Sets a dependency property value.
+		 *
+		 * Note that the casing of this method is intentionally Pascal for platform alignment.
+		 */
+		public SetDependencyPropertyValue(elementId: number, propertyNameAndValue: string) : string {
+			if (!WindowManager.setDependencyPropertyValueMethod) {
+				WindowManager.setDependencyPropertyValueMethod = (<any>Module).mono_bind_static_method("[Uno.UI] Uno.UI.Helpers.Automation:SetDependencyPropertyValue");
+			}
+
+			const element = this.getView(elementId) as HTMLElement;
+			const htmlId = Number(element.getAttribute("XamlHandle"));
+
+			return WindowManager.setDependencyPropertyValueMethod(htmlId, propertyNameAndValue);
+		}
+
+		/**
 			* Remove the loading indicator.
 			*
 			* In a future version it will also handle the splashscreen.
@@ -1452,6 +1667,32 @@
 				return false;
 			}
 			return rootElement === element || rootElement.contains(element);
+		}
+
+		public setCursor(cssCursor: string): string {
+			const unoBody = document.getElementById(this.containerElementId);
+
+			if (unoBody) {
+
+				//always cleanup
+				if (this.cursorStyleElement != undefined) {
+					this.cursorStyleElement.remove();
+					this.cursorStyleElement= undefined
+				}
+
+				//only add custom overriding style if not auto 
+				if (cssCursor != "auto") {
+
+					// this part is only to override default css:  .uno-buttonbase {cursor: pointer;}
+
+					this.cursorStyleElement = document.createElement("style");
+					this.cursorStyleElement.innerHTML = ".uno-buttonbase { cursor: " + cssCursor + "; }";
+					document.body.appendChild(this.cursorStyleElement);
+				}
+
+				unoBody.style.cursor = cssCursor;
+			}
+			return "ok";
 		}
 	}
 

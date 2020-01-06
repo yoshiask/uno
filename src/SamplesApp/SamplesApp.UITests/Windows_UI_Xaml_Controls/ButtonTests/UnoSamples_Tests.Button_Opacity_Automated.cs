@@ -16,6 +16,7 @@ namespace SamplesApp.UITests.Windows_UI_Xaml_Controls.ButtonTests
 	{
 		[Test]
 		[AutoRetry]
+		[ActivePlatforms(Platform.Android, Platform.Browser)] // Disabled on iOS: https://github.com/unoplatform/uno/issues/1955
 		public void Button_IsOpacity_Validation()
 		{
 			Run("Uno.UI.Samples.Content.UITests.ButtonTestsControl.Button_Opacity_Automated");
@@ -25,7 +26,7 @@ namespace SamplesApp.UITests.Windows_UI_Xaml_Controls.ButtonTests
 			var valueOfOpacity = _app.Marked("ValueOfOpacity");
 			var applyOpacityButton = _app.Marked("ApplyOpacityButton");
 
-			// Assert inital state 
+			// Assert initial state 
 			Assert.AreEqual("0", totalClicks.GetDependencyPropertyValue("Text")?.ToString());
 			Assert.AreEqual("1", valueOfOpacity.GetDependencyPropertyValue("Text")?.ToString());
 

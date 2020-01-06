@@ -19,7 +19,7 @@ namespace Windows.UI.Xaml.Controls
 	{
 		private ITextBoxView _textBoxView;
 
-		//Only implemented in TextBox in IOS. Key events are not passed to UIViews that dont implement UIKeyInput protocol
+		//Only implemented in TextBox in IOS. Key events are not passed to UIViews that don't implement UIKeyInput protocol
 		//http://stackoverflow.com/questions/24106882/how-do-i-get-keyboard-events-without-a-textbox
 
 		partial void InitializePropertiesPartial()
@@ -55,10 +55,6 @@ namespace Windows.UI.Xaml.Controls
 					}
 				}
 			}
-		}
-
-		partial void OnForegroundColorChangedPartial(Brush newValue)
-		{
 		}
 
 		public override bool BecomeFirstResponder()
@@ -125,9 +121,8 @@ namespace Windows.UI.Xaml.Controls
 
 		internal bool OnKey(char key)
 		{
-			var keyRoutedEventArgs = new KeyRoutedEventArgs()
-			{
-				Key = key.ToVirtualKey(),
+			var keyRoutedEventArgs = new KeyRoutedEventArgs(this, key.ToVirtualKey())
+			{ 
 				CanBubbleNatively = true
 			};
 

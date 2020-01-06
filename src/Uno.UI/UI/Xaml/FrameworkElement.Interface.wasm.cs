@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using Windows.Foundation;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Windows.UI.Xaml.Input;
 using Microsoft.Extensions.Logging;
 using Uno.Extensions;
 using Uno.UI;
@@ -44,14 +45,18 @@ namespace Windows.UI.Xaml
 			}
 
 			_log = this.Log();
+			_logDebug = _log.IsEnabled(LogLevel.Debug) ? _log : null;
 		}
 
-		protected internal readonly ILogger _log;
+		private protected readonly ILogger _log;
+		private protected readonly ILogger _logDebug;
 
+		private static readonly Uri DefaultBaseUri = new Uri("ms-appx://local");
 		public global::System.Uri BaseUri
 		{
 			get;
-		} = new Uri("ms-appx://local");
+			internal set;
+		} = DefaultBaseUri;
 
 		protected virtual void OnLoaded()
 		{
@@ -76,11 +81,11 @@ namespace Windows.UI.Xaml
 
 		private static void OnTransitionsChanged(object dependencyObject, DependencyPropertyChangedEventArgs args)
 		{
-			
+
 		}
 		#endregion
 
-		public IFrameworkElement FindName(string name) 
+		public IFrameworkElement FindName(string name)
 			=> IFrameworkElementHelper.FindName(this, GetChildren(), name);
 
 
@@ -92,7 +97,7 @@ namespace Windows.UI.Xaml
 		{
 			return finalSize;
 		}
-		
+
 		#region Background DependencyProperty
 
 		public Brush Background
@@ -173,16 +178,31 @@ namespace Windows.UI.Xaml
 		}
 
 		public static readonly DependencyProperty IsEnabledProperty =
-			DependencyProperty.Register("IsEnabled", typeof(bool), typeof(FrameworkElement), new PropertyMetadata(true, (s, e) =>
-			{
-				var elt = (FrameworkElement) s;
-				elt?.OnIsEnabledChanged((bool) e.OldValue, (bool) e.NewValue);
-				elt?.IsEnabledChanged?.Invoke(s, e);
-			}));
+			DependencyProperty.Register(
+				"IsEnabled",
+				typeof(bool),
+				typeof(FrameworkElement),
+				new FrameworkPropertyMetadata(
+					true,
+					FrameworkPropertyMetadataOptions.Inherits,
+					(s, e) =>
+					{
+						var elt = (FrameworkElement)s;
+						elt?.OnIsEnabledChanged((bool)e.OldValue, (bool)e.NewValue);
+						elt?.IsEnabledChanged?.Invoke(s, e);
+					}
+				)
+	);
 
 		protected virtual void OnIsEnabledChanged(bool oldValue, bool newValue)
 		{
 			UpdateHitTest();
+
+			// TODO: move focus elsewhere if control.FocusState != FocusState.Unfocused
+			if (FeatureConfiguration.UIElement.AssignDOMXamlProperties)
+			{
+				UpdateDOMProperties();
+			}
 		}
 
 		#endregion

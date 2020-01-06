@@ -14,6 +14,7 @@ using Windows.UI.Xaml;
 using Uno.UI;
 using Uno.Extensions;
 using Windows.UI.Xaml.Media;
+using Size = Windows.Foundation.Size;
 
 namespace Uno.UI.Controls
 {
@@ -517,11 +518,24 @@ namespace Uno.UI.Controls
 			}
 		}
 
-		public override bool DispatchTouchEvent(MotionEvent e)
+		protected override void OnMeasure(int widthMeasureSpec, int heightMeasureSpec)
 		{
-			base.DispatchTouchEvent(e);
-			return true; // Ensure clicks don't go through panes
+			// For some reason it seams Android is always measuring the Pane with a width at 100px.
+			// This behavior could break the Measure & Arrange phases where some controls may be arranged
+			// at a wrong size.
+
+			// To fix this, we simply apply the control's constraints (min+max defined sizes)
+			var availableSize = ViewHelper.LogicalSizeFromSpec(widthMeasureSpec, heightMeasureSpec);
+			var sizeForChildren = this.ApplySizeConstraints(availableSize).LogicalToPhysicalPixels();
+
+			base.OnMeasure(
+				ViewHelper.MakeMeasureSpec((int)sizeForChildren.Width, MeasureSpecMode.AtMost),
+				ViewHelper.MakeMeasureSpec((int)sizeForChildren.Height, MeasureSpecMode.AtMost));
 		}
+
+		/// <inheritdoc />
+		protected override bool NativeHitCheck()
+			=> true; // Ensure clicks don't go through panes
 	}
 
 

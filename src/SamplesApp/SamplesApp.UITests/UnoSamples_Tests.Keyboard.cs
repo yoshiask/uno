@@ -9,6 +9,7 @@ using SamplesApp.UITests;
 using SamplesApp.UITests.TestFramework;
 using Uno.UITest.Helpers;
 using Uno.UITest.Helpers.Queries;
+using Uno.UITests.Helpers;
 
 namespace SamplesApp.UITests
 {
@@ -30,7 +31,7 @@ namespace SamplesApp.UITests
 			var multilineTextBox = _app.Marked("MultilineTextBox");
 			var numberTextBox = _app.Marked("NumberTextBox");
 
-			// Assert inital state 
+			// Assert initial state 
 			Assert.AreEqual(string.Empty, normalTextBox.GetDependencyPropertyValue("Text")?.ToString());
 			Assert.AreEqual("Text", filledTextBox.GetDependencyPropertyValue("Text")?.ToString());
 			Assert.AreEqual(string.Empty, placeholderTextTextBox.GetDependencyPropertyValue("Text")?.ToString());
@@ -42,31 +43,31 @@ namespace SamplesApp.UITests
 				// Setting focus on normalTextBox
 				_app.Tap(normalTextBox);
 				_app.Wait(1);
-				TakeScreenshot("0 - Focus on normalTextBox ");
+				TakeScreenshot("0 - Focus on normalTextBox ", ignoreInSnapshotCompare: true);
 
 				// Removing focus on normalTextBox
 				_app.TapCoordinates(0f, 0f);
 				_app.Wait(1);
-				TakeScreenshot("0 - Remove Focus on normalTextBox");
+				TakeScreenshot("0 - Remove Focus on normalTextBox", ignoreInSnapshotCompare: AppInitializer.GetLocalPlatform() == Platform.Android /*Keyboard predicted text can change*/);
 			}
 
 			{
 				// Setting focus on normalTextBox
 				_app.Tap(filledTextBox);
 				_app.Wait(1);
-				TakeScreenshot("1 - Focus on filledTextBox");
+				TakeScreenshot("1 - Focus on filledTextBox", ignoreInSnapshotCompare: true);
 
 				// Removing focus on normalTextBox
 				_app.TapCoordinates(0f, 0f);
 				_app.Wait(1);
-				TakeScreenshot("1 - Remove Focus on filledTextBox");
+				TakeScreenshot("1 - Remove Focus on filledTextBox", ignoreInSnapshotCompare: AppInitializer.GetLocalPlatform() == Platform.Android /*Keyboard predicted text can change*/);
 			}
 
 			{
 				// Setting focus on placeholderTextTextBox
 				_app.Tap(placeholderTextTextBox);
 				_app.Wait(1);
-				TakeScreenshot("2 - Focus on placeholderTextTextBox");
+				TakeScreenshot("2 - Focus on placeholderTextTextBox", ignoreInSnapshotCompare: true);
 
 				// Removing focus on placeholderTextTextBox
 				_app.TapCoordinates(0f, 0f);
@@ -78,7 +79,7 @@ namespace SamplesApp.UITests
 				// Setting focus on disabledTextBox
 				_app.Tap(disabledTextBox);
 				_app.Wait(1);
-				TakeScreenshot("3 - Focus on disabledTextBox");
+				TakeScreenshot("3 - Focus on disabledTextBox", ignoreInSnapshotCompare: true);
 
 				// Removing focus on disabledTextBox
 				_app.TapCoordinates(0f, 0f);
@@ -90,7 +91,7 @@ namespace SamplesApp.UITests
 				// Setting focus on multilineTextBox
 				_app.Tap(multilineTextBox);
 				_app.Wait(1);
-				TakeScreenshot("4 - Focus on multilineTextBox");
+				TakeScreenshot("4 - Focus on multilineTextBox", ignoreInSnapshotCompare: true);
 
 				// Removing focus on multilineTextBox
 				_app.TapCoordinates(0f, 0f);
@@ -102,7 +103,7 @@ namespace SamplesApp.UITests
 				// Setting focus on numberTextBox
 				_app.Tap(numberTextBox);
 				_app.Wait(1);
-				TakeScreenshot("5 - Focus on numberTextBox");
+				TakeScreenshot("5 - Focus on numberTextBox", ignoreInSnapshotCompare: true);
 
 				// Removing focus on numberTextBox
 				_app.TapCoordinates(0f, 0f);
@@ -126,7 +127,7 @@ namespace SamplesApp.UITests
 			var multilineTextBox = _app.Marked("MultilineTextBox");
 			var numberTextBox = _app.Marked("NumberTextBox");
 
-			// Assert inital state 
+			// Assert initial state 
 			Assert.AreEqual(string.Empty, normalTextBox.GetDependencyPropertyValue("Text")?.ToString());
 			Assert.AreEqual("Text", filledTextBox.GetDependencyPropertyValue("Text")?.ToString());
 			Assert.AreEqual(string.Empty, placeholderTextTextBox.GetDependencyPropertyValue("Text")?.ToString());
@@ -138,31 +139,31 @@ namespace SamplesApp.UITests
 				// Setting focus on normalTextBox
 				_app.Tap(normalTextBox);
 				_app.Wait(1);
-				TakeScreenshot("0 - Focus on normalTextBox");
+				TakeScreenshot("0 - Focus on normalTextBox", ignoreInSnapshotCompare: true);
 
 				// Removing focus on normalTextBox
 				_app.TapCoordinates(0f, 0f);
 				_app.Wait(1);
-				TakeScreenshot("0 - Remove Focus on normalTextBox");
+				TakeScreenshot("0 - Remove Focus on normalTextBox", ignoreInSnapshotCompare: AppInitializer.GetLocalPlatform() == Platform.Android /*Keyboard predicted text can change*/);
 			}
 
 			{
 				// Setting focus on normalTextBox
 				_app.Tap(filledTextBox);
 				_app.Wait(1);
-				TakeScreenshot("1 - Focus on filledTextBox");
+				TakeScreenshot("1 - Focus on filledTextBox", ignoreInSnapshotCompare: true);
 
 				// Removing focus on normalTextBox
 				_app.TapCoordinates(0f, 0f);
 				_app.Wait(1);
-				TakeScreenshot("1 - Remove Focus on filledTextBox");
+				TakeScreenshot("1 - Remove Focus on filledTextBox", ignoreInSnapshotCompare: AppInitializer.GetLocalPlatform() == Platform.Android /*Keyboard predicted text can change*/);
 			}
 
 			{
 				// Setting focus on placeholderTextTextBox
 				_app.Tap(placeholderTextTextBox);
 				_app.Wait(1);
-				TakeScreenshot("2 - Focus on placeholderTextTextBox");
+				TakeScreenshot("2 - Focus on placeholderTextTextBox", ignoreInSnapshotCompare: true);
 
 				// Removing focus on placeholderTextTextBox
 				_app.TapCoordinates(0f, 0f);
@@ -174,7 +175,7 @@ namespace SamplesApp.UITests
 				// Setting focus on disabledTextBox
 				_app.Tap(disabledTextBox);
 				_app.Wait(1);
-				TakeScreenshot("3 - Focus on disabledTextBox");
+				TakeScreenshot("3 - Focus on disabledTextBox", ignoreInSnapshotCompare: true);
 
 				// Removing focus on disabledTextBox
 				_app.TapCoordinates(0f, 0f);
@@ -186,7 +187,7 @@ namespace SamplesApp.UITests
 				// Setting focus on multilineTextBox
 				_app.Tap(multilineTextBox);
 				_app.Wait(1);
-				TakeScreenshot("4 - Focus on multilineTextBox");
+				TakeScreenshot("4 - Focus on multilineTextBox", ignoreInSnapshotCompare: true);
 
 				// Removing focus on multilineTextBox
 				_app.TapCoordinates(0f, 0f);
@@ -198,7 +199,7 @@ namespace SamplesApp.UITests
 				// Setting focus on numberTextBox
 				_app.Tap(numberTextBox);
 				_app.Wait(1);
-				TakeScreenshot("5 - Focus on numberTextBox");
+				TakeScreenshot("5 - Focus on numberTextBox", ignoreInSnapshotCompare: true);
 
 				// Removing focus on numberTextBox
 				_app.TapCoordinates(0f, 0f);
@@ -209,6 +210,7 @@ namespace SamplesApp.UITests
 
 		[Test]
 		[AutoRetry]
+		[ActivePlatforms(Platform.Android, Platform.Browser)] // Disabled on iOS: https://github.com/unoplatform/uno/issues/1955
 		public void Keyboard_Textbox_IsEnabled_Validation()
 		{
 			Run("Uno.UI.Samples.Content.UITests.TextBoxControl.Input_Test_InsideScrollerViewer_Automated");
@@ -218,7 +220,7 @@ namespace SamplesApp.UITests
 			var normalTextBox = _app.Marked("NormalTextBox");
 			var disabledTextBox = _app.Marked("DisabledTextBox");
 
-			// Assert inital state 
+			// Assert initial state 
 			Assert.AreEqual(string.Empty, normalTextBox.GetDependencyPropertyValue("Text")?.ToString());
 			Assert.AreEqual(string.Empty, disabledTextBox.GetDependencyPropertyValue("Text")?.ToString());
 
@@ -227,7 +229,7 @@ namespace SamplesApp.UITests
 				_app.Tap(normalTextBox);
 				_app.Wait(1);
 
-				// Writting in normalTextBox 
+				// Writing in normalTextBox 
 				_app.EnterText("Test 1");
 				Assert.AreEqual("Test 1", normalTextBox.GetDependencyPropertyValue("Text")?.ToString());
 
@@ -241,7 +243,7 @@ namespace SamplesApp.UITests
 				_app.Tap(disabledTextBox);
 				_app.Wait(1);
 
-				// Writting in disabledTextBox 
+				// Writing in disabledTextBox 
 				_app.EnterText("Test 2");
 				Assert.AreEqual(string.Empty, disabledTextBox.GetDependencyPropertyValue("Text")?.ToString());
 
@@ -388,6 +390,7 @@ namespace SamplesApp.UITests
 
 		[Test]
 		[AutoRetry]
+		[ActivePlatforms(Platform.iOS, Platform.Browser)] // Android is disabled https://github.com/unoplatform/uno/issues/1630
 		public void TextBox_Disable()
 		{
 			Run("UITests.Shared.Windows_UI_Xaml_Controls.TextBoxTests.TextBox_Disabled");
@@ -416,7 +419,7 @@ namespace SamplesApp.UITests
 
 		[Test]
 		[AutoRetry]
-		[ActivePlatforms(Platform.Android, Platform.iOS)]
+		[ActivePlatforms(Platform.Android)] // Disabled on iOS: https://github.com/unoplatform/uno/issues/1955
 		public void Keyboard_DismissTesting()
 		{
 			Run(("Uno.UI.Samples.Content.UITests.ButtonTestsControl.AppBar_KeyBoard"));
@@ -428,7 +431,7 @@ namespace SamplesApp.UITests
 
 			_app.WaitForElement(singleTextBox);
 
-			TakeScreenshot("initial");
+			var initial = TakeScreenshot("initial", ignoreInSnapshotCompare: true);
 
 			singleTextBox.Tap();
 			_app.Wait(2);
@@ -441,42 +444,11 @@ namespace SamplesApp.UITests
 			_app.Wait(3);
 			_app.Back();
 
-			TakeScreenshot("final");
-			_app.Wait(2);
+			var final = TakeScreenshot("final", ignoreInSnapshotCompare: true);
 
-			// TODO do not rely on GDI to do the image comparison
-			//
-			//Bitmap img1 = new Bitmap(f.ToString());
-			//Bitmap img2 = new Bitmap(t.ToString());
-
-			//float diffPercentage = 0;
-			//float diff = 0;
-
-			//if (img1.Size != img2.Size)
-			//{
-			//	throw new Exception("Images are of different sizes");
-			//}
-			//else
-			//{
-			//	for (int x = 0; x < img1.Width; x++)
-			//	{
-			//		for (int y = 0; y < img1.Height; y++)
-			//		{
-			//			Color img1P = img1.GetPixel(x, y);
-			//			Color img2P = img2.GetPixel(x, y);
-
-			//			diff += Math.Abs(img1P.R - img2P.R);
-			//			diff += Math.Abs(img1P.G - img2P.G);
-			//			diff += Math.Abs(img1P.B - img2P.B);
-			//		}
-			//	}
-
-			//	diffPercentage = 100 * (diff / 255) / (img1.Width * img1.Height * 3);
-			//	if (diffPercentage > 1)
-			//	{
-			//		Assert.Fail("Images are not same");
-			//	}
-			//}
+			// We only validate that the bottom of the screen is the same (so the keyboard is no longer visible).
+			// This is to avoid content offset if the status bar was opened by the keyboard or the message box.
+			ImageAssert.AreEqual(initial, final, new Rectangle(0, -100, int.MaxValue, 100));
 		}
 	}
 }

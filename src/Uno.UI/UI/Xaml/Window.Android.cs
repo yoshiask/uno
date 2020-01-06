@@ -4,6 +4,7 @@ using Android.App;
 using Android.Util;
 using Android.Views;
 using Uno.UI;
+using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.Graphics.Display;
 using Windows.UI.Core;
@@ -24,6 +25,10 @@ namespace Windows.UI.Xaml
 		{
 			Dispatcher = CoreDispatcher.Main;
 			CoreWindow = new CoreWindow();
+
+			CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBarChanged
+				+= RaiseNativeSizeChanged;
+
 			InitializeCommon();
 		}
 
@@ -188,7 +193,7 @@ namespace Windows.UI.Xaml
 			var logicalStatusBarHeight = 0d;
 
 			// The real metrics excluded the StatusBar only if it is plain.
-			// We want to substract it if it is translucent. Otherwise, it will be like we substract it twice.
+			// We want to subtract it if it is translucent. Otherwise, it will be like we subtract it twice.
 			if (IsStatusBarVisible() && IsStatusBarTranslucent())
 			{
 				var resourceId = Android.Content.Res.Resources.System.GetIdentifier("status_bar_height", "dimen", "android");
@@ -210,7 +215,7 @@ namespace Windows.UI.Xaml
 				: ApplicationActivity.Instance.LayoutProvider.NavigationBarRect.Height();
 
 			// The real metrics excluded the NavigationBar only if it is plain.
-			// We want to substract it if it is translucent. Otherwise, it will be like we substract it twice.
+			// We want to subtract it if it is translucent. Otherwise, it will be like we subtract it twice.
 			return IsNavigationBarVisible() && IsNavigationBarTranslucent()
 				? ViewHelper.PhysicalToLogicalPixels(navigationBarSize)
 				: 0;

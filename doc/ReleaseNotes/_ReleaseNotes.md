@@ -1,14 +1,57 @@
-﻿# Release notes
+# Release notes
 
-## Next version
 ### Features
+- Support for `EmailManager.ShowComposeNewEmailAsync`
+- Add support for `StorageFolder.CreateFileAsync(string path)`
+- Add support for ApplicationViewTitleBar.BackgroundColor on WASM
+- Add support for Automation SetDependencyPropertyValue in Uno.UITest
+- Added support for using a `string` value in a `StaticResource` when using `CreateFromStringAttribute'
+- [Android] Adds support for `FeatureConfiguration.ScrollViewer.AndroidScrollbarFadeDelay`
+- Add support for `Grid.ColumnSpacing` and `Grid.RowSpacing`
+- Add clarification in [documentation](../articles/uno-development/working-with-the-samples-apps.md) for adding automated UI tests
+- Add support for `Popup.LightDismissOverlayMode`, as well as `DatePicker.LightDismissOverlayMode` and `Flyout.LightDismissOverlayMode`
+
+### Breaking changes
+-
+
+### Bug fixes
+- Made macOS Samples app skeleton runnable (temporarily removed ApplicationData check on startup, fixed reference), added xamarinmacos20 to crosstargeting_override sample
+- [#2230] `DisplayInformation` leaks memory
+- [WASM] Shapes now update when their Fill brush's Color changes
+- [WASM] Fix bug where changing `IsEnabled` from false to true on `Control` inside another `Control` didn't work
+- [Wasm] Add arbitrary delay in Safari macOS to avoid StackOverflow issues
+- #2227 fixed Color & SolidColorBrush literal values generation
+- [Android] Fix bug where setting Canvas.ZIndex would apply shadow effect in some cases
+- #2287 Vertical `ListView` containing a horizontal `ScrollViewer`: horizontal scrolling is difficult, only works when the gesture is perfectly horizontal
+- #2130 Grid - fix invalid measure when total star size is 0
+- [iOS] Fix invalid image measure on constrained images with `Margin`
+- [#2033] Add Missing `LostFocus` Value to `UpdateSourceTrigger` Enum
+
+## Release 2.0
+
+### Features
+* [#2040] Support for ms-settings:// special URIs on Android and iOS, Launcher API alignments to match UWP behavior
+* [#2029](https://github.com/unoplatform/uno/pull/2029) Support for MenuFlyoutItem.Click
+* support /[file]/[name] format in ResourceLoader.GetForCurrentView().GetString()
+* [#2039] Added support for Xaml type conversions using `CreateFromStringAttribute`.
+* [#] Support for `Windows.Devices.Lights.Lamp` on iOS, Android.
+* [#1970](https://github.com/unoplatform/uno/pull/1970) Added support for `AnalyticsInfo` properties on iOS, Android and WASM
+* [#1207] Implemented some `PackageId` properties
+* [#1919](https://github.com/unoplatform/uno/pull/1919) Support for `PathGeometry` on WASM.
+* Support for `Geolocator` on WASM, improvements for support on Android, iOS
+* [#1813](https://github.com/unoplatform/uno/pull/1813) - Added polyline support for WASM and samples for all shapes
+* [#1743](https://github.com/unoplatform/uno/pull/1743) - Added a change to make the `MarkupExtensionReturnType` optional
+* Added Dark and HighContrast theme resources, reacts to Dark/Light theme on iOS, Android and WASM automatically during the startup of the app if `RequestedTheme` is not set in `App.xaml`
+* Support for `Gyrometer` on Android, iOS and WASM
+   * `ReadingChanged`
+   * `ReportInterval`
 * Support for `Launcher.QueryUriSupportAsync` method on Android and iOS
 * [#1493](https://github.com/unoplatform/uno/pull/1493) - Implemented the `Windows.Input.PointerUpdateKind` Enum.
 *  [#1428](https://github.com/unoplatform/uno/issues/1428) - Add support for horizontal progressbars to `BindableProgressBar` on Android.
 * Add support for `Windows.Devices.Sensors.Magnetometer` APIs on iOS, Android and WASM
    * `ReadingChanged`
    * `ReportInterval`
-* Added support for `Windows.UI.StartScreen.JumpList` APIs on Android and iOS
+* Add support for `Windows.UI.StartScreen.JumpList` APIs on Android and iOS
    * Includes `Logo`, `DisplayName` and `Arguments`
    * The activation proceeds through the `OnLaunched` method same as on UWP
 * Refactored `DrawableHelper` to the `Uno` project
@@ -21,9 +64,9 @@
 * Add support for `Windows.ApplicationModel.Calls.PhoneCallManager`
 * Add support for `Windows.Phone.Devices.Notification.VibrationDevice` API on iOS, Android and WASM
 * Basic support for `Windows.Devices.Sensors.Barometer`
-* Support setting `Style` inline (eg `<TextBlock><TextBlock.Style><Style TargetType="TextBlock"><Setter>...`)
+* Support setting `Style` inline (e.g. `<TextBlock><TextBlock.Style><Style TargetType="TextBlock"><Setter>...`)
 * [Wasm] Add support for `DisplayInformation` properties `LogicalDpi`, `ResolutionScale`, `ScreenWidthInRawPixels`, `RawPixelsPerViewPixel` , and `ScreenHeightInRawPixels`¸
-* Permit `DependencyProperty` to be set reentrantly. Eg this permits `TextBox.TextChanged` to modify the `Text` property (previously this could only be achieved using `Dispatcher.RunAsync()`).
+* Permit `DependencyProperty` to be set reentrantly. E.g. this permits `TextBox.TextChanged` to modify the `Text` property (previously this could only be achieved using `Dispatcher.RunAsync()`).
 * Add support for filtered solutions development for Uno.UI contributions.
 * 132984 [Android] Notch support on Android
 * Add support for Android UI Tests in PRs for improved regression testing
@@ -39,7 +82,7 @@
   - Should be set when the application is starting (before first request to a static resource).
 * Prevent possible crash with `MediaPlayerElement` (tentative)
 * Add support for `ContentDialog`, including `Closing` and `Closed` events
-* Permit `DependencyProperty` to be set reentrantly. Eg this permits `TextBox.TextChanging` to modify the `Text` property (previously this could only be achieved using `Dispatcher.RunAsync()`).
+* Permit `DependencyProperty` to be set reentrantly. E.g. this permits `TextBox.TextChanging` to modify the `Text` property (previously this could only be achieved using `Dispatcher.RunAsync()`).
 * Implement `TextBox.TextChanging` and `TextBox.BeforeTextChanging`. As on UWP, this allows the text to be intercepted and modified before the UI is updated. Previously on Android using the `TextChanged` event would lead to laggy response and dropped characters when typing rapidly; this is no longer the case with `TextChanging`.
 * [WASM] `ComboBox`'s dropdown list (`CarouselPanel`) is now virtualized (#1012)
 * Improve Screenshot comparer tool, CI test results now contain Screenshots compare data
@@ -57,10 +100,35 @@
 * Add non-failing StatusBar BackgroundOpacity and BackgroundColor getters
 * Relax DependencyProperty owner validation for non-FrameworkElement
 * `ToolTip` & `ToolTipService` are now implemented.
-* [#1352](https://github.com/unoplatform/uno/issues/1352) Add support for `ThemeResource`s with different types (eg: mixing `SolidColorBrush` and `LinearGradientBrush`)
+* [#1352](https://github.com/unoplatform/uno/issues/1352) Add support for `ThemeResource`s with different types (e.g.: mixing `SolidColorBrush` and `LinearGradientBrush`)
 * Add support for BitmapSource.PixelWidth and Height
 * Preliminary support for `ColumnDefinition.ActualWidth` and `RowDefinition.ActualHeight`.
 * Updated VisualTree of an app with Visibility for each items.
+* Add support for `CompositionTarget.Rendering` event.
+* Add support for `IObservableVector<T>` in `ItemsControl`
+* [#1559] [#1167] Wasm: make the IsEnabled property inheritable.
+* Full support of pointer events cf. [routed events documentation](../articles/features/routed-events.md)
+* Add support of manipulation events cf. [routed events documentation](../articles/features/routed-events.md)
+* Update CheckBox style to 10.0.17763
+* Adds the support for `AutomationProperties.AutomationId`
+* [#1328](https://github.com/unoplatform/uno/issues/1328) Basic ProgressRing implementation for WASM
+* Add support for `Windows.UI.Xaml.Controls.Primitives.LayoutInformation.GetAvailableSize`
+* Add support for Runtime Tests that require UI integration
+* Enable iOS UI Tests
+* Add support for `PersonPicture`
+* Add support for `VisualState` `Setter` data binding, static resources and complex objects
+* Clipping to bounds of control is now more similar to UWP
+* The _feature flag_ `FeatureConfiguration.UseLegacyClipping` is now deprecated and not used anymore
+* XAML Hot Reload support for iOS, Android and Windows
+* Add support for GitPod Workspace and prebuilds
+* #880 Added added implicit conversion for double to Thickness
+* Add Android support for `CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar` to programatically draw under the status bar
+* [WASM] `ScrollViewer.ChangeView` is now supported
+* [Wasm] Add the ability to focus a TextBox by clicking its header
+* Add support for `ToggleButton.IsThreeState` and `ToggleButton.Indeterminate`
+* [Wasm] Add support for `TextBox.IsReadonly`
+* [iOS] [WASM] `Path` now supports `LinearGradientBrush` as `Fill`
+* A feature flag has been added to change the default preferred placement mode fo the drop down of the `ComboBox` (cf. ../articles/control/ComboBox.md)
 
 ### Breaking changes
 * `TextBox` no longer raises TextChanged when its template is applied, in line with UWP.
@@ -69,18 +137,36 @@
 * `TextBox.Text = null` will now throw an exception, as on UWP. Pushing `null` via a binding is still valid.
 * Projects targeting Android 8 must now use Xamarin.GooglePlayServices.* 60.1142.1 (60.1142.0 has been unlisted)
 * Projects targeting Android 9 must now use Xamarin.GooglePlayServices.* 71.1600.0
+* [iOS] UIWebView is deprecated and replaced with WKWebView (ITMS-90809: Deprecated API Usage - Apple will stop accepting submissions of apps that use UIWebView APIs . See https://developer.apple.com/documentation/uikit/uiwebview for more information.)
+* [iOS] If you set the `ManipulationMode` to something else than `System` or `All`, the [DelaysContentTouches](https://developer.apple.com/documentation/uikit/uiscrollview/1619398-delayscontenttouches) is going to be disabled on all parent `ScrollViewer`
+* [#1237] Static resources defined in App.xaml were not processed and registered properly
+    > This change might break the compilation for projects that define duplicate resources in other globally accessible resource dictionaries. Adjustments to remove duplicate resources may be necessary.
+ * [WASM] The tranform returned by `UIElement.TransformToVisual` is now including scale, rotation or any custom transformation that was declard on a parent element (transform was only including translate components)
 
 ### Bug fixes
 * [#1605](https://github.com/unoplatform/uno/pull/1605)Fix PassworVault for API Level inferior to 23
 * [#1531](https://github.com/unoplatform/uno/pull/1531)Fix an issue with VirtualizePanelAdaptater by adding a cache where the ItemSources lenght change and created a OutOfRangeException
+* [#2186](https://github.com/unoplatform/uno/pull/2186) Fix Canvas Measurement to behave like UWP
+* [#2093](https://github.com/unoplatform/uno/pull/2093) Fix missing measurement option for polyline and polygon
+* Font size, used for ComboBoxItems, are same as in ComboBox content (not smaller)
+* [#2023](https://github.com/unoplatform/uno/pull/2023) Android WebView.NavigateToString doesn't throw exception even when string is very long.
+* [#2020](https://github.com/unoplatform/uno/pull/2020) `ContentControl` no longer display the datacontext type when ContentTemplate and content are empty
+* [#1987](https://github.com/unoplatform/uno/pull/1987) Missing XML comment warnings are disabled on generated code
+* [#1939](https://github.com/unoplatform/uno/pull/1939) Handles nullables types in XAML file generator
+* [#1741](https://github.com/unoplatform/uno/issues/1741) On Android, `ApplicationData.Current.[LocalFolder|RoamingFolder]` can now be used in the ctor of App.xaml.cs
+    > This change introduces a new constructor in `Windows.UI.Xaml.NativeApplication` that requests a delegate. In the Visual Studio Templates for Uno Platform, the `Main.cs` for the Android, the constructor now provides `() => new App()` instead of `new App()`, you can do the same in your existing application. See [this file](https://github.com/unoplatform/uno/blob/master/src/SolutionTemplate/UnoSolutionTemplate/Droid/Main.cs) for an example.
+* [#1767] Invalid `this` keyword generated for `Storyboard.SetTarget`
+* [#1781] WASM Images are no longer draggable and selectable by default to match UWP
+* [#1771](https://github.com/unoplatform/uno/pull/1771) Fix ".Uno" in project names resulted in build errors.
+* [#1531](https://github.com/unoplatform/uno/pull/1531) Fix an issue with VirtualizePanelAdaptater by adding a cache where the ItemSources length change and created a OutOfRangeException
 * [WASM] #1518 Fix Navigation Issue Where SystemNavigationManager.enable() is called twice and clear the stack history
 * [#1278](https://github.com/unoplatform/uno/pull/1278) the XAML sourcegenerator now always uses the fully qualified type name to prevent type conflicts.
 * [#1392](https://github.com/unoplatform/uno/pull/1392) Resolved exceptions while changing cursor color on Android P.
-* [#1383](https://github.com/unoplatform/uno/pull/1383) resolve Android compilation errors related to Assets filenames: "Invali`d file name: It must contain only"
+* [#1383](https://github.com/unoplatform/uno/pull/1383) resolve Android compilation errors related to Assets filenames: "Invalid file name: It must contain only"
 * [#1380](https://github.com/unoplatform/uno/pull/1380) iOS head generated by Uno Solution Template now specifies MinimumOSVersion, in line with XF so first compile is successful.
 * #1276 retrieving non-existent setting via indexer should not throw and  `ApplicationDataContainer` allowed clearing value by calling `Add(null)` which was not consistent with UWP.
 * [iOS] Area of view outside Clip rect now allows touch to pass through, this fixes NavigationView not allowing touches to children (#1018)
-* `ComboBox` drop down is now placed following a logic which is closer to UWP and it longer flickers when it appears (especilly on WASM)
+* `ComboBox` drop down is now placed following a logic which is closer to UWP and it no longer flickers when it appears (especilly on WASM) cf. ../articles/control/ComboBox.md
 * #854 `BasedOn` on a `<Style>` in `App.Xaml` were not resolving properly
 * #706 `x:Name` in `App.Xaml`'s resources were crashing the compilation.
 * #846 `x:Name` on non-`DependencyObject` resources were crashing the compilation
@@ -118,13 +204,40 @@
 * Fix layout bug in Image control.
 * [#1387] `ComboBox`: Fix DataContext was propagated to `<ContentPresenter>` when there was no selected item, causing strange display behavior.
 * #1354 fixed Recycler.State desync issue
-* #1533 [Wasm] Fix measure caching for zero sized measure 
+* #1533 [Wasm] Fix measure caching for zero sized measure
 * [iOS(iPad)] `ComboBox` : the combobox wasn't fully expanding vertically on first opening.
 * `Popup` & `ComboBox` (and other controls using `Popup`) were not behaving properly when `IsLightDismissable` were set to `true`.
 * [Wasm] Fix unloaded UIElements are made visible if measured and arranged
 * [Android] Fix java NRE handing touch events on detached view
+* [Pivot] Add support for non PivotItem items
 * #1557 Fix local DataContext on ContentDialog is overwritten
-* [WASM] Fix display for multiple popups (eg ComboBox inside of ContentDialog)
+* [WASM] Fix display for multiple popups (e.g. ComboBox inside of ContentDialog)
+* [Android] Fix invalid ImageBrush stack overflow with delayed image reuse
+* CommandBar fixes (AppBarToggleButton, AppBarButton)
+* Fix Symbols rendering in sample app
+* Fix multiple invocations of OnLoaded when hosting a control in ItemsControl
+* [Android] Fix glitchy animations inside ListView with transformed ancestor.
+* Adjust `AppBar` and `CommandBar` styles.
+* Adjust the Stretch mode of `BitmapIcon` content
+* Fix invalid Image size constraint
+* [Android] MenuFlyout was misplaced if view was in a hierarchy with a RenderTransform
+* Fix color refresh of `BitmapIcon` monochrome Foreground
+* [IOS] DatePickerFlyout min and max year were resetting to FallbackNullValue
+* [Android] Fix bug in `ListView` when using an `ObservableCollection` as its source and using `Header` and `Footer`.
+* [#1924](https://github.com/unoplatform/uno/issues/1924) Fix Android `ListView.HeaderTemplate` (and `.FooterTemplate`) binding bug when changing `Header` and `Footer`.
+* 164480 [Android] fixed a text wrapping issue caused by layout height desync
+* [Wasm] Fix unable to reset `Image.Source` property
+* [#2014](https://github.com/unoplatform/uno/issues/2014) Fix iOS Picker for ComboBox not selecting the correct item.
+* [iOS] #977 Fix exception when setting MediaPlayerElement.Stretch in XAML.
+* #1708 Fix initial Flyout placement and window resize placement
+* [Android] #2007 ComboBox does not take Window.VisibleBounds to position its popup
+* [Wasm] Fixes the measure of a TextBoxView #2034 #2095
+* [Android] [Wasm] Recent clipping improvements were incompleted. Fixed a case where a control was allowed to draw itself to use more than available place in the _arrange_ phase.
+* [iOS] Fix negative result value of TimePicker. Now value range is limited from 0 to 1 day
+* #2129 WebAssembly Bootstrapper update to remove the implicit .NET 4.6.2 dependency, and support for long file paths on Windows.
+* #2147 Fix NRE in android-specific TextBox.ImeOptions
+* #2146 [iOS] ListView doesn't take extra space when items are added to collection
+* [iOS] Animation might run twice
 
 ## Release 1.45.0
 ### Features
@@ -178,7 +291,7 @@
 * [Wasm] Add NativeXXX styles (which are aliases to the XamlXXX styles)
 * [Wasm] Enable persistence for all ApplicationData folders
 * [Wasm] Add Samples App UI Screenshots diffing tool with previous builds
-* Add `PasswordVault` on supported platfrosm
+* Add `PasswordVault` on supported platform
 * [Android] Updated support libraries to 28.0.0.1 for Android 9
 * Add support for `x:Load`
 * [Wasm] Restore support for `x:Load` and `x:DeferLoadStrategy`
@@ -216,7 +329,7 @@
 ### Breaking Changes
 * The `WebAssemblyRuntime.InvokeJSUnmarshalled` method with three parameters has been removed.
 * `NavigationBarHelper` has been removed.
-* Localized Text, Content etc is now applied even if the Text (etc) property isn't set in Xaml. Nested implicit content (eg `<Button><Border>...`) will be overridden by localized values if available.
+* Localized Text, Content etc is now applied even if the Text (etc) property isn't set in Xaml. Nested implicit content (e.g. `<Button><Border>...`) will be overridden by localized values if available.
 * [Android] Unless nested under `SecondaryCommands`, the `AppBarButton.Label` property will no longer be used for the title of menu item, instead use the `AppBarButton.Content` property. For `SecondaryCommands`, keep using `AppBarButton.Label`.
 * The `WordEllipsis` was removed from the `TextWrapping` as it's not a valid value for UWP (And it was actually supported only on WASM) (The right way to get ellipsis is with the `TextTrimming.WordEllipsis`)
 * [Android] `Popup.Anchor` is no longer available
@@ -292,6 +405,7 @@
 * [Android] A ListView inside another ListView no longer causes an app freeze/crash
 * `Click` on `ButtonBase` was not properly raised.
 
+
 ## Release 1.44.0
 
 ### Features
@@ -304,7 +418,7 @@
 * Restore original SymbolIcon.SymbolProperty as a C# property
 * Add support for `MediaPlaybackList`
 * Update Uno.SourceGenerationTasks to improve build performance
-    - Move to the latest Uno.SourceGenerationTasks to improve project parsing performance, and allows for the removal of unused targets caused by nventive/Uno.SourceGeneration#2. Uno.Xaml and Uno.UI.BindingHelpers now only build the required targets.
+    - Move to the latest Uno.SourceGenerationTasks to improve project parsing performance, and allows for the removal of unused targets caused by unoplatform/uno.SourceGeneration#2. Uno.Xaml and Uno.UI.BindingHelpers now only build the required targets.
     - Move to net461 for test projects so the the Uno.Xaml project can be referenced properly
     - Use the latest MSBuild.Sdk.Extras for actual parallel cross-targeted builds
     - Move the nuget package versions to the Directory.Build.targets file so it's easier to change all versions at once.
@@ -346,7 +460,7 @@
     - `MediaPlaybackList.Items` is back to an `IObservableVector`
 
 ### Bug fixes
- * Transforms are now fully functionnal
+ * Transforms are now fully functional
  * [Wasm] Fixed ListView infinite loop when using custom containers
  * [Wasm] Use Uno.UI Assembly for namespace type lookup in `XamlReader`
  * [Wasm] Fixed `System.UriConverter` is being linked out
@@ -461,7 +575,7 @@
  * Adjust Microsoft.CodeAnalysis versions to avoid restore conflicts
  * Fix element name matching existing types fails to compile (e.g. ContentPresenter)
  * 138735 [Android] Fixed broken DatePicker
- * Multi-selection Check Boxes in ListViewItems are appearing brielfly (https://github.com/nventive/Uno/issues/403)
+ * Multi-selection Check Boxes in ListViewItems are appearing brielfly (https://github.com/unoplatform/uno/issues/403)
  * 140721 [Android] FlipView not visible when navigating back to page
  * 138537 [iOS] App freezes after State selection causing infinite load on every subsequent launch
  * Fix invalid Border Content type for macOS
@@ -549,7 +663,7 @@
  * 137979 [Android] Incorrect offset when applying RotateTransform to stretched view
  * Now supports internal object in desource dictionaries
  * 134573 CommandBar doesn't take the proper space on iOS phones in landscape
- * #26 The explicit property <Style.Setters> does not intialize style setters properly
+ * #26 The explicit property <Style.Setters> does not initialize style setters properly
  * 104057 [Android] ListView shows overscroll effect even when it doesn't need to scroll
  * #376 iOS project compilation fails: Can't resolve the reference 'System.Void Windows.UI.Xaml.Documents.BlockCollection::Add(Windows.UI.Xaml.Documents.Block)
  * 138099, 138463 [Android] fixed `ListView` scrolls up when tapping an item at the bottom of screen
@@ -561,7 +675,7 @@
 
 ### Features
 
-* [#154](https://github.com/nventive/Uno/issues/154) Implement the MediaPlayerElement control
+* [#154](https://github.com/unoplatform/uno/issues/154) Implement the MediaPlayerElement control
 * 135799 Implemented MediaPlayer.Dispose()
 
 ### Bug fixes
@@ -587,13 +701,13 @@
  * 148229 [Android] Right time is picked and rounded to nearest time increment in clock mode
  * 148241 [Android] won't open if `MinuteIncrement` is not set
  * 148582 Time picker initial time when using time increment is using initial time seconds when rounding.. it should ignore seconds..
- * 148285 [iOS] TimePicker is clipped off screen when ios:FlyoutPlacement isnt set
+ * 148285 [iOS] TimePicker is clipped off screen when ios:FlyoutPlacement isn't set
 
 ## Release 1.40
 
 This release is the first non-experimental release of the Uno Platform since the initial public version in May 2018. Lot of bug fixes and features have been added since then, and lots more are coming.
 
-A lot of those changes where included to support these libraries : [MVVMLight](https://github.com/nventive/uno.mvvmlight), [ReactiveUI](https://github.com/nventive/Uno.ReactiveUI), [Prism](https://github.com/nventive/Uno.Prism), [Rx.NET](https://github.com/nventive/Uno.Rx.NET), [Windows Community Toolkit](https://github.com/nventive/Uno.WindowsCommunityToolkit), [Xamarin.Forms UWP](https://github.com/nventive/Uno.Xamarin.Forms).
+A lot of those changes where included to support these libraries : [MVVMLight](https://github.com/unoplatform/uno.mvvmlight), [ReactiveUI](https://github.com/unoplatform/uno.ReactiveUI), [Prism](https://github.com/unoplatform/uno.Prism), [Rx.NET](https://github.com/unoplatform/uno.Rx.NET), [Windows Community Toolkit](https://github.com/unoplatform/uno.WindowsCommunityToolkit), [Xamarin.Forms UWP](https://github.com/unoplatform/uno.Xamarin.Forms).
 
 Here are some highlights of this release:
 
@@ -626,15 +740,15 @@ Here are some highlights of this release:
 
 Here's the full change log:
 
-- Fixes for VisualTransition.Storyboard lazy bindings [#12](https://github.com/nventive/Uno/pull/12)
-- ListView fixes [#22](https://github.com/nventive/Uno/pull/22)
+- Fixes for VisualTransition.Storyboard lazy bindings [#12](https://github.com/unoplatform/uno/pull/12)
+- ListView fixes [#22](https://github.com/unoplatform/uno/pull/22)
     - Improve Path parser compatibility
     - Update assets generation documentation
     - Fix ItemsWrapGrid layout when ItemHeight/ItemWidth are not set
     - Adjust for invalid AnchorPoint support for iOS (#16)
     - Fix for ListView initialization order issue
-- Default styles clearing fixes [#23](https://github.com/nventive/Uno/pull/23)
-- Compatibility and stability fixes [#37](https://github.com/nventive/Uno/pull/37)
+- Default styles clearing fixes [#23](https://github.com/unoplatform/uno/pull/23)
+- Compatibility and stability fixes [#37](https://github.com/unoplatform/uno/pull/37)
     - Wasm SplitView fixes
     - Enum fast converters
     - TextBox InputScope fixes
@@ -653,33 +767,33 @@ Here's the full change log:
     - Add support for Object as DependencyProperty owner
     - Add Wasm support for UIElement.Tapped
     - Fix iOS UnregisterDoubleTapped stack overflow
-- Compatibility and stability fixes [#43](https://github.com/nventive/Uno/pull/43)
+- Compatibility and stability fixes [#43](https://github.com/unoplatform/uno/pull/43)
     - Adjust WASM thickness support for children arrange
     - Fix support for inline text content using ContentProperty
     - Fix memory leaks in ScrollViewer
     - Adjust for missing styles in UWP Styles FeatureConfiguration
     - Fix for Source Generation race condition on slow build servers
-- Compatibility and stability fixes [#53](https://github.com/nventive/Uno/pull/53)
-    - Adjust for WASM Support for local images [#1](https://github.com/nventive/Uno/issues/1)
+- Compatibility and stability fixes [#53](https://github.com/unoplatform/uno/pull/53)
+    - Adjust for WASM Support for local images [#1](https://github.com/unoplatform/uno/issues/1)
     - Fixes x:Bind support for Wasm
     - Fix invalid deserialization of ApplicationDataContainer for iOS
     - Fix error for ApplicationView.Title for WASM
     - Remove glib conversion errors in WASM
-- UWP API Alignments for Wasm [#70](https://github.com/nventive/Uno/pull/70)
+- UWP API Alignments for Wasm [#70](https://github.com/unoplatform/uno/pull/70)
     - Add support for Application.Start() to provide a proper SynchronizationContext for error management
     - Fix for ImplicitStyles support in XamlReader
     - Add support for the Pivot control using the default UWP Xaml style
     - Adjust body background color after the splash screen removal
     - Adjust the materialization of Control templates to not be lazy
-- Add support for Xaml file defined event handlers [#71](https://github.com/nventive/Uno/pull/71)
-- API Compatibility Updates [#75](https://github.com/nventive/Uno/pull/75)
+- Add support for Xaml file defined event handlers [#71](https://github.com/unoplatform/uno/pull/71)
+- API Compatibility Updates [#75](https://github.com/unoplatform/uno/pull/75)
     - Add support for implicit bool to Visibility conversion
     - Fix default Style constructor does not set the proper property precedence
     - Add more DependencyObjectStore logging
     - Align ItemsControl.Items behavior with UWP (#34)
     - Fix invalid uri parsing when set through BitmapImage.UriSource
-- [WASM] Fix text measure when not connected to DOM [#76](https://github.com/nventive/Uno/pull/76)
-- Pivot, AutoSuggestBox, TextBox, XamlReader updates [#77](https://github.com/nventive/Uno/pull/77)
+- [WASM] Fix text measure when not connected to DOM [#76](https://github.com/unoplatform/uno/pull/76)
+- Pivot, AutoSuggestBox, TextBox, XamlReader updates [#77](https://github.com/unoplatform/uno/pull/77)
     - Added missing TransformGroup ContentProperty
     - Fixed invalid namespace attribution of attached properties in XamlReader
     - Fixed BitmapImage.UriSource updates not being applied on Wasm
@@ -688,26 +802,26 @@ Here's the full change log:
     - Add ThreadPoolTimer support
     - Fix for iOS popup not appearing
     - Fix for Wasm textbox not properly updating while not loaded
-- [WASM] Add suport for TextBlock.Padding property [#88](https://github.com/nventive/Uno/pull/88)
-- [WASM] Fixed measuring support with Polyfill for Node.isConnected [#89](https://github.com/nventive/Uno/pull/88), [#91](https://github.com/nventive/Uno/pull/91)
-- Misc fixes [#93](https://github.com/nventive/Uno/pull/93)
+- [WASM] Add support for TextBlock.Padding property [#88](https://github.com/unoplatform/uno/pull/88)
+- [WASM] Fixed measuring support with Polyfill for Node.isConnected [#89](https://github.com/unoplatform/uno/pull/88), [#91](https://github.com/unoplatform/uno/pull/91)
+- Misc fixes [#93](https://github.com/unoplatform/uno/pull/93)
     - Fixed iOS `SimpleOrientationSensor` default queue management
     - Fixed multiple memory leaks in `ListView`, `ScrollViewer`
     - Implemented `CacheLength` for Android `ListViewBase`
     - Fixed for `DependencyObject` properties inheritance race condition
     - Fix for empty Path reporting an infinite size
     - Fix Title  not appearing in CommandBar
-- Add support for WebAssembly AppManifest.displayName [#94](https://github.com/nventive/Uno/pull/94)
-- Enable SourceLink, Reference Assemblies, Deterministic build [#100](https://github.com/nventive/Uno/pull/100)
-- Binding Engine Alignments [#113](https://github.com/nventive/Uno/pull/113)
+- Add support for WebAssembly AppManifest.displayName [#94](https://github.com/unoplatform/uno/pull/94)
+- Enable SourceLink, Reference Assemblies, Deterministic build [#100](https://github.com/unoplatform/uno/pull/100)
+- Binding Engine Alignments [#113](https://github.com/unoplatform/uno/pull/113)
     - Use Portable symbols for Xamarin debugging stability
     - Enable x:Name reference in x:Bind markup. This requires for a failed BindableMetadata lookup to fall through reflection lookup.
     - Assume ".Value" binding path on a primitive is equivalent to self, to enable nullable bindings.
     - Adjust unit tests logging
     - Enables auto "LogicalChild" treatment to allow for DependencyObjectCollection members to be databound
     - Enable parent reset for "LogicalChild" assignations
-- Implement the CoreWindow.Dispatcher property [#117](https://github.com/nventive/Uno/pull/117)
-- Misc Fixes [#120](https://github.com/nventive/Uno/pull/120)
+- Implement the CoreWindow.Dispatcher property [#117](https://github.com/unoplatform/uno/pull/117)
+- Misc Fixes [#120](https://github.com/unoplatform/uno/pull/120)
     - Fix for CommandBar back button icon
     - Improve HyperLinks hit-testing for iOS
     - Fixed android PaintDrawable opacity
@@ -717,11 +831,11 @@ Here's the full change log:
     - Adjust MinWidth/MinHeight support in Grid
     - Adjust PasswordBox custom font for during password reveal
     - ListView, ContentControl memory improvements
-    - Style behavior adjustements
-- Update for android animation reliability [#123](https://github.com/nventive/Uno/pull/123)
-- Add support for WriteableBitmap [#125](https://github.com/nventive/Uno/pull/125)
-- Updated vsix structure [#128](https://github.com/nventive/Uno/pull/128)
-- Multiple enhancements for WCT 4.0 [#131](https://github.com/nventive/Uno/pull/131)
+    - Style behavior adjustments
+- Update for android animation reliability [#123](https://github.com/unoplatform/uno/pull/123)
+- Add support for WriteableBitmap [#125](https://github.com/unoplatform/uno/pull/125)
+- Updated vsix structure [#128](https://github.com/unoplatform/uno/pull/128)
+- Multiple enhancements for WCT 4.0 [#131](https://github.com/unoplatform/uno/pull/131)
     - Adds support for `IconElement` fast conversion
     - Adds stubs for `ToggleSwitchTemplateSettings`, `PackageId`, `UISettings`
     - Adjust `XamlObjectBuilder` logging
@@ -732,14 +846,14 @@ Here's the full change log:
     - Fix invalid measure for empty wasm images
     - Add size/rect checks for measure/arrange wasm
     - Improve XamlReader error reporting
-- Add support for Cross-platform library template in VSIX [#132](https://github.com/nventive/Uno/pull/132)
-- Add support for AutomationPeer [#141](https://github.com/nventive/Uno/pull/141)
-- Improved support for UWP resources [#149](https://github.com/nventive/Uno/pull/149)
+- Add support for Cross-platform library template in VSIX [#132](https://github.com/unoplatform/uno/pull/132)
+- Add support for AutomationPeer [#141](https://github.com/unoplatform/uno/pull/141)
+- Improved support for UWP resources [#149](https://github.com/unoplatform/uno/pull/149)
     - Projects no longer need to define `XamlCodeGenerationFiles` (fixes #144)
     - Projects no longer need to define `ResourcesDirectory` (fixes #106)
     - Projects no longer need to initialize `ResourceHelper.ResourcesService` (fixes #142)
     - `ResourceLoader.GetString` is now supported (fixes #142)
-- Updates rollup [#151](https://github.com/nventive/Uno/pull/151)
+- Updates rollup [#151](https://github.com/unoplatform/uno/pull/151)
     - Fixed `VisualState` not updated when `TextBox` is focused
     - Improve `ListView` and `Selector` memory footprint
     - Adjust GenericStyles application sequence for Android
@@ -756,12 +870,12 @@ Here's the full change log:
     - Fixed `ComboBox` popup touch issue
     - Add support for TextBlock.TextDecorations
     - TextBlock base class from UILabel to FrameworkElement
-- Auto-generate list of views implemented in Uno [#152](https://github.com/nventive/Uno/pull/152)
-- Add support for string to `Type` conversion in Xaml generator and Binding engine. [#159](https://github.com/nventive/Uno/pull/159)
-- Add support for attached properties localization [#156](https://github.com/nventive/Uno/pull/156)
-- Added `ItemsControl.OnItemsChanged` support [#175](https://github.com/nventive/Uno/pull/175)
-- Added support for XAML inline collections declaration [#184](https://github.com/nventive/Uno/pull/184)
-- Adjust the sequence of control template materialization [#192](https://github.com/nventive/Uno/pull/192)
+- Auto-generate list of views implemented in Uno [#152](https://github.com/unoplatform/uno/pull/152)
+- Add support for string to `Type` conversion in Xaml generator and Binding engine. [#159](https://github.com/unoplatform/uno/pull/159)
+- Add support for attached properties localization [#156](https://github.com/unoplatform/uno/pull/156)
+- Added `ItemsControl.OnItemsChanged` support [#175](https://github.com/unoplatform/uno/pull/175)
+- Added support for XAML inline collections declaration [#184](https://github.com/unoplatform/uno/pull/184)
+- Adjust the sequence of control template materialization [#192](https://github.com/unoplatform/uno/pull/192)
 - Support for ListView.ScrollIntoView with leading alignment
 - Added support for ListView GroupStyle.HeaderTemplateSelector
 - [IOS-ANDROID] Added support for time picker minute increment

@@ -58,7 +58,7 @@ namespace Windows.UI.Xaml
 		/// management. Once default/implicit styles are implemented properly,
 		/// this should be removed.
 		///
-		/// See https://github.com/nventive/Uno/issues/119 for details.
+		/// See https://github.com/unoplatform/uno/issues/119 for details.
 		/// </remarks>
 		private bool _styleChanging = false;
 		private bool _defaultStyleApplied = false;
@@ -122,6 +122,10 @@ namespace Windows.UI.Xaml
 		/// <returns>The size that this object determines it needs during layout, based on its calculations of the allocated sizes for child objects or based on other considerations such as a fixed container size.</returns>
 		protected virtual Size MeasureOverride(Size availableSize)
 		{
+#if !__WASM__
+			LastAvailableSize = availableSize;
+#endif
+
 			var child = this.FindFirstChild();
 			return child != null ? MeasureElement(child, availableSize) : new Size(0, 0);
 		}
@@ -167,6 +171,11 @@ namespace Windows.UI.Xaml
 		/// </remarks>
 		public override void Measure(Size availableSize)
 		{
+			if (double.IsNaN(availableSize.Width) || double.IsNaN(availableSize.Height))
+			{
+				throw new InvalidOperationException($"Cannot measure [{GetType()}] with NaN");
+			}
+
 			_layouter.Measure(availableSize);
 			OnMeasurePartial(availableSize);
 		}
@@ -215,7 +224,7 @@ namespace Windows.UI.Xaml
 #if __WASM__
 			var adjust = GetThicknessAdjust();
 
-			// HTML mooves the origin along with the border thickness.
+			// HTML moves the origin along with the border thickness.
 			// Adjust the child based on this element's border thickness.
 			var rect = new Rect(finalRect.X - adjust.Left, finalRect.Y - adjust.Top, finalRect.Width, finalRect.Height);
 
@@ -335,7 +344,7 @@ namespace Windows.UI.Xaml
 		}
 
 		/// <summary>
-		/// This method is kept internal until https://github.com/unoplatform/uno/issues/119 is adressed.
+		/// This method is kept internal until https://github.com/unoplatform/uno/issues/119 is addressed.
 		/// </summary>
 		/// <returns></returns>
 		internal virtual Type GetDefaultStyleType() => GetType();
@@ -434,7 +443,7 @@ namespace Windows.UI.Xaml
 
 		internal virtual void OnLayoutUpdated()
 		{
-			LayoutUpdated?.Invoke(this, RoutedEventArgs.Empty);
+			LayoutUpdated?.Invoke(this, new RoutedEventArgs(this));
 		}
 
 #if XAMARIN

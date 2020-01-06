@@ -8,12 +8,19 @@ using System.Text;
 using System.Threading.Tasks;
 using Uno.UITest.Helpers;
 using Uno.UITest.Helpers.Queries;
+using Uno.UITests.Helpers;
 
 namespace SamplesApp.UITests.Windows_UI_Xaml_Controls.ContentDialogTests
 {
 	[TestFixture]
 	public partial class ContentDialog_Tests : SampleControlUITestBase
 	{
+		private void CurrentTestTakeScreenShot(string name) =>
+			// Screenshot taking for this fixture is disabled on Android because of the
+			// presence of the status bar when native popups are opened, adding the clock
+			// (that is always changing :)).
+			TakeScreenshot(name, ignoreInSnapshotCompare: AppInitializer.GetLocalPlatform() == Platform.Android);
+
 		[Test]
 		[AutoRetry]
 		public void Simple_ContentDialog_01_Primary()
@@ -26,7 +33,7 @@ namespace SamplesApp.UITests.Windows_UI_Xaml_Controls.ContentDialogTests
 
 			var dialogResult = _app.Marked("dialogResult");
 
-			// Assert inital state 
+			// Assert initial state 
 			Assert.AreEqual("Undefined", dialogResult.GetDependencyPropertyValue("Text")?.ToString());
 
 			_app.Tap(showDialog1);
@@ -34,7 +41,7 @@ namespace SamplesApp.UITests.Windows_UI_Xaml_Controls.ContentDialogTests
 			var primaryButton = _app.Marked("PrimaryButton");
 			_app.WaitForElement(primaryButton);
 
-			_app.Screenshot(nameof(Simple_ContentDialog_01_Primary) + " - Primary Button");
+			CurrentTestTakeScreenShot("Primary Button");
 
 			_app.Tap(primaryButton);
 
@@ -53,7 +60,7 @@ namespace SamplesApp.UITests.Windows_UI_Xaml_Controls.ContentDialogTests
 
 			var dialogResult = _app.Marked("dialogResult");
 
-			// Assert inital state 
+			// Assert initial state 
 			Assert.AreEqual("Undefined", dialogResult.GetDependencyPropertyValue("Text")?.ToString());
 
 			_app.Tap(showDialog1);
@@ -61,7 +68,7 @@ namespace SamplesApp.UITests.Windows_UI_Xaml_Controls.ContentDialogTests
 			var primaryButton = _app.Marked("PrimaryButton");
 			_app.WaitForElement(primaryButton);
 
-			_app.Screenshot(nameof(Simple_ContentDialog_01_Primary) + " - Primary Button");
+			CurrentTestTakeScreenShot("Primary Button");
 
 			_app.Tap(primaryButton);
 
@@ -70,11 +77,11 @@ namespace SamplesApp.UITests.Windows_UI_Xaml_Controls.ContentDialogTests
 			var secondaryButton = _app.Marked("SecondaryButton");
 			_app.WaitForElement(secondaryButton);
 
-			_app.Screenshot(nameof(Simple_ContentDialog_01_Primary) + " - Secondary Button");
+			CurrentTestTakeScreenShot("Secondary Button");
 
 			_app.Tap(secondaryButton);
 
-			_app.Screenshot(nameof(Simple_ContentDialog_01_Primary) + " - Closed");
+			CurrentTestTakeScreenShot("Closed");
 		}
 
 		[Test]
@@ -89,7 +96,7 @@ namespace SamplesApp.UITests.Windows_UI_Xaml_Controls.ContentDialogTests
 
 			var dialogResult = _app.Marked("dialogResult");
 
-			// Assert inital state 
+			// Assert initial state 
 			Assert.AreEqual("Undefined", dialogResult.GetDependencyPropertyValue("Text")?.ToString());
 
 			_app.Tap(showDialog1);
@@ -97,7 +104,7 @@ namespace SamplesApp.UITests.Windows_UI_Xaml_Controls.ContentDialogTests
 			var secondaryButton = _app.Marked("SecondaryButton");
 			_app.WaitForElement(secondaryButton);
 
-			_app.Screenshot(nameof(Simple_ContentDialog_01_Secondary) + " - Secondary Button");
+			CurrentTestTakeScreenShot("Secondary Button");
 
 			_app.Tap(secondaryButton);
 
@@ -117,7 +124,7 @@ namespace SamplesApp.UITests.Windows_UI_Xaml_Controls.ContentDialogTests
 			var dialogResult = _app.Marked("dialogResult");
 			var dialogCommand = _app.Marked("commandResult");
 
-			// Assert inital state 
+			// Assert initial state 
 			Assert.AreEqual("Undefined", dialogResult.GetDependencyPropertyValue("Text")?.ToString());
 
 			_app.Tap(showDialog1);
@@ -125,7 +132,7 @@ namespace SamplesApp.UITests.Windows_UI_Xaml_Controls.ContentDialogTests
 			var primaryButton = _app.Marked("PrimaryButton");
 			_app.WaitForElement(primaryButton);
 
-			_app.Screenshot(nameof(Simple_ContentDialog_01_Secondary) + " - Primary Button");
+			CurrentTestTakeScreenShot("Primary Button");
 
 			_app.Tap(primaryButton);
 
@@ -145,7 +152,7 @@ namespace SamplesApp.UITests.Windows_UI_Xaml_Controls.ContentDialogTests
 
 			var dialogResult = _app.Marked("dialogResult");
 
-			// Assert inital state 
+			// Assert initial state 
 			Assert.AreEqual("Undefined", dialogResult.GetDependencyPropertyValue("Text")?.ToString());
 
 			_app.Tap(showDialog1);
@@ -153,7 +160,7 @@ namespace SamplesApp.UITests.Windows_UI_Xaml_Controls.ContentDialogTests
 			var closeButton = _app.Marked("CloseButton");
 			_app.WaitForElement(closeButton);
 
-			_app.Screenshot(nameof(Simple_ContentDialog_01_Secondary) + " - Close Button");
+			CurrentTestTakeScreenShot("Close Button");
 
 			_app.Tap(closeButton);
 
@@ -172,7 +179,7 @@ namespace SamplesApp.UITests.Windows_UI_Xaml_Controls.ContentDialogTests
 
 			var dialogResult = _app.Marked("dialogResult");
 
-			// Assert inital state 
+			// Assert initial state 
 			Assert.AreEqual("Undefined", dialogResult.GetDependencyPropertyValue("Text")?.ToString());
 
 			_app.Tap(showDialog1);
@@ -180,7 +187,7 @@ namespace SamplesApp.UITests.Windows_UI_Xaml_Controls.ContentDialogTests
 			var dialogInnerButton = _app.Marked("dialogInnerButton");
 			_app.WaitForElement(dialogInnerButton);
 
-			_app.Screenshot(nameof(Simple_ContentDialog_01_Primary) + " - Secondary Button");
+			CurrentTestTakeScreenShot("Secondary Button");
 
 			_app.Tap(dialogInnerButton);
 
@@ -194,7 +201,7 @@ namespace SamplesApp.UITests.Windows_UI_Xaml_Controls.ContentDialogTests
 			var dialogTextBinding = _app.Marked("dialogTextBinding");
 			_app.WaitForDependencyPropertyValue(dialogTextBinding, "Text", "This is some text");
 
-			_app.Screenshot(nameof(Simple_ContentDialog_01_TypeInner) + " - Secondary Button");
+			CurrentTestTakeScreenShot("Secondary Button");
 
 			var primaryButton = _app.Marked("SecondaryButton");
 			_app.Tap(primaryButton);
@@ -221,8 +228,6 @@ namespace SamplesApp.UITests.Windows_UI_Xaml_Controls.ContentDialogTests
 
 			_app.WaitForDependencyPropertyValue(closedText, "Text", "Closed");
 		}
-
-
 
 		[Test]
 		[AutoRetry]

@@ -19,6 +19,8 @@ using Windows.System;
 using Uno.Collections;
 using Uno.UI;
 using System.Numerics;
+using Windows.UI.Input;
+using Windows.UI.Xaml.Controls;
 using Uno.UI.Xaml;
 
 namespace Windows.UI.Xaml
@@ -31,7 +33,9 @@ namespace Windows.UI.Xaml
 
 		private readonly GCHandle _gcHandle;
 		private readonly bool _isFrameworkElement;
+		private Rect _nativeLayoutSlot; // The LayoutSLot requested JS, and which also contains Margins.
 
+		private protected int? Depth { get; private set; }
 
 		private static class ClassNames
 		{
@@ -39,7 +43,7 @@ namespace Windows.UI.Xaml
 
 			internal static string[] GetForType(Type type)
 			{
-				if(!_classNames.TryGetValue(type, out var names))
+				if (!_classNames.TryGetValue(type, out var names))
 				{
 					_classNames[type] = names = GetClassesForType(type).ToArray();
 				}
@@ -55,18 +59,6 @@ namespace Windows.UI.Xaml
 					type = type.BaseType;
 				}
 			}
-		}
-
-		private void CapturePointerNative(Pointer pointer)
-		{
-			var command = "Uno.UI.WindowManager.current.setPointerCapture(" + HtmlId + ", " + pointer.PointerId + ");";
-			WebAssemblyRuntime.InvokeJS(command);
-		}
-
-		private void ReleasePointerCaptureNative(Pointer pointer)
-		{
-			var command = "Uno.UI.WindowManager.current.releasePointerCapture(" + HtmlId + ", " + pointer.PointerId + ");";
-			WebAssemblyRuntime.InvokeJS(command);
 		}
 
 		public Size MeasureView(Size availableSize)
@@ -115,6 +107,7 @@ namespace Windows.UI.Xaml
 				classes: ClassNames.GetForType(type)
 			);
 
+			InitializePointers();
 			UpdateHitTest();
 
 			FocusManager.Track(this);
@@ -175,12 +168,19 @@ namespace Windows.UI.Xaml
 		private long _arrangeCount = 0;
 #endif
 
-		protected internal void ArrangeElementNative(Rect rect, Rect? clipRect)
+		/// <summary>
+		/// Natively arranges and clips an element.
+		/// </summary>
+		/// <param name="rect">The dimensions to apply to the element</param>
+		/// <param name="clipToBounds">Whether the element should be clipped to its bounds</param>
+		/// <param name="clipRect">The Clip rect to set, if any</param>
+		protected internal void ArrangeElementNative(Rect rect, bool clipToBounds, Rect? clipRect)
 		{
-			Uno.UI.Xaml.WindowManagerInterop.ArrangeElement(HtmlId, rect, clipRect);
+			_nativeLayoutSlot = rect;
+			Uno.UI.Xaml.WindowManagerInterop.ArrangeElement(HtmlId, rect, clipToBounds, clipRect);
 
 #if DEBUG
-			var count = Interlocked.Increment(ref _arrangeCount);
+			var count = ++_arrangeCount;
 
 			SetAttribute(("xamlArrangeCount", count.ToString()));
 #endif
@@ -205,6 +205,11 @@ namespace Windows.UI.Xaml
 		protected internal void SetAttribute(string name, string value)
 		{
 			Uno.UI.Xaml.WindowManagerInterop.SetAttribute(HtmlId, name, value);
+		}
+
+		protected internal void RemoveAttribute(string name)
+		{
+			Uno.UI.Xaml.WindowManagerInterop.RemoveAttribute(HtmlId, name);
 		}
 
 		protected internal void SetAttribute(params (string name, string value)[] attributes)
@@ -247,8 +252,9 @@ namespace Windows.UI.Xaml
 			Uno.UI.Xaml.WindowManagerInterop.SetContentHtml(HtmlId, html);
 		}
 
-		partial void EnsureClip(Rect rect)
+		partial void ApplyNativeClip(Rect rect)
 		{
+
 			if (rect.IsEmpty)
 			{
 				SetStyle("clip", "");
@@ -285,17 +291,16 @@ namespace Windows.UI.Xaml
 			CustomEventDetailJsonExtractor, // For use with CustomEvent("name", {detail:{detail here}}) - will be JSON.stringify
 		}
 
+		internal delegate EventArgs EventArgsParser(object sender, string payload);
+
 		private class EventRegistration
 		{
 			private static readonly string[] noRegistrationEventNames = { "loading", "loaded", "unloaded" };
-			private static readonly Func<EventArgs, bool> _emptyFilter = _ => true;
 
 			private readonly UIElement _owner;
 			private readonly string _eventName;
-			private RoutedEvent _routedEvent;
 			private readonly bool _canBubbleNatively;
-			private readonly Func<string, EventArgs> _payloadConverter;
-			private readonly Func<EventArgs, bool> _eventFilterManaged;
+			private readonly EventArgsParser _payloadConverter;
 			private readonly Action _subscribeCommand;
 
 			private List<Delegate> _invocationList = new List<Delegate>();
@@ -306,28 +311,23 @@ namespace Windows.UI.Xaml
 			public EventRegistration(
 				UIElement owner,
 				string eventName,
-				RoutedEvent routedEvent,
 				bool onCapturePhase = false,
 				bool canBubbleNatively = false,
 				HtmlEventFilter? eventFilter = null,
 				HtmlEventExtractor? eventExtractor = null,
-				Func<string, EventArgs> payloadConverter = null,
-				Func<EventArgs, bool> eventFilterManaged = null)
+				EventArgsParser payloadConverter = null)
 			{
 				_owner = owner;
 				_eventName = eventName;
-				_routedEvent = routedEvent;
 				_canBubbleNatively = canBubbleNatively;
 				_payloadConverter = payloadConverter;
-				_eventFilterManaged = eventFilterManaged ?? _emptyFilter;
 				if (noRegistrationEventNames.Contains(eventName))
 				{
 					_subscribeCommand = null;
 				}
 				else
 				{
-					_subscribeCommand = () =>
-						Uno.UI.Xaml.WindowManagerInterop.RegisterEventOnView(_owner.HtmlId, eventName, onCapturePhase, eventFilter?.ToString(), eventExtractor?.ToString());
+					_subscribeCommand = () => WindowManagerInterop.RegisterEventOnView(_owner.HtmlId, eventName, onCapturePhase, eventFilter?.ToString(), eventExtractor?.ToString());
 				}
 			}
 
@@ -386,29 +386,21 @@ namespace Windows.UI.Xaml
 					var args = eventArgs;
 					if (_payloadConverter != null && nativeEventPayload != null)
 					{
-						args = _payloadConverter(nativeEventPayload);
+						args = _payloadConverter(_owner, nativeEventPayload);
 					}
 
 					if (args is RoutedEventArgs routedArgs)
 					{
 						routedArgs.CanBubbleNatively = _canBubbleNatively;
-
-						if (_routedEvent?.Flag == RoutedEventFlag.Tapped)
-						{
-							_owner.PreRaiseTapped?.Invoke(_owner, null);
-						}
 					}
 
-					if (_eventFilterManaged(args))
+					foreach (var handler in _invocationList)
 					{
-						foreach (var handler in _invocationList)
-						{
-							var result = handler.DynamicInvoke(_owner, args);
+						var result = handler.DynamicInvoke(_owner, args);
 
-							if (result is bool isHandedInManaged && isHandedInManaged)
-							{
-								return true; // will call ".preventDefault()" in JS to prevent native bubbling
-							}
+						if (result is bool isHandedInManaged && isHandedInManaged)
+						{
+							return true; // will call ".preventDefault()" in JS to prevent native bubbling
 						}
 					}
 
@@ -442,19 +434,22 @@ namespace Windows.UI.Xaml
 		internal void RegisterEventHandler(
 			string eventName,
 			Delegate handler,
-			RoutedEvent routedEvent = null,
 			bool onCapturePhase = false,
 			bool canBubbleNatively = false,
 			HtmlEventFilter? eventFilter = null,
 			HtmlEventExtractor? eventExtractor = null,
-			Func<string, EventArgs> payloadConverter = null)
+			EventArgsParser payloadConverter = null)
 		{
+			if (this.Log().IsEnabled(LogLevel.Debug))
+			{
+				this.Log().Debug($"Registering {eventName} on {this}.");
+			}
+
 			if (!_eventHandlers.TryGetValue(eventName, out var registration))
 			{
 				_eventHandlers[eventName] = registration = new EventRegistration(
 					this,
 					eventName,
-					routedEvent,
 					onCapturePhase,
 					canBubbleNatively,
 					eventFilter,
@@ -520,7 +515,7 @@ namespace Windows.UI.Xaml
 		{
 			var gcHandle = GCHandle.FromIntPtr((IntPtr)handle);
 
-			if(gcHandle.IsAllocated && gcHandle.Target is UIElement element)
+			if (gcHandle.IsAllocated && gcHandle.Target is UIElement element)
 			{
 				return element;
 			}
@@ -530,7 +525,7 @@ namespace Windows.UI.Xaml
 
 		private Rect _arranged;
 		private string _name;
-		internal IList<UIElement> _children = new MaterializableList<UIElement>();
+		internal readonly IList<UIElement> _children = new MaterializableList<UIElement>();
 
 		public string Name
 		{
@@ -553,10 +548,6 @@ namespace Windows.UI.Xaml
 				Uno.UI.Xaml.WindowManagerInterop.SetXUid(HtmlId, _uid);
 			}
 		}
-
-		partial void InitializeCapture();
-
-		internal bool IsPointerCaptured => _pointCaptures.Any();
 
 		public int MeasureCallCount { get; protected set; }
 		public int ArrangeCallCount { get; protected set; }
@@ -592,6 +583,11 @@ namespace Windows.UI.Xaml
 			{
 				SetStyle("visibility", "hidden");
 			}
+
+			if (FeatureConfiguration.UIElement.AssignDOMXamlProperties)
+			{
+				UpdateDOMProperties();
+			}
 		}
 
 		partial void OnOpacityChanged(DependencyPropertyChangedEventArgs args)
@@ -611,52 +607,88 @@ namespace Windows.UI.Xaml
 		partial void OnIsHitTestVisibleChangedPartial(bool oldValue, bool newValue)
 		{
 			UpdateHitTest();
+
+			if (FeatureConfiguration.UIElement.AssignDOMXamlProperties)
+			{
+				UpdateDOMProperties();
+			}
 		}
 
 		public override string ToString()
 		{
-			return GetType().Name + "-" + HtmlId;
-		}
-
-		internal void RaiseTapped(TappedRoutedEventArgs args)
-		{
-			if (this.Log().IsEnabled(LogLevel.Warning))
+			if (FeatureConfiguration.UIElement.RenderToStringWithId)
 			{
-				this.Log().Warn("RaiseTapped is not supported");
+				return GetType().Name + "-" + HtmlId;
 			}
+
+			return base.ToString();
 		}
 
 		public GeneralTransform TransformToVisual(UIElement visual)
-		{
-			var bounds = GetBoundingClientRect();
-			var otherBounds = new Rect(0, 0, 0, 0);
+			=> new MatrixTransform { Matrix = new Matrix(TransformToVisualCore(visual)) };
 
-			// If visual is null, we transform the element to the window
-			if (visual == null)
+		private Matrix3x2 TransformToVisualCore(UIElement visual)
+		{
+			if (visual == this)
 			{
-				// Do nothing (leave at 0,0)
-			}
-			else
-			{
-				otherBounds = visual.GetBoundingClientRect();
+				return Matrix3x2.Identity;
 			}
 
-			return new MatrixTransform
+			var matrix = Matrix3x2.Identity;
+			double offsetX = 0.0, offsetY = 0.0;
+			var elt = this;
+			do
 			{
-				Matrix = new Matrix(
-					m11: 1,
-					m12: 0,
-					m21: 0,
-					m22: 1,
-					offsetX: bounds.X - otherBounds.X,
-					offsetY: bounds.Y - otherBounds.Y
-				)
-			};
-		}
+				var transform = elt.RenderTransform;
+				if (transform == null)
+				{
+					// As this is the common case, avoid Matrix computation when a basic addition is sufficient
+					offsetX += elt._nativeLayoutSlot.X;
+					offsetY += elt._nativeLayoutSlot.Y;
+				}
+				else
+				{
+					// First apply any pending arrange offset that would have been impacted by this RenderTransform (eg. scaled)
+					// Friendly reminder: Matrix multiplication is usually not commutative ;)
+					matrix *= Matrix3x2.CreateTranslation((float)offsetX, (float)offsetY);
+					matrix *= transform.MatrixCore;
 
-		internal void UpdateHitTest()
-		{
-			this.CoerceValue(HitTestVisibilityProperty);
+					offsetX = elt._nativeLayoutSlot.X;
+					offsetY = elt._nativeLayoutSlot.Y;
+				}
+
+				if (elt is ScrollViewer sv)
+				{
+					var zoom = sv.ZoomFactor;
+					if (zoom != 1)
+					{
+						matrix *= Matrix3x2.CreateTranslation((float)offsetX, (float)offsetY);
+						matrix *= Matrix3x2.CreateScale(zoom);
+
+						offsetX = -sv.HorizontalOffset;
+						offsetY = -sv.VerticalOffset;
+					}
+					else
+					{
+						offsetX -= sv.HorizontalOffset;
+						offsetY -= sv.VerticalOffset;
+					}
+				}
+			} while ((elt = elt.GetParent() as UIElement) != null && elt != visual); // If possible we stop as soon as we reach 'visual'
+
+			matrix *= Matrix3x2.CreateTranslation((float)offsetX, (float)offsetY);
+
+			if (visual != null && elt != visual)
+			{
+				// Unfortunately we didn't find the 'visual' in our parent hierarchy,
+				// so matrix == thisToRoot and we now have to compute the transform 'rootToVisual'.
+				var visualToRoot = visual.TransformToVisualCore(null);
+				Matrix3x2.Invert(visualToRoot, out var rootToVisual);
+
+				matrix *= rootToVisual;
+			}
+
+			return matrix;
 		}
 
 		internal virtual bool IsEnabledOverride() => true;
@@ -792,7 +824,7 @@ namespace Windows.UI.Xaml
 				}
 				else
 				{
-					child.ManagedOnLoaded();
+					child.ManagedOnLoaded((Depth ?? int.MinValue) + 1);
 				}
 			}
 		}
@@ -822,19 +854,21 @@ namespace Windows.UI.Xaml
 			}
 		}
 
-		internal virtual void ManagedOnLoaded()
+		internal virtual void ManagedOnLoaded(int depth)
 		{
 			IsLoaded = true;
+			Depth = depth;
 
 			foreach (var child in _children)
 			{
-				child.ManagedOnLoaded();
+				child.ManagedOnLoaded(depth + 1);
 			}
 		}
 
 		internal virtual void ManagedOnUnloaded()
 		{
 			IsLoaded = false;
+			Depth = null;
 
 			foreach (var child in _children)
 			{
@@ -842,306 +876,101 @@ namespace Windows.UI.Xaml
 			}
 		}
 
-		private static Dictionary<RoutedEvent, (string eventName, string domEventName)> RoutedEventNames
-			= new Dictionary<RoutedEvent, (string, string)>
-			{
-				// Add more events
-				{ PointerPressedEvent, (nameof(PointerPressedEvent), "pointerdown") },
-				{ PointerReleasedEvent, (nameof(PointerReleasedEvent), "pointerup") },
-				{ PointerMovedEvent, (nameof(PointerMovedEvent), "pointermove") },
-				{ PointerEnteredEvent, (nameof(PointerEnteredEvent), "pointerenter") },
-				{ PointerExitedEvent, (nameof(PointerExitedEvent), "pointerleave") },
-				{ KeyDownEvent, (nameof(KeyDownEvent), "keydown") },
-				{ KeyUpEvent, (nameof(KeyUpEvent), "keyup") },
-				{ GotFocusEvent, (nameof(GotFocusEvent), "focus") },
-				{ LostFocusEvent, (nameof(LostFocusEvent), "focusout") },
-				{ TappedEvent, (nameof(TappedEvent), "click") },
-				{ DoubleTappedEvent, (nameof(DoubleTappedEvent), "dblclick") }
-			};
-
 		// We keep track of registered routed events to avoid registering the same one twice (mainly because RemoveHandler is not implemented)
-		private HashSet<RoutedEvent> _registeredRoutedEvents = new HashSet<RoutedEvent>();
+		private RoutedEventFlag _registeredRoutedEvents;
 
-		partial void AddHandlerPartial(RoutedEvent routedEvent, object handler, bool handledEventsToo)
+		partial void AddFocusHandler(RoutedEvent routedEvent, int handlersCount, object handler, bool handledEventsToo)
 		{
-			if (!_registeredRoutedEvents.Contains(routedEvent))
+			if (handlersCount != 1
+				// We do not remove event handlers for now, so do not rely only on the handlersCount and keep track of registered events
+				|| _registeredRoutedEvents.HasFlag(routedEvent.Flag))
 			{
-				if (this.Log().IsEnabled(LogLevel.Debug))
-				{
-					this.Log().Debug($"Registering {routedEvent.Name} on {this}.");
-				}
-
-				_registeredRoutedEvents.Add(routedEvent);
-				if (RoutedEventNames.TryGetValue(routedEvent, out var eventDescription))
-				{
-					HtmlEventFilter? eventFilter;
-					HtmlEventExtractor? eventExtractor;
-					Func<string, EventArgs> payloadConverter;
-
-					switch (eventDescription.eventName)
-					{
-						case nameof(PointerPressedEvent):
-						case nameof(PointerReleasedEvent):
-						case nameof(PointerMovedEvent):
-						case nameof(PointerEnteredEvent):
-						case nameof(PointerExitedEvent):
-							eventFilter = (routedEvent == PointerPressedEvent || routedEvent == PointerReleasedEvent)
-								? HtmlEventFilter.LeftPointerEventFilter
-								: (HtmlEventFilter?) null;
-							eventExtractor = HtmlEventExtractor.PointerEventExtractor;
-							payloadConverter = PayloadToPointerArgs;
-							break;
-
-						case nameof(TappedEvent):
-							eventFilter = HtmlEventFilter.LeftPointerEventFilter;
-							eventExtractor = HtmlEventExtractor.TappedEventExtractor;
-							payloadConverter = PayloadToTappedArgs;
-							break;
-
-						case nameof(DoubleTappedEvent):
-							eventFilter = HtmlEventFilter.LeftPointerEventFilter;
-							eventExtractor = HtmlEventExtractor.TappedEventExtractor;
-							payloadConverter = PayloadToTappedArgs;
-							break;
-
-						case nameof(KeyDownEvent):
-						case nameof(KeyUpEvent):
-							eventFilter = null;
-							eventExtractor = HtmlEventExtractor.KeyboardEventExtractor;
-							payloadConverter = PayloadToKeyArgs;
-							break;
-
-						case nameof(GotFocusEvent):
-						case nameof(LostFocusEvent):
-							eventFilter = null;
-							eventExtractor = HtmlEventExtractor.FocusEventExtractor;
-							payloadConverter = PayloadToFocusArgs;
-							break;
-
-						default:
-							eventFilter = null;
-							eventExtractor = null;
-							payloadConverter = s => new RoutedEventArgs { OriginalSource = this };
-							break;
-					}
-
-					bool RoutedEventHandler(object sender, RoutedEventArgs args)
-						=> RaiseEvent(routedEvent, args);
-
-					RegisterEventHandler(
-						eventDescription.domEventName,
-						routedEvent: routedEvent,
-						handler: new RoutedEventHandlerWithHandled(RoutedEventHandler),
-						onCapturePhase: false,
-						canBubbleNatively: true,
-						eventFilter: eventFilter ?? HtmlEventFilter.Default,
-						eventExtractor: eventExtractor,
-						payloadConverter: payloadConverter
-					);
-				}
+				return;
 			}
+			_registeredRoutedEvents |= routedEvent.Flag;
+
+			var domEventName = routedEvent.Flag == RoutedEventFlag.GotFocus ? "focus"
+				: routedEvent.Flag == RoutedEventFlag.LostFocus ? "focusout"
+				: throw new ArgumentOutOfRangeException(nameof(routedEvent), "Not a focus event");
+
+			RegisterEventHandler(
+				domEventName,
+				handler: new RoutedEventHandlerWithHandled((snd, args) => RaiseEvent(routedEvent, args)),
+				onCapturePhase: false,
+				canBubbleNatively: true,
+				eventFilter: HtmlEventFilter.Default,
+				eventExtractor: HtmlEventExtractor.FocusEventExtractor,
+				payloadConverter: PayloadToFocusArgs
+			);
 		}
 
-		private PointerRoutedEventArgs PayloadToPointerArgs(string payload)
+		partial void AddKeyHandler(RoutedEvent routedEvent, int handlersCount, object handler, bool handledEventsToo)
 		{
-			var parts = payload?.Split(';');
-			if (parts?.Length != 7)
+			if (handlersCount != 1
+				// We do not remove event handlers for now, so do not rely only on the handlersCount and keep track of registered events
+				|| _registeredRoutedEvents.HasFlag(routedEvent.Flag))
 			{
-				return null;
+				return;
 			}
+			_registeredRoutedEvents |= routedEvent.Flag;
 
-			var pointerId = uint.Parse(parts[0], CultureInfo.InvariantCulture);
-			var x = double.Parse(parts[1], CultureInfo.InvariantCulture);
-			var y = double.Parse(parts[2], CultureInfo.InvariantCulture);
-			var ctrl = parts[3] == "1";
-			var shift = parts[4] == "1";
-			var buttons = int.Parse(parts[5], CultureInfo.InvariantCulture); // -1: none, 0:main, 1:middle, 2:other (commonly main=left, other=right)
-			var typeStr = parts[6];
+			var domEventName = routedEvent.Flag == RoutedEventFlag.KeyDown ? "keydown"
+				: routedEvent.Flag == RoutedEventFlag.KeyUp ? "keyup"
+				: throw new ArgumentOutOfRangeException(nameof(routedEvent), "Not a keyboard event");
 
-			var keys = ctrl ? VirtualKeyModifiers.Control : (shift ? VirtualKeyModifiers.Shift : VirtualKeyModifiers.None);
-			var type = ConvertPointerTypeString(typeStr);
-
-			var args = new PointerRoutedEventArgs(new Point(x, y))
-			{
-				OriginalSource = this,
-				KeyModifiers = keys,
-				Pointer = new Pointer(pointerId, type)
-			};
-
-			return args;
-		}
-
-		private TappedRoutedEventArgs PayloadToTappedArgs(string payload)
-		{
-			var parts = payload?.Split(';');
-			if (parts?.Length != 7)
-			{
-				return null;
-			}
-
-			var pointerId = uint.Parse(parts[0], CultureInfo.InvariantCulture);
-			var x = double.Parse(parts[1], CultureInfo.InvariantCulture);
-			var y = double.Parse(parts[2], CultureInfo.InvariantCulture);
-			var typeStr = parts[6];
-
-			var type = ConvertPointerTypeString(typeStr);
-
-			var args = new TappedRoutedEventArgs(new Point(x, y))
-			{
-				OriginalSource = this,
-				PointerDeviceType = type
-			};
-
-			return args;
-		}
-
-		private KeyRoutedEventArgs PayloadToKeyArgs(string payload)
-		{
-			return new KeyRoutedEventArgs
-			{
-				OriginalSource = this,
-				Key = System.VirtualKeyHelper.FromKey(payload),
-			};
-		}
-
-		private RoutedEventArgs PayloadToFocusArgs(string payload)
-		{
-			if(int.TryParse(payload, out int xamlHandle))
-			{
-				if(GetElementFromHandle(xamlHandle) is UIElement element)
-				{
-					return new RoutedEventArgs
-					{
-						OriginalSource = element,
-					};
-				}
-			}
-
-			return new KeyRoutedEventArgs
-			{
-				OriginalSource = this,
-			};
-		}
-
-		private static PointerDeviceType ConvertPointerTypeString(string typeStr)
-		{
-			PointerDeviceType type;
-			switch (typeStr.ToUpper())
-			{
-				case "MOUSE":
-				default:
-					type = PointerDeviceType.Mouse;
-					break;
-				case "PEN":
-					type = PointerDeviceType.Pen;
-					break;
-				case "TOUCH":
-					type = PointerDeviceType.Touch;
-					break;
-			}
-
-			return type;
-		}
-
-#region HitTestVisibility
-
-		private enum HitTestVisibility
-		{
-			/// <summary>
-			/// The element and its children can't be targeted by hit-testing.
-			/// </summary>
-			/// <remarks>
-			/// This occurs when IsHitTestVisible="False", IsEnabled="False", or Visibility="Collapsed".
-			/// </remarks>
-			Collapsed,
-
-			/// <summary>
-			/// The element can't be targeted by hit-testing.
-			/// </summary>
-			/// <remarks>
-			/// This usually occurs if an element doesn't have a Background/Fill.
-			/// </remarks>
-			Invisible,
-
-			/// <summary>
-			/// The element can be targeted by hit-testing.
-			/// </summary>
-			Visible,
+			RegisterEventHandler(
+				domEventName,
+				handler: new RoutedEventHandlerWithHandled((snd, args) => RaiseEvent(routedEvent, args)),
+				onCapturePhase: false,
+				canBubbleNatively: true,
+				eventFilter: HtmlEventFilter.Default,
+				eventExtractor: HtmlEventExtractor.KeyboardEventExtractor,
+				payloadConverter: PayloadToKeyArgs
+			);
 		}
 
 		/// <summary>
-		/// Represents the final calculated hit-test visibility of the element.
+		/// If corresponding feature flag is enabled, set layout properties as DOM attributes to aid in debugging.
 		/// </summary>
 		/// <remarks>
-		/// This property should never be directly set, and its value should always be calculated through coercion (see <see cref="CoerceHitTestVisibility(DependencyObject, object, bool)"/>.
+		/// Calls to this method should be wrapped in a check of the feature flag, to avoid the expense of a virtual method call
+		/// that will most of the time do nothing in hot code paths.
 		/// </remarks>
-		private static readonly DependencyProperty HitTestVisibilityProperty =
-			DependencyProperty.Register(
-				"HitTestVisibility",
-				typeof(HitTestVisibility),
-				typeof(UIElement),
-				new FrameworkPropertyMetadata(
-					HitTestVisibility.Visible,
-					FrameworkPropertyMetadataOptions.Inherits,
-					coerceValueCallback: (s, e) => CoerceHitTestVisibility(s, e),
-					propertyChangedCallback: (s, e) => OnHitTestVisibilityChanged(s, e)
-				)
-			);
+		private protected virtual void UpdateDOMProperties()
+		{
+			if (FeatureConfiguration.UIElement.AssignDOMXamlProperties)
+			{
+				UpdateDOMXamlProperty(nameof(Visibility), Visibility);
+				UpdateDOMXamlProperty(nameof(IsHitTestVisible), IsHitTestVisible);
+			}
+		}
 
 		/// <summary>
-		/// This calculates the final hit-test visibility of an element.
+		/// Sets a Xaml property as a DOM attribute for debugging.
 		/// </summary>
-		/// <returns></returns>
-		private static object CoerceHitTestVisibility(DependencyObject dependencyObject, object baseValue)
+		/// <param name="propertyName">The property's name</param>
+		/// <param name="value">The current property value</param>
+		internal void UpdateDOMXamlProperty(string propertyName, object value)
 		{
-			var element = (UIElement)dependencyObject;
-
-			// The HitTestVisibilityProperty is never set directly. This means that baseValue is always the result of the parent's CoerceHitTestVisibility.
-			var baseHitTestVisibility = (HitTestVisibility)baseValue;
-
-			// If the parent is collapsed, we should be collapsed as well. This takes priority over everything else, even if we would be visible otherwise.
-			if (baseHitTestVisibility == HitTestVisibility.Collapsed)
-			{
-				return HitTestVisibility.Collapsed;
-			}
-
-			// If we're not locally hit-test visible, visible, or enabled, we should be collapsed. Our children will be collapsed as well.
-			if (!element.IsHitTestVisible || element.Visibility != Visibility.Visible || !element.IsEnabledOverride())
-			{
-				return HitTestVisibility.Collapsed;
-			}
-
-			// If we're not hit (usually means we don't have a Background/Fill), we're invisible. Our children will be visible or not, depending on their state.
-			if (!element.IsViewHit())
-			{
-				return HitTestVisibility.Invisible;
-			}
-
-			// If we're not collapsed or invisible, we can be targeted by hit-testing. This means that we can be the source of pointer events.
-			return HitTestVisibility.Visible;
+			WindowManagerInterop.SetAttribute(HtmlId, "xaml" + propertyName.ToLowerInvariant().Replace('.', '_'), value?.ToString() ?? "[null]");
 		}
 
-		private static void OnHitTestVisibilityChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs args)
+		private static KeyRoutedEventArgs PayloadToKeyArgs(object src, string payload)
 		{
-			if (dependencyObject is UIElement element && args.NewValue is HitTestVisibility hitTestVisibility)
-			{
-				if (hitTestVisibility == HitTestVisibility.Visible)
-				{
-					// By default, elements have 'pointer-event' set to 'auto' (see Uno.UI.css .uno-uielement class).
-					// This means that they can be the target of hit-testing and will raise pointer events when interacted with.
-					// This is aligned with HitTestVisibilityProperty's default value of Visible.
-					element.SetStyle("pointer-events", "auto");
-				}
-				else
-				{
-					// If HitTestVisibilityProperty is calculated to Invisible or Collapsed,
-					// we don't want to be the target of hit-testing and raise any pointer events.
-					// This is done by setting 'pointer-events' to 'none'.
-					element.SetStyle("pointer-events", "none");
-				}
-			}
+			return new KeyRoutedEventArgs(src, System.VirtualKeyHelper.FromKey(payload));
 		}
 
-#endregion
+		private static RoutedEventArgs PayloadToFocusArgs(object src, string payload)
+		{
+			if (int.TryParse(payload, out int xamlHandle))
+			{
+				if (GetElementFromHandle(xamlHandle) is UIElement element)
+				{
+					return new RoutedEventArgs(element);
+				}
+			}
+
+			return new RoutedEventArgs(src);
+		}
 	}
 }

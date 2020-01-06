@@ -148,24 +148,12 @@ namespace Windows.UI.Xaml
 		/// </summary>
 		public static void Initialize(IFrameworkElement e)
 		{
-#if NET461
-			// These properties have moved to dependency properties
-			// on Uno.UI, tests still depend on it.
-			e.HorizontalAlignment = HorizontalAlignment.Stretch;
-			e.VerticalAlignment = VerticalAlignment.Stretch;
-			e.Width = e.Height = double.NaN;
-			e.MinWidth = e.MinHeight = 0;
-			e.MaxWidth = e.MaxHeight = double.PositiveInfinity;
-#endif
 			if (FeatureConfiguration.FrameworkElement.UseLegacyApplyStylePhase)
 			{
 				e.Style = Xaml.Style.DefaultStyleForType(e.GetType());
 			}
 
-			if (
-				!FeatureConfiguration.UIElement.UseLegacyClipping
-				&& e is UIElement uiElement
-			)
+			if (e is UIElement uiElement)
 			{
 #if __IOS__
 				uiElement.ClipsToBounds = false;
@@ -179,7 +167,7 @@ namespace Windows.UI.Xaml
 			{
 				// TODO:
 				// This causes Android to cycle through every visible IFrameworkElement every time the accessibility focus is changed
-				// and calls the overriden InitializeAccessibilityNodeInfo method.
+				// and calls the overridden InitializeAccessibilityNodeInfo method.
 				// This could become a performance problem (due to interop) in complex UIs (only if TalkBack is enabled).
 				// A possible optimization could be to set it to ImportantForAccessibility.No if FrameworkElement.CreateAutomationPeer returns null.
 				view.ImportantForAccessibility = Android.Views.ImportantForAccessibility.Yes;
@@ -293,7 +281,7 @@ namespace Windows.UI.Xaml
 
 			var view = ((View)element);
 			view.Measure(widthSpec, heightSpec);
-			
+
 			return Uno.UI.Controls.BindableView.GetNativeMeasuredDimensionsFast(view)
 				.PhysicalToLogicalPixels();
 #else
@@ -325,7 +313,7 @@ namespace Windows.UI.Xaml
 		public static CGSize SizeThatFits(IFrameworkElement e, CGSize size)
 		{
 			// Note that on iOS, the computation is intentionally kept as nfloat
-			// to handle discrepencies with the nfloat.NaN and double.NaN.
+			// to handle discrepancies with the nfloat.NaN and double.NaN.
 
 			if (e.Visibility == Visibility.Collapsed)
 			{
@@ -351,10 +339,10 @@ namespace Windows.UI.Xaml
 		/// Gets the min value being left or right.
 		/// </summary>
 		/// <remarks>
-		/// This method kept here for readbility 
+		/// This method kept here for readbility
 		/// of <see cref="SizeThatFits(IFrameworkElement, CGSize)"/> the keep its
 		/// fluent aspect.
-		/// It also does not use the generic extension that may create an very 
+		/// It also does not use the generic extension that may create an very
 		/// short lived <see cref="IConvertible"/> instance.
 		/// </remarks>
 		private static nfloat LocalMin(this nfloat left, nfloat right)
@@ -366,10 +354,10 @@ namespace Windows.UI.Xaml
 		/// Gets the max value being left or right.
 		/// </summary>
 		/// <remarks>
-		/// This method kept here for readbility 
+		/// This method kept here for readbility
 		/// of <see cref="SizeThatFits(IFrameworkElement, CGSize)"/> the keep its
 		/// fluent aspect.
-		/// It also does not use the generic extension that may create an very 
+		/// It also does not use the generic extension that may create an very
 		/// short lived <see cref="IConvertible"/> instance.
 		/// </remarks>
 		private static nfloat LocalMax(this nfloat left, nfloat right)

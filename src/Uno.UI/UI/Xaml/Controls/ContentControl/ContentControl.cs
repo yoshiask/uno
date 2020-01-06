@@ -48,7 +48,7 @@ namespace Windows.UI.Xaml.Controls
 		private bool _canCreateTemplateWithoutParent = false;
 
 		/// <summary>
-		/// Flag to determine if the current content has been overriden.
+		/// Flag to determine if the current content has been overridden.
 		/// This is only in use when <see cref="IsContentPresenterBypassEnabled"/> is true.
 		/// </summary>
 		private bool _localContentDataContextOverride;
@@ -67,9 +67,19 @@ namespace Windows.UI.Xaml.Controls
 		{
 			get
 			{
-				return this.IsDependencyPropertySet(ContentProperty)
-					? GetValue(ContentProperty)
-					: DataContext;
+				if (this.IsDependencyPropertySet(ContentProperty))
+				{
+					return GetValue(ContentProperty);
+				}
+				else if (ContentTemplate != null)
+				{
+					return DataContext;
+				}
+				else
+				{
+					// Return null to be sure that the Content will be empty and prevent the type to be dispayed.
+					return null;
+				}
 			}
 			set { SetValue(ContentProperty, value); }
 		}
@@ -149,7 +159,7 @@ namespace Windows.UI.Xaml.Controls
 					ContentTemplateRoot = null;
 				}
 
-				if(newValue != null)
+				if (newValue != null)
 				{
 					SetUpdateTemplate();
 				}
@@ -324,6 +334,8 @@ namespace Windows.UI.Xaml.Controls
 				if (Content != null
 					&& !(Content is View)
 					&& ContentTemplateRoot == null
+					&& dataTemplate == null
+					&& ContentTemplate == null
 				)
 				{
 					SetContentTemplateRootToPlaceholder();
@@ -408,7 +420,7 @@ namespace Windows.UI.Xaml.Controls
 		/// <summary>
 		/// This property determines if the current instance is not providing a Control
 		/// Template, to allow for the ContentControl to avoid using a ContentPresenter. This extra layer
-		/// is a problem on Android, where the stack size is severly limited (32KB at most)
+		/// is a problem on Android, where the stack size is severely limited (32KB at most)
 		/// on version 4.4 and earlier.
 		/// Android 5.0 does not have this limitation, because ART requires greater stack sizes.
 		/// </summary>
@@ -418,20 +430,20 @@ namespace Windows.UI.Xaml.Controls
 		/// Return false in this case, even if the Template is null.
 		/// </remarks>
 		internal bool IsContentPresenterBypassEnabled => Template == null && !HasDefaultTemplate(GetDefaultStyleType());
-		
+
 		/// <summary>
 		/// Gets whether the default style for the given type sets a non-null Template.
 		/// </summary>
-		private static Func<Type, bool> HasDefaultTemplate = 
+		private static Func<Type, bool> HasDefaultTemplate =
 			Funcs.CreateMemoized((Type type) =>
-				Style.DefaultStyleForType(type) is Style defaultStyle 
+				Style.DefaultStyleForType(type) is Style defaultStyle
 					&& defaultStyle
 						.Flatten(s => s.BasedOn)
 						.SelectMany(s => s.Setters)
 						.OfType<Setter>()
 						.Any(s => s.Property == TemplateProperty && s.Value != null)
 			);
-		
+
 		/// <summary>
 		/// Creates a ContentControl which can be measured without being added to the visual tree (eg as container in virtualized lists).
 		/// </summary>

@@ -459,7 +459,7 @@ namespace Windows.UI.Xaml.Controls
 
 		public override bool OnRequestChildFocus(RecyclerView parent, RecyclerView.State state, View child, View focused)
 		{
-			// Returning true here prevents the list scrolling a focussed control into view. We disable this behaviour to prevent a tricky 
+			// Returning true here prevents the list scrolling a focused control into view. We disable this behaviour to prevent a tricky 
 			// bug where, when there is a ScrapLayout while scrolling the list, a SelectorItem that has focus is detached and reattached 
 			// and the list tries to bring it into view, causing funky 'pinning' behaviour.
 			return true;
@@ -1585,7 +1585,8 @@ namespace Windows.UI.Xaml.Controls
 				var headerIndex = GetHeaderViewIndex();
 				_previousHeaderExtent = GetChildExtentWithMargins(headerIndex);
 				// Rebind to apply changes, RecyclerView alone will recycle the view without rebinding.
-				recycler.BindViewToPosition(GetChildAt(headerIndex), headerIndex);
+				// Here we use position: 0 because the header is always at index 0 from the collection's perspective.
+				recycler.BindViewToPosition(GetChildAt(headerIndex), position: 0);
 				base.RemoveAndRecycleViewAt(headerIndex, recycler);
 				HeaderViewCount = 0;
 			}
@@ -1594,7 +1595,8 @@ namespace Windows.UI.Xaml.Controls
 			{
 				var footerIndex = GetFooterViewIndex();
 				// Rebind to apply changes, RecyclerView alone will recycle the view without rebinding.
-				recycler.BindViewToPosition(GetChildAt(footerIndex), footerIndex);
+				// Here we use position: 1 or 0 because the footer is always the first or second item (depending on the header's presence) from the collection's perspective.
+				recycler.BindViewToPosition(GetChildAt(footerIndex), XamlParent.ShouldShowHeader ? 1 : 0);
 				base.RemoveAndRecycleViewAt(footerIndex, recycler);
 				FooterViewCount = 0;
 			}

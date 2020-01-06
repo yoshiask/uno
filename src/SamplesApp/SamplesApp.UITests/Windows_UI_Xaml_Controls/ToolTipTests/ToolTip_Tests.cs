@@ -13,6 +13,7 @@ namespace SamplesApp.UITests.Windows_UI_Xaml_Controls.ToolTipTests
 	{
 		[Test]
 		[AutoRetry]
+		[ActivePlatforms(Platform.iOS, Platform.Browser)] // Android is disabled https://github.com/unoplatform/uno/issues/1630
 		public void NoToolTip_On_Open()
 		{
 			Run("UITests.Shared.Windows_UI_Xaml_Controls.ToolTip.TextOnlyToolTipSample");
@@ -37,7 +38,7 @@ namespace SamplesApp.UITests.Windows_UI_Xaml_Controls.ToolTipTests
 
 			_app.Marked("richToolTip").FirstResult().Should().NotBeNull("1.2s after click, should have a tooltip");
 
-			_app.Screenshot("opened-tooltip");
+			TakeScreenshot("opened-tooltip");
 
 			Thread.Sleep(7200);
 
@@ -47,7 +48,7 @@ namespace SamplesApp.UITests.Windows_UI_Xaml_Controls.ToolTipTests
 
 			Thread.Sleep(1200);
 
-			_app.Screenshot("opened-textonly-tooltip");
+			TakeScreenshot("opened-textonly-tooltip");
 		}
 	}
 }

@@ -12,12 +12,12 @@ namespace Windows.UI.Xaml.Shapes
 	{
 		private const double DefaultStrokeThicknessWhenNoStrokeDefined = 0.0;
 
-		private SerialDisposable _brushChanged = new SerialDisposable();
+		private readonly SerialDisposable _brushChanged = new SerialDisposable();
 
 		/// <summary>
 		/// Returns StrokeThickness or 0.0 if Stroke is <c>null</c>
 		/// </summary>
-		protected internal double ActualStrokeThickness
+		private protected double ActualStrokeThickness
 		{
 			get
 			{
@@ -79,9 +79,9 @@ namespace Windows.UI.Xaml.Shapes
 
 		public static readonly DependencyProperty StrokeThicknessProperty =
 			DependencyProperty.Register(
-				nameof(StrokeThickness), 
-				typeof(double), 
-				typeof(Shape), 
+				nameof(StrokeThickness),
+				typeof(double),
+				typeof(Shape),
 				new FrameworkPropertyMetadata(
 					defaultValue: 1.0,
 					options: FrameworkPropertyMetadataOptions.AffectsMeasure,
@@ -123,7 +123,13 @@ namespace Windows.UI.Xaml.Shapes
 
 		protected virtual void OnFillChanged(Brush newValue)
 		{
-			_brushChanged.Disposable = Brush.AssignAndObserveBrush(newValue, _ => RefreshShape(true));
+			_brushChanged.Disposable = Brush.AssignAndObserveBrush(newValue, _ =>
+#if __WASM__
+				OnFillUpdatedPartial()
+#else
+				RefreshShape(true)
+#endif
+			);
 
 			OnFillUpdated(newValue);
 		}
@@ -163,7 +169,7 @@ namespace Windows.UI.Xaml.Shapes
 		}
 		partial void OnStrokeDashArrayUpdatedPartial();
 
-		protected internal virtual void RefreshShape(bool forceRefresh = false) { }
+		protected virtual void RefreshShape(bool forceRefresh = false) { }
 
 		internal override bool IsViewHit()
 			=> Fill != null || base.IsViewHit();

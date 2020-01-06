@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Globalization;
 using Windows.Foundation;
 using Windows.UI.Xaml.Media;
 using Uno.Disposables;
 using System.Numerics;
+using Uno.UI;
+using Windows.UI.Xaml.Wasm;
 
 namespace Windows.UI.Xaml.Shapes
 {
@@ -23,6 +26,13 @@ namespace Windows.UI.Xaml.Shapes
 
 		protected override Size MeasureOverride(Size availableSize)
 		{
+			// We make sure to invoke native methods while not in the visual tree
+			// (For instance getBBox will fail on FF)
+			if (Parent == null)
+			{
+				return new Size();
+			}
+
 			var measurements = GetMeasurements(availableSize);
 			var desiredSize = measurements.desiredSize;
 
@@ -33,6 +43,13 @@ namespace Windows.UI.Xaml.Shapes
 
 		protected override Size ArrangeOverride(Size finalSize)
 		{
+			// We make sure to invoke native methods while not in the visual tree
+			// (For instance getBBox will fail on FF)
+			if (Parent == null)
+			{
+				return new Size();
+			}
+
 			var measurements = GetMeasurements(finalSize);
 
 			var scale = Matrix3x2.CreateScale((float)measurements.scaleX, (float)measurements.scaleY);
@@ -41,6 +58,11 @@ namespace Windows.UI.Xaml.Shapes
 
 			foreach (FrameworkElement child in GetChildren())
 			{
+				if (child is DefsSvgElement)
+				{
+					// Defs hosts non-visual objects
+					continue;
+				}
 				child.SetNativeTransform(matrix);
 			}
 
@@ -58,7 +80,7 @@ namespace Windows.UI.Xaml.Shapes
 				return (new Size(contentBBox.Right, contentBBox.Bottom), 0, 0, 1, 1);
 			}
 
-			var contentAspectRatio = contentBBox.Width / contentBBox.Height;
+			var contentAspectRatio = contentBBox.AspectRatio();
 
 			//  Calculate the control size
 			var calculatedWidth = LimitWithUserSize(availableSize.Width, Width, contentBBox.Width);
@@ -128,6 +150,12 @@ namespace Windows.UI.Xaml.Shapes
 
 			foreach (FrameworkElement child in GetChildren())
 			{
+				if (child is DefsSvgElement)
+				{
+					// Defs hosts non-visual objects
+					continue;
+				}
+
 				var childRect = GetBBoxWithStrokeThickness(child);
 				if (bbox == Rect.Empty)
 				{

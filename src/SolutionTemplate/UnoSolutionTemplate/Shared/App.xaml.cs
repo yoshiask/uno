@@ -29,7 +29,7 @@ namespace $ext_safeprojectname$
 		/// </summary>
 		public App()
 		{
-			ConfigureFilters(Uno.Extensions.LogExtensionPoint.AmbientLoggerFactory);
+			ConfigureFilters(global::Uno.Extensions.LogExtensionPoint.AmbientLoggerFactory);
 
 			this.InitializeComponent();
 			this.Suspending += OnSuspending;
@@ -139,6 +139,18 @@ namespace $ext_safeprojectname$
 
 						// DependencyObject memory references tracking
 						// { "ReferenceHolder", LogLevel.Debug },
+
+						// ListView-related messages
+						// { "Windows.UI.Xaml.Controls.ListViewBase", LogLevel.Debug },
+						// { "Windows.UI.Xaml.Controls.ListView", LogLevel.Debug },
+						// { "Windows.UI.Xaml.Controls.GridView", LogLevel.Debug },
+						// { "Windows.UI.Xaml.Controls.VirtualizingPanelLayout", LogLevel.Debug },
+						// { "Windows.UI.Xaml.Controls.NativeListViewBase", LogLevel.Debug },
+						// { "Windows.UI.Xaml.Controls.ListViewBaseSource", LogLevel.Debug }, //iOS
+						// { "Windows.UI.Xaml.Controls.ListViewBaseInternalContainer", LogLevel.Debug }, //iOS
+						// { "Windows.UI.Xaml.Controls.NativeListViewBaseAdapter", LogLevel.Debug }, //Android
+						// { "Windows.UI.Xaml.Controls.BufferViewCache", LogLevel.Debug }, //Android
+						// { "Windows.UI.Xaml.Controls.VirtualizingPanelGenerator", LogLevel.Debug }, //WASM
 					}
 				)
 #if DEBUG

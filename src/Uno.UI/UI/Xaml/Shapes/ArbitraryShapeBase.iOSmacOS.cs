@@ -9,7 +9,7 @@ using Uno.Disposables;
 using Windows.UI.Xaml.Media;
 using Windows.Foundation;
 using Uno.Logging;
-
+using Uno.UI;
 #if __IOS__
 using UIKit;
 using _Color = UIKit.UIColor;
@@ -89,7 +89,7 @@ namespace Windows.UI.Xaml.Shapes
 			var pathBounds = path.PathBoundingBox;
 
 			if (
-				nfloat.IsInfinity(pathBounds.Left) 
+				nfloat.IsInfinity(pathBounds.Left)
 				|| nfloat.IsInfinity(pathBounds.Left)
 			)
 			{
@@ -144,13 +144,15 @@ namespace Windows.UI.Xaml.Shapes
 				throw new InvalidOperationException($"transform {transform} contains NaN values, transformation will fail.");
 			}
 
-			var colorFill = this.Fill as SolidColorBrush ?? SolidColorBrushHelper.Transparent;
-			var imageFill = this.Fill as ImageBrush;
+			var colorFill = Fill as SolidColorBrush ?? SolidColorBrushHelper.Transparent;
+			var imageFill = Fill as ImageBrush;
+			var gradientFill = Fill as LinearGradientBrush;
 			var stroke = this.Stroke as SolidColorBrush ?? SolidColorBrushHelper.Transparent;
 
+			var transformedPath = new CGPath(path, transform);
 			var layer = new CAShapeLayer()
 			{
-				Path = new CGPath(path, transform),
+				Path = transformedPath,
 				StrokeColor = stroke.ColorWithOpacity,
 				LineWidth = (nfloat)ActualStrokeThickness,
 			};
@@ -175,6 +177,22 @@ namespace Windows.UI.Xaml.Shapes
 					imageFill,
 					fillMask
 				);
+			}
+			else if (gradientFill != null)
+			{
+				var fillMask = new CAShapeLayer()
+				{
+					Path = transformedPath,
+					Frame = Bounds,
+					// We only use the fill color to create the mask area
+					FillColor = _Color.White.CGColor,
+				};
+
+				var gradientLayer = gradientFill.GetLayer(Frame.Size);
+				gradientLayer.Frame = Bounds;
+				gradientLayer.Mask = fillMask;
+				gradientLayer.MasksToBounds = true;
+				layer.AddSublayer(gradientLayer);
 			}
 
 			if (StrokeDashArray != null)
@@ -209,7 +227,7 @@ namespace Windows.UI.Xaml.Shapes
 			};
 
 			// The ImageBrush.Stretch will tell us the SIZE of the image we need for the layer
-			var aspectRatio = (double)(uiImage.Size.Width / uiImage.Size.Height);
+			var aspectRatio = uiImage.Size.AspectRatio();
 			CGSize imageSize;
 			switch (imageBrush.Stretch)
 			{
@@ -282,9 +300,25 @@ namespace Windows.UI.Xaml.Shapes
 			var path = GetPath();
 			if (path == null)
 			{
-				return default(Size);
+				return default;
 			}
 			var bounds = path.PathBoundingBox;
+
+			if (bounds.IsEmpty)
+			{
+				return default;
+			}
+
+			// On iOS 11, the origin (X, Y) of bounds could be infinite, leading to strange results.
+			if (nfloat.IsInfinity(bounds.X))
+			{
+				bounds.X = 0;
+			}
+
+			if (nfloat.IsInfinity(bounds.Y))
+			{
+				bounds.Y = 0;
+			}
 
 			var pathWidth = bounds.Width;
 			var pathHeight = bounds.Height;
@@ -308,9 +342,11 @@ namespace Windows.UI.Xaml.Shapes
 			var calculatedWidth = LimitWithUserSize(controlWidth, userWidth, pathWidth);
 			var calculatedHeight = LimitWithUserSize(controlHeight, userHeight, pathHeight);
 
+			var strokeThickness = this.ActualStrokeThickness;
+			var strokeThicknessF = (float)strokeThickness;
 
-			_scaleX = (nfloat)(calculatedWidth - (nfloat)this.ActualStrokeThickness) / pathWidth;
-			_scaleY = (nfloat)(calculatedHeight - (nfloat)this.ActualStrokeThickness) / pathHeight;
+			_scaleX = (nfloat)(calculatedWidth - strokeThicknessF) / pathWidth;
+			_scaleY = (nfloat)(calculatedHeight - strokeThicknessF) / pathHeight;
 
 			//Make sure that we have a valid scale if both of them are not set
 			if (double.IsInfinity((double)_scaleX) &&
@@ -356,8 +392,8 @@ namespace Windows.UI.Xaml.Shapes
 					break;
 			}
 
-			calculatedWidth += (double)this.ActualStrokeThickness;
-			calculatedHeight += (double)this.ActualStrokeThickness;
+			calculatedWidth += strokeThickness;
+			calculatedHeight += strokeThickness;
 
 			return new Size(calculatedWidth, calculatedHeight);
 		}

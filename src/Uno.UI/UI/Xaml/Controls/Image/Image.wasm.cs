@@ -21,7 +21,7 @@ namespace Windows.UI.Xaml.Controls
 		}
 	}
 
-	partial class Image : FrameworkElement
+	partial class Image : FrameworkElement, ICustomClippingElement
 	{
 		private readonly SerialDisposable _sourceDisposable = new SerialDisposable();
 
@@ -33,6 +33,8 @@ namespace Windows.UI.Xaml.Controls
 		public Image()
 		{
 			_htmlImage = new HtmlImage();
+
+			_htmlImage.SetAttribute("draggable", "false");
 
 			ImageOpened += OnImageOpened;
 			ImageFailed += OnImageFailed;
@@ -91,7 +93,6 @@ namespace Windows.UI.Xaml.Controls
 		// Using a DependencyProperty as the backing store for Source.  This enables animation, styling, binding, etc...
 		public static readonly DependencyProperty SourceProperty =
 			DependencyProperty.Register("Source", typeof(ImageSource), typeof(Image), new PropertyMetadata(null, (s, e) => ((Image)s)?.OnSourceChanged(e)));
-
 
 		private void OnSourceChanged(DependencyPropertyChangedEventArgs e)
 		{
@@ -159,6 +160,10 @@ namespace Windows.UI.Xaml.Controls
 							SetImageUrl(url.OriginalString);
 						}
 					}
+					else
+					{
+						SetImageUrl("");
+					}
 				}
 
 				_sourceDisposable.Disposable = null;
@@ -194,21 +199,22 @@ namespace Windows.UI.Xaml.Controls
 
 		#endregion
 
+		public static readonly DependencyProperty StretchProperty =
+			DependencyProperty.Register(
+				"Stretch",
+				typeof(Stretch),
+				typeof(Image),
+				new PropertyMetadata(
+					Media.Stretch.Uniform,
+					(s, e) => ((Image)s).OnStretchChanged((Stretch)e.NewValue, (Stretch)e.OldValue)));
+
 		public Stretch Stretch
 		{
-			get { return (Stretch)this.GetValue(StretchProperty); }
-			set { this.SetValue(StretchProperty, value); }
+			get => (Stretch)GetValue(StretchProperty);
+			set => SetValue(StretchProperty, value);
 		}
 
-		// Using a DependencyProperty as the backing store for Stretch.  This enables animation, styling, binding, etc...
-		public static readonly DependencyProperty StretchProperty =
-			DependencyProperty.Register("Stretch", typeof(Stretch), typeof(Image), new PropertyMetadata(Media.Stretch.Uniform, (s, e) =>
-				((Image)s).OnStretchChanged((Stretch)e.NewValue, (Stretch)e.OldValue)));
-
-		private void OnStretchChanged(Stretch newValue, Stretch oldValue)
-		{
-			InvalidateArrange();
-		}
+		private void OnStretchChanged(Stretch newValue, Stretch oldValue) => InvalidateArrange();
 
 		protected override Size MeasureOverride(Size availableSize)
 		{
@@ -236,12 +242,12 @@ namespace Windows.UI.Xaml.Controls
 			// Always making sure the ret size isn't bigger than the available size for an image with a fixed width or height
 			ret = new Size(
 				!Double.IsNaN(Width) && (ret.Width > availableSize.Width) ? availableSize.Width : ret.Width,
-				!Double.IsNaN(Width) && (ret.Height > availableSize.Height) ? availableSize.Height : ret.Height
+				!Double.IsNaN(Height) && (ret.Height > availableSize.Height) ? availableSize.Height : ret.Height
 			);
 
 			if (this.Log().IsEnabled(LogLevel.Debug))
 			{
-				this.Log().LogDebug($"Measure {this} availableSize:{availableSize} measuredSize:{_lastMeasuredSize} ret:{ret}");
+				this.Log().LogDebug($"Measure {this} availableSize:{availableSize} measuredSize:{_lastMeasuredSize} ret:{ret} Stretch: {Stretch} Width:{Width} Height:{Height}");
 			}
 
 			return ret;
@@ -249,94 +255,27 @@ namespace Windows.UI.Xaml.Controls
 
 		protected override Size ArrangeOverride(Size finalSize)
 		{
-			(double x, double y, double? width, double? height) getHtmlImagePosition()
-			{
-				var sourceRect = new Windows.Foundation.Rect(Windows.Foundation.Point.Zero, _lastMeasuredSize);
-				var imageRect = new Windows.Foundation.Rect(Windows.Foundation.Point.Zero, finalSize);
+			// Calculate the resulting space required on screen for the image
+			var containerSize = this.MeasureSource(finalSize, _lastMeasuredSize);
 
-				this.MeasureSource(imageRect, ref sourceRect);
-				this.ArrangeSource(imageRect, ref sourceRect);
+			// Calculate the position of the image to follow stretch and alignment requirements
+			var finalPosition = this.ArrangeSource(finalSize, containerSize);
 
-				switch (Stretch)
-				{
-					case Stretch.Fill:
-					case Stretch.None:
-						return (sourceRect.X, sourceRect.Y, sourceRect.Width, sourceRect.Height);
-
-					case Stretch.Uniform:
-						if (finalSize.Width >= _lastMeasuredSize.Width)
-						{
-							// /---/-----\---\
-							// |   |     |   |
-							// |   |     |   |
-							// |   |     |   |
-							// |   |     |   |
-							// |   |     |   |
-							// \---\-----/---/
-
-							return (sourceRect.X, sourceRect.Y, null, sourceRect.Height);
-						}
-						else
-						{
-							return (sourceRect.X, sourceRect.Y, sourceRect.Width, null);
-						}
-
-					case Stretch.UniformToFill:
-						var adjustedSize = this.AdjustSize(finalSize, _lastMeasuredSize);
-
-						if (adjustedSize.Height <= finalSize.Height)
-						{
-							//
-							// /-------------\
-							// |             |
-							// /-------------\
-							// |             |
-							// |             |
-							// |             |
-							// |             |
-							// \-------------/
-							// |             |
-							// \-------------/
-							//
-							
-							return (sourceRect.X, sourceRect.Y, null, finalSize.Height);
-						}
-						else
-						{
-							return (sourceRect.X, sourceRect.Y, finalSize.Width, null);
-						}
-
-					default:
-						throw new NotSupportedException();
-				}
-			}
-
-			var position = getHtmlImagePosition();
-
-			// Clip the image to the parent's arrange size.
-			var clipRect = new Rect(0, 0, finalSize.Width, finalSize.Height);
-
-			var arrangeRect = new Rect(
-				position.x,
-				position.y,
-				position.width != null ? position.width.Value : double.NaN,
-				position.height != null ? position.height.Value : double.NaN
-			);
-
-			_htmlImage.ArrangeElementNative(arrangeRect, clipRect);
+			_htmlImage.ArrangeElementNative(finalPosition, false, clipRect: null);
 
 			if (this.Log().IsEnabled(LogLevel.Debug))
 			{
-				this.Log().LogDebug($"Arrange {this} _lastMeasuredSize:{_lastMeasuredSize} clip:{clipRect} position:{position} finalSize:{finalSize}");
+				this.Log().LogDebug($"Arrange {this} _lastMeasuredSize:{_lastMeasuredSize} position:{finalPosition} finalSize:{finalSize}");
 			}
 
 			// Image has no direct child that needs to be arranged explicitly
 			return finalSize;
 		}
 
-		internal override bool IsViewHit()
-		{
-			return Source != null || base.IsViewHit();
-		}
+		internal override bool IsViewHit() => Source != null || base.IsViewHit();
+
+		bool ICustomClippingElement.AllowClippingToLayoutSlot => true;
+
+		bool ICustomClippingElement.ForceClippingToLayoutSlot => true;
 	}
 }

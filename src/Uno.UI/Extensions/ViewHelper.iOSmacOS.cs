@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Runtime.CompilerServices;
 using Uno.UI.Extensions;
 using Uno.Logging;
 using Uno.Extensions;
@@ -61,39 +62,44 @@ namespace Uno.UI
 			} 
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static CGSize PhysicalToLogicalPixels(this CGSize size)
 		{
 			return size;
-			// UISize are automatically scaled to the device's DPI, we don't need to ajust.
+			// UISize are automatically scaled to the device's DPI, we don't need to adjust.
 			// return new SizeF(size.Width / MainScreenScale, size.Height / MainScreenScale);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Windows.Foundation.Size PhysicalToLogicalPixels(this Windows.Foundation.Size size)
 		{
 			return size;
-			// UISize are automatically scaled to the device's DPI, we don't need to ajust.
+			// UISize are automatically scaled to the device's DPI, we don't need to adjust.
 			// return new SizeF(size.Width / MainScreenScale, size.Height / MainScreenScale);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static CGSize LogicalToPhysicalPixels(this Windows.Foundation.Size size)
 		{
 			var ret = new CGSize((nfloat)size.Width, (nfloat)size.Height);
 			return ret;
-			// UISize are automatically scaled to the device's DPI, we don't need to ajust.
+			// UISize are automatically scaled to the device's DPI, we don't need to adjust.
 			// return new SizeF(size.Width * MainScreenScale, size.Height * MainScreenScale);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static CGSize LogicalToPhysicalPixels(this CGSize size)
 		{
 			return size;
-			// UISize are automatically scaled to the device's DPI, we don't need to ajust.
+			// UISize are automatically scaled to the device's DPI, we don't need to adjust.
 			// return new SizeF(size.Width * MainScreenScale, size.Height * MainScreenScale);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static CGRect PhysicalToLogicalPixels(this CGRect size)
 		{
 			return size;
-			// UISize are automatically scaled to the device's DPI, we don't need to ajust.
+			// UISize are automatically scaled to the device's DPI, we don't need to adjust.
 			//return new RectangleF(
 			//	size.X / MainScreenScale,
 			//	size.Y / MainScreenScale,
@@ -102,6 +108,19 @@ namespace Uno.UI
 			//);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Windows.Foundation.Point PhysicalToLogicalPixels(this Windows.Foundation.Point point)
+		{
+			return point;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Windows.Foundation.Point LogicalToPhysicalPixels(this Windows.Foundation.Point point)
+		{
+			return point;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static CGRect LogicalToPhysicalPixels(this CGRect size)
 		{
 			// https://markpospesel.wordpress.com/2013/02/27/cgrectintegral/

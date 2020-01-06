@@ -18,6 +18,8 @@ using Uno;
 using Uno.UI.Controls;
 using Uno.UI.Media;
 using System;
+using Windows.UI.Xaml.Markup;
+using Microsoft.Extensions.Logging;
 
 #if __IOS__
 using UIKit;
@@ -28,14 +30,8 @@ namespace Windows.UI.Xaml
 	public partial class UIElement : DependencyObject, IXUidProvider
 	{
 		private readonly SerialDisposable _clipSubscription = new SerialDisposable();
-		private readonly List<Pointer> _pointCaptures = new List<Pointer>();
 		private readonly List<KeyboardAccelerator> _keyboardAccelerators = new List<KeyboardAccelerator>();
 		private string _uid;
-
-		partial void InitializeCapture()
-		{
-			this.SetValue(PointerCapturesProperty, _pointCaptures);
-		}
 
 		string IXUidProvider.Uid
 		{
@@ -49,14 +45,7 @@ namespace Windows.UI.Xaml
 
 		partial void OnUidChangedPartial();
 
-		/// <summary>
-		/// Determines if an <see cref="UIElement"/> clips its children to its bounds.
-		/// </summary>
-		internal bool ClipChildrenToBounds { get; set; } = true;
-
-		internal bool IsPointerPressed { get; set; }
-
-		internal bool IsPointerOver { get; set; }
+		private protected bool RequiresClipping { get; set; } = true;
 
 		#region Clip DependencyProperty
 
@@ -228,20 +217,42 @@ namespace Windows.UI.Xaml
 
 		internal bool IsRenderingSuspended { get; set; }
 
-		private void ApplyClip()
+		internal void ApplyClip()
 		{
-			var rect = Clip?.Rect ?? Rect.Empty;
+			Rect rect;
 
-			if (Clip?.Transform is TranslateTransform translateTransform)
+			if (Clip == null)
 			{
-				rect.X += translateTransform.X;
-				rect.Y += translateTransform.Y;
+				rect = Rect.Empty;
+			}
+			else
+			{
+				rect = Clip?.Rect ?? Rect.Empty;
+
+				if (Clip?.Transform is TranslateTransform translateTransform)
+				{
+					rect.X += translateTransform.X;
+					rect.Y += translateTransform.Y;
+				}
 			}
 
-			EnsureClip(rect);
+			if (NeedsClipToSlot)
+			{
+				var boundsClipping = new Rect(0, 0, RenderSize.Width, RenderSize.Height);
+				if (rect.IsEmpty)
+				{
+					rect = boundsClipping;
+				}
+				else
+				{
+					rect.Intersect(boundsClipping);
+				}
+			}
+
+			ApplyNativeClip(rect);
 		}
 
-		partial void EnsureClip(Rect rect);
+		partial void ApplyNativeClip(Rect rect);
 
 		internal static object GetDependencyPropertyValueInternal(DependencyObject owner, string dependencyPropertyName)
 		{
@@ -249,13 +260,70 @@ namespace Windows.UI.Xaml
 			return dp == null ? null : owner.GetValue(dp);
 		}
 
+		/// <summary>
+		/// Sets the specified dependency property value using the format "name|value"
+		/// </summary>
+		/// <param name="dependencyPropertyNameAndValue">The name and value of the property</param>
+		/// <returns>The currenty set value at the Local precedence</returns>
+		/// <remarks>
+		/// The signature of this method was chosen to work around a limitation of Xamarin.UITest with regards to
+		/// parameters passing on iOS, where the number of parameters follows a unconventional set of rules. Using
+		/// a single parameter with a simple delimitation format fits all platforms with little overhead.
+		/// </remarks>
+		internal static string SetDependencyPropertyValueInternal(DependencyObject owner, string dependencyPropertyNameAndValue)
+		{
+			var s = dependencyPropertyNameAndValue;
+			var index = s.IndexOf("|");
+
+			if (index != -1)
+			{
+				var dependencyPropertyName = s.Substring(0, index);
+				var value = s.Substring(index + 1);
+
+				if (DependencyProperty.GetProperty(owner.GetType(), dependencyPropertyName) is DependencyProperty dp)
+				{
+					if (owner.Log().IsEnabled(Microsoft.Extensions.Logging.LogLevel.Debug))
+					{
+						owner.Log().LogDebug($"SetDependencyPropertyValue({dependencyPropertyName}) = {value}");
+					}
+
+					owner.SetValue(dp, XamlBindingHelper.ConvertValue(dp.Type, value));
+
+					return owner.GetValue(dp)?.ToString();
+				}
+				else
+				{
+					if (owner.Log().IsEnabled(Microsoft.Extensions.Logging.LogLevel.Debug))
+					{
+						owner.Log().LogDebug($"Failed to find property [{dependencyPropertyName}] on [{owner}]");
+					}
+					return "**** Failed to find property";
+				}
+			}
+			else
+			{
+				return "**** Invalid property and value format.";
+			}
+		}
+
 		internal Rect LayoutSlot { get; set; } = default;
+
+		internal bool NeedsClipToSlot { get; set; }
 
 #if !__WASM__
 		/// <summary>
+		/// Backing property for <see cref="Windows.UI.Xaml.Controls.Primitives.LayoutInformation.GetAvailableSize(UIElement)"/>
+		/// </summary>
+		internal Size LastAvailableSize { get; set; }
+
+		/// <summary>
 		/// Provides the size reported during the last call to Measure.
 		/// </summary>
-		public Size DesiredSize { get; internal set; }
+		public Size DesiredSize
+		{
+			get;
+			internal set;
+		}
 
 		/// <summary>
 		/// Provides the size reported during the last call to Arrange (i.e. the ActualSize)
@@ -296,63 +364,6 @@ namespace Windows.UI.Xaml
 			InvalidateMeasure();
 		}
 #endif
-
-		public bool CapturePointer(Pointer value)
-		{
-			if (_pointCaptures.Contains(value))
-			{
-				this.Log().Error($"{this}: Pointer {value} already captured.");
-			}
-			else
-			{
-				_pointCaptures.Add(value);
-#if __WASM__
-				CapturePointerNative(value);
-#endif
-			}
-			return true;
-		}
-
-		public void ReleasePointerCapture(Pointer value)
-		{
-			if (_pointCaptures.Contains(value))
-			{
-				_pointCaptures.Remove(value);
-#if __WASM__
-				ReleasePointerCaptureNative(value);
-#endif
-			}
-			else
-			{
-				this.Log().Error($"{this}: Cannot release pointer {value}: not captured by this control.");
-			}
-		}
-
-		public void ReleasePointerCaptures()
-		{
-			if (_pointCaptures.Count == 0)
-			{
-				this.Log().Warn($"{this}: no pointers to release.");
-				return;
-			}
-#if __WASM__
-			foreach (var pointer in _pointCaptures)
-			{
-				ReleasePointerCaptureNative(pointer);
-			}
-#endif
-			_pointCaptures.Clear();
-		}
-
-		public global::System.Collections.Generic.IReadOnlyList<global::Windows.UI.Xaml.Input.Pointer> PointerCaptures
-			=> (IReadOnlyList<global::Windows.UI.Xaml.Input.Pointer>)this.GetValue(PointerCapturesProperty);
-
-		public static DependencyProperty PointerCapturesProperty { get; } =
-		DependencyProperty.Register(
-			"PointerCaptures", typeof(global::System.Collections.Generic.IReadOnlyList<global::Windows.UI.Xaml.Input.Pointer>),
-			typeof(global::Windows.UI.Xaml.UIElement),
-			new FrameworkPropertyMetadata(defaultValue: null)
-		);
 
 		public void StartBringIntoView()
 		{

@@ -39,6 +39,7 @@ var Windows;
                     CoreDispatcher.initMethods();
                     CoreDispatcher._isReady = isReady;
                     CoreDispatcher._isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                    CoreDispatcher._isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
                 }
                 /**
                  * Enqueues a core dispatcher callback on the javascript's event loop
@@ -63,14 +64,14 @@ var Windows;
                     return true;
                 }
                 static InnerWakeUp() {
-                    if (CoreDispatcher._isIOS && CoreDispatcher._isFirstCall) {
+                    if ((CoreDispatcher._isIOS || CoreDispatcher._isSafari) && CoreDispatcher._isFirstCall) {
                         //
                         // This is a workaround for the available call stack during the first 5 (?) seconds
                         // of the startup of an application. See https://github.com/mono/mono/issues/12357 for
                         // more details.
                         //
                         CoreDispatcher._isFirstCall = false;
-                        console.debug("Detected iOS, delaying first CoreDispatched dispatch for 5s (see https://github.com/mono/mono/issues/12357)");
+                        console.warn("Detected iOS, delaying first CoreDispatcher dispatch for 5 seconds (see https://github.com/mono/mono/issues/12357)");
                         window.setTimeout(() => this.WakeUp(), 5000);
                     }
                     else {
@@ -564,6 +565,23 @@ var Uno;
                 return true;
             }
             /**
+                * Removes an attribute for an element.
+                */
+            removeAttribute(elementId, name) {
+                const element = this.getView(elementId);
+                element.removeAttribute(name);
+                return "ok";
+            }
+            /**
+                * Removes an attribute for an element.
+                */
+            removeAttributeNative(pParams) {
+                const params = WindowManagerRemoveAttributeParams.unmarshal(pParams);
+                const element = this.getView(params.HtmlId);
+                element.removeAttribute(params.Name);
+                return true;
+            }
+            /**
                 * Get an attribute for an element.
                 */
             getAttribute(elementId, name) {
@@ -623,7 +641,7 @@ var Uno;
                 * To remove a value, set it to empty string.
                 * @param styles A dictionary of styles to apply on html element.
                 */
-            setStyle(elementId, styles, setAsArranged = false) {
+            setStyle(elementId, styles, setAsArranged = false, clipToBounds) {
                 const element = this.getView(elementId);
                 for (const style in styles) {
                     if (styles.hasOwnProperty(style)) {
@@ -632,6 +650,9 @@ var Uno;
                 }
                 if (setAsArranged) {
                     this.setAsArranged(element);
+                }
+                if (typeof clipToBounds === "boolean") {
+                    this.setClipToBounds(element, clipToBounds);
                 }
                 return "ok";
             }
@@ -654,6 +675,7 @@ var Uno;
                 if (params.SetAsArranged) {
                     this.setAsArranged(element);
                 }
+                this.setClipToBounds(element, params.ClipToBounds);
                 return true;
             }
             /**
@@ -733,6 +755,7 @@ var Uno;
                     style.clip = "";
                 }
                 this.setAsArranged(element);
+                this.setClipToBounds(element, params.ClipToBounds);
                 return true;
             }
             setAsArranged(element) {
@@ -740,6 +763,14 @@ var Uno;
             }
             setAsUnarranged(element) {
                 element.classList.add(WindowManager.unoUnarrangedClassName);
+            }
+            setClipToBounds(element, clipToBounds) {
+                if (clipToBounds) {
+                    element.classList.add(WindowManager.unoClippedToBoundsClassName);
+                }
+                else {
+                    element.classList.remove(WindowManager.unoClippedToBoundsClassName);
+                }
             }
             /**
             * Sets the transform matrix of an element
@@ -808,6 +839,21 @@ var Uno;
                 return true;
             }
             /**
+             * Ensure that any pending leave event are going to be processed (cf @see processPendingLeaveEvent )
+             */
+            ensurePendingLeaveEventProcessing() {
+                if (this._isPendingLeaveProcessingEnabled) {
+                    return;
+                }
+                // Register an event listener on move in order to process any pending event (leave).
+                document.addEventListener("pointermove", evt => {
+                    if (this.processPendingLeaveEvent) {
+                        this.processPendingLeaveEvent(evt);
+                    }
+                }, true); // in the capture phase to get it as soon as possible, and to make sure to respect the events ordering
+                this._isPendingLeaveProcessingEnabled = true;
+            }
+            /**
                 * Add an event handler to a html element.
                 *
                 * @param eventName The name of the event
@@ -815,12 +861,8 @@ var Uno;
                 */
             registerEventOnViewInternal(elementId, eventName, onCapturePhase = false, eventFilterName, eventExtractorName) {
                 const element = this.getView(elementId);
-                const eventFilter = this.getEventFilter(eventFilterName);
                 const eventExtractor = this.getEventExtractor(eventExtractorName);
                 const eventHandler = (event) => {
-                    if (eventFilter && !eventFilter(event)) {
-                        return;
-                    }
                     const eventPayload = eventExtractor
                         ? `${eventExtractor(event)}`
                         : "";
@@ -829,7 +871,85 @@ var Uno;
                         event.stopPropagation();
                     }
                 };
-                element.addEventListener(eventName, eventHandler, onCapturePhase);
+                if (eventName == "pointerenter") {
+                    const enterPointerHandler = (event) => {
+                        const e = event;
+                        if (e.explicitOriginalTarget) { // FF only
+                            // It happens on FF that when another control which is over the 'element' has been updated, like text or visibility changed,
+                            // we receive a pointer enter/leave of an element which is under an element that is capable to handle pointers,
+                            // which is unexpected as the "pointerenter" should not bubble.
+                            // So we have to validate that this event is effectively due to the pointer entering the control.
+                            // We achieve this by browsing up the elements under the pointer (** not the visual tree**) 
+                            const evt = event;
+                            for (let elt of document.elementsFromPoint(evt.pageX, evt.pageY)) {
+                                if (elt == element) {
+                                    // We found our target element, we can raise the event and stop the loop
+                                    eventHandler(event);
+                                    return;
+                                }
+                                let htmlElt = elt;
+                                if (htmlElt.style.pointerEvents != "none") {
+                                    // This 'htmlElt' is handling the pointers events, this mean that we can stop the loop.
+                                    // However, if this 'htmlElt' is one of our child it means that the event was legitimate
+                                    // and we have to raise it for the 'element'.
+                                    while (htmlElt.parentElement) {
+                                        htmlElt = htmlElt.parentElement;
+                                        if (htmlElt == element) {
+                                            eventHandler(event);
+                                            return;
+                                        }
+                                    }
+                                    // We found an element this is capable to handle the pointers but which is not one of our child
+                                    // (probably a sibling which is covering the element). It means that the pointerEnter/Leave should
+                                    // not have bubble to the element, and we can mute it.
+                                    return;
+                                }
+                            }
+                        }
+                        else {
+                            eventHandler(event);
+                        }
+                    };
+                    element.addEventListener(eventName, enterPointerHandler, onCapturePhase);
+                }
+                else if (eventName == "pointerleave") {
+                    const leavePointerHandler = (event) => {
+                        const e = event;
+                        if (e.explicitOriginalTarget // FF only
+                            && e.explicitOriginalTarget !== event.currentTarget
+                            && event.isOver(element)) {
+                            // If the event was re-targeted, it's suspicious as the leave event should not bubble
+                            // This happens on FF when another control which is over the 'element' has been updated, like text or visibility changed.
+                            // So we have to validate that this event is effectively due to the pointer leaving the element.
+                            // We achieve that by buffering it until the next few 'pointermove' on document for which we validate the new pointer location.
+                            // It's common to get a move right after the leave with the same pointer's location,
+                            // so we wait up to 3 pointer move before dropping the leave event.
+                            var attempt = 3;
+                            this.ensurePendingLeaveEventProcessing();
+                            this.processPendingLeaveEvent = (move) => {
+                                if (!move.isOverDeep(element)) {
+                                    console.log("Raising deferred pointerleave on element " + elementId);
+                                    eventHandler(event);
+                                    this.processPendingLeaveEvent = null;
+                                }
+                                else if (--attempt <= 0) {
+                                    console.log("Drop deferred pointerleave on element " + elementId);
+                                    this.processPendingLeaveEvent = null;
+                                }
+                                else {
+                                    console.log("Requeue deferred pointerleave on element " + elementId);
+                                }
+                            };
+                        }
+                        else {
+                            eventHandler(event);
+                        }
+                    };
+                    element.addEventListener(eventName, leavePointerHandler, onCapturePhase);
+                }
+                else {
+                    element.addEventListener(eventName, eventHandler, onCapturePhase);
+                }
             }
             /**
              * left pointer event filter to be used with registerEventOnView
@@ -867,9 +987,20 @@ var Uno;
              * @param evt
              */
             pointerEventExtractor(evt) {
-                return evt
-                    ? `${evt.pointerId};${evt.clientX};${evt.clientY};${(evt.ctrlKey ? "1" : "0")};${(evt.shiftKey ? "1" : "0")};${evt.button};${evt.pointerType}`
-                    : "";
+                if (!evt) {
+                    return "";
+                }
+                let src = evt.target;
+                let srcHandle = "0";
+                while (src) {
+                    let handle = src.getAttribute("XamlHandle");
+                    if (handle) {
+                        srcHandle = handle;
+                        break;
+                    }
+                    src = src.parentElement;
+                }
+                return `${evt.pointerId};${evt.clientX};${evt.clientY};${(evt.ctrlKey ? "1" : "0")};${(evt.shiftKey ? "1" : "0")};${evt.buttons};${evt.button};${evt.pointerType};${srcHandle};${evt.timeStamp}`;
             }
             /**
              * keyboard event extractor to be used with registerEventOnView
@@ -1124,18 +1255,31 @@ var Uno;
                 ret2.marshal(pReturn);
                 return true;
             }
+            measureElement(element) {
+                const offsetWidth = element.offsetWidth;
+                const offsetHeight = element.offsetHeight;
+                const resultWidth = offsetWidth ? offsetWidth : element.clientWidth;
+                const resultHeight = offsetHeight ? offsetHeight : element.clientHeight;
+                // +1 is added to take rounding/flooring into account
+                return [resultWidth + 1, resultHeight];
+            }
             measureViewInternal(viewId, maxWidth, maxHeight) {
                 const element = this.getView(viewId);
                 const elementStyle = element.style;
                 const originalStyleCssText = elementStyle.cssText;
                 let parentElement = null;
                 let parentElementWidthHeight = null;
-                let isDisconnected = !element.isConnected;
+                let unconnectedRoot = null;
+                let cleanupUnconnectedRoot = function (owner) {
+                    if (unconnectedRoot !== null) {
+                        owner.removeChild(unconnectedRoot);
+                    }
+                };
                 try {
-                    if (isDisconnected) {
+                    if (!element.isConnected) {
                         // If the element is not connected to the DOM, we need it
                         // to be connected for the measure to provide a meaningful value.
-                        let unconnectedRoot = element;
+                        unconnectedRoot = element;
                         while (unconnectedRoot.parentElement) {
                             // Need to find the top most "unconnected" parent
                             // of this element
@@ -1186,13 +1330,22 @@ var Uno;
                         const imgElement = element;
                         return [imgElement.naturalWidth, imgElement.naturalHeight];
                     }
+                    else if (element instanceof HTMLInputElement) {
+                        const inputElement = element;
+                        cleanupUnconnectedRoot(this.containerElement);
+                        // Create a temporary element that will contain the input's content
+                        var textOnlyElement = document.createElement("p");
+                        textOnlyElement.style.cssText = updatedStyleString;
+                        textOnlyElement.innerText = inputElement.value;
+                        unconnectedRoot = textOnlyElement;
+                        this.containerElement.appendChild(unconnectedRoot);
+                        var textSize = this.measureElement(textOnlyElement);
+                        var inputSize = this.measureElement(element);
+                        // Take the width of the inner text, but keep the height of the input element.
+                        return [textSize[0], inputSize[1]];
+                    }
                     else {
-                        const offsetWidth = element.offsetWidth;
-                        const offsetHeight = element.offsetHeight;
-                        const resultWidth = offsetWidth ? offsetWidth : element.clientWidth;
-                        const resultHeight = offsetHeight ? offsetHeight : element.clientHeight;
-                        // +0.5 is added to take rounding into account
-                        return [resultWidth + 0.5, resultHeight];
+                        return this.measureElement(element);
                     }
                 }
                 finally {
@@ -1201,10 +1354,19 @@ var Uno;
                         parentElement.style.width = parentElementWidthHeight.width;
                         parentElement.style.height = parentElementWidthHeight.height;
                     }
-                    if (isDisconnected) {
-                        this.containerElement.removeChild(element);
-                    }
+                    cleanupUnconnectedRoot(this.containerElement);
                 }
+            }
+            scrollTo(pParams) {
+                const params = WindowManagerScrollToOptionsParams.unmarshal(pParams);
+                const elt = this.getView(params.HtmlId);
+                const opts = ({
+                    left: params.HasLeft ? params.Left : undefined,
+                    top: params.HasTop ? params.Top : undefined,
+                    behavior: (params.DisableAnimation ? "auto" : "smooth")
+                });
+                elt.scrollTo(opts);
+                return true;
             }
             setImageRawData(viewId, dataPtr, width, height) {
                 const element = this.getView(viewId);
@@ -1340,6 +1502,19 @@ var Uno;
                 return WindowManager.getDependencyPropertyValueMethod(htmlId, propertyName);
             }
             /**
+             * Sets a dependency property value.
+             *
+             * Note that the casing of this method is intentionally Pascal for platform alignment.
+             */
+            SetDependencyPropertyValue(elementId, propertyNameAndValue) {
+                if (!WindowManager.setDependencyPropertyValueMethod) {
+                    WindowManager.setDependencyPropertyValueMethod = Module.mono_bind_static_method("[Uno.UI] Uno.UI.Helpers.Automation:SetDependencyPropertyValue");
+                }
+                const element = this.getView(elementId);
+                const htmlId = Number(element.getAttribute("XamlHandle"));
+                return WindowManager.setDependencyPropertyValueMethod(htmlId, propertyNameAndValue);
+            }
+            /**
                 * Remove the loading indicator.
                 *
                 * In a future version it will also handle the splashscreen.
@@ -1419,11 +1594,31 @@ var Uno;
                 }
                 return rootElement === element || rootElement.contains(element);
             }
+            setCursor(cssCursor) {
+                const unoBody = document.getElementById(this.containerElementId);
+                if (unoBody) {
+                    //always cleanup
+                    if (this.cursorStyleElement != undefined) {
+                        this.cursorStyleElement.remove();
+                        this.cursorStyleElement = undefined;
+                    }
+                    //only add custom overriding style if not auto 
+                    if (cssCursor != "auto") {
+                        // this part is only to override default css:  .uno-buttonbase {cursor: pointer;}
+                        this.cursorStyleElement = document.createElement("style");
+                        this.cursorStyleElement.innerHTML = ".uno-buttonbase { cursor: " + cssCursor + "; }";
+                        document.body.appendChild(this.cursorStyleElement);
+                    }
+                    unoBody.style.cursor = cssCursor;
+                }
+                return "ok";
+            }
         }
         WindowManager._isHosted = false;
         WindowManager._isLoadEventsEnabled = false;
         WindowManager.unoRootClassName = "uno-root-element";
         WindowManager.unoUnarrangedClassName = "uno-unarranged";
+        WindowManager.unoClippedToBoundsClassName = "uno-clippedToBounds";
         WindowManager._cctor = (() => {
             WindowManager.initMethods();
             UI.HtmlDom.initPolyfills();
@@ -1519,6 +1714,9 @@ class WindowManagerArrangeElementParams {
         }
         {
             ret.Clip = Boolean(Module.getValue(pData + 68, "i32"));
+        }
+        {
+            ret.ClipToBounds = Boolean(Module.getValue(pData + 72, "i32"));
         }
         return ret;
     }
@@ -1709,6 +1907,25 @@ class WindowManagerRegisterEventOnViewParams {
     }
 }
 /* TSBindingsGenerator Generated code -- this code is regenerated on each build */
+class WindowManagerRemoveAttributeParams {
+    static unmarshal(pData) {
+        let ret = new WindowManagerRemoveAttributeParams();
+        {
+            ret.HtmlId = Number(Module.getValue(pData + 0, "*"));
+        }
+        {
+            var ptr = Module.getValue(pData + 4, "*");
+            if (ptr !== 0) {
+                ret.Name = String(Module.UTF8ToString(ptr));
+            }
+            else {
+                ret.Name = null;
+            }
+        }
+        return ret;
+    }
+}
+/* TSBindingsGenerator Generated code -- this code is regenerated on each build */
 class WindowManagerRemoveViewParams {
     static unmarshal(pData) {
         let ret = new WindowManagerRemoveViewParams();
@@ -1748,6 +1965,31 @@ class WindowManagerResetStyleParams {
             else {
                 ret.Styles = null;
             }
+        }
+        return ret;
+    }
+}
+/* TSBindingsGenerator Generated code -- this code is regenerated on each build */
+class WindowManagerScrollToOptionsParams {
+    static unmarshal(pData) {
+        let ret = new WindowManagerScrollToOptionsParams();
+        {
+            ret.Left = Number(Module.getValue(pData + 0, "double"));
+        }
+        {
+            ret.Top = Number(Module.getValue(pData + 8, "double"));
+        }
+        {
+            ret.HasLeft = Boolean(Module.getValue(pData + 16, "i32"));
+        }
+        {
+            ret.HasTop = Boolean(Module.getValue(pData + 20, "i32"));
+        }
+        {
+            ret.DisableAnimation = Boolean(Module.getValue(pData + 24, "i32"));
+        }
+        {
+            ret.HtmlId = Number(Module.getValue(pData + 28, "*"));
         }
         return ret;
     }
@@ -1995,6 +2237,9 @@ class WindowManagerSetStylesParams {
                 ret.Pairs = null;
             }
         }
+        {
+            ret.ClipToBounds = Boolean(Module.getValue(pData + 16, "i32"));
+        }
         return ret;
     }
 }
@@ -2017,6 +2262,28 @@ class WindowManagerSetXUidParams {
         return ret;
     }
 }
+PointerEvent.prototype.isOver = function (element) {
+    const bounds = element.getBoundingClientRect();
+    return this.pageX >= bounds.left
+        && this.pageX < bounds.right
+        && this.pageY >= bounds.top
+        && this.pageY < bounds.bottom;
+};
+PointerEvent.prototype.isOverDeep = function (element) {
+    if (!element) {
+        return false;
+    }
+    else if (element.style.pointerEvents != "none") {
+        return this.isOver(element);
+    }
+    else {
+        for (let elt of element.children) {
+            if (this.isOverDeep(elt)) {
+                return true;
+            }
+        }
+    }
+};
 var Uno;
 (function (Uno) {
     var Foundation;
@@ -2113,7 +2380,7 @@ var Windows;
                 const that = this;
                 FS.syncfs(true, err => {
                     if (err) {
-                        console.error(`Error synchronizing filsystem from IndexDB: ${err}`);
+                        console.error(`Error synchronizing filesystem from IndexDB: ${err}`);
                     }
                 });
                 // Ensure to sync pseudo file system on unload (and periodically for safety)
@@ -2129,7 +2396,7 @@ var Windows;
             static synchronizeFileSystem() {
                 FS.syncfs(err => {
                     if (err) {
-                        console.error(`Error synchronizing filsystem from IndexDB: ${err}`);
+                        console.error(`Error synchronizing filesystem from IndexDB: ${err}`);
                     }
                 });
             }
@@ -2137,6 +2404,294 @@ var Windows;
         StorageFolder._isInit = false;
         Storage.StorageFolder = StorageFolder;
     })(Storage = Windows.Storage || (Windows.Storage = {}));
+})(Windows || (Windows = {}));
+var Windows;
+(function (Windows) {
+    var Devices;
+    (function (Devices) {
+        var Geolocation;
+        (function (Geolocation) {
+            let GeolocationAccessStatus;
+            (function (GeolocationAccessStatus) {
+                GeolocationAccessStatus["Allowed"] = "Allowed";
+                GeolocationAccessStatus["Denied"] = "Denied";
+                GeolocationAccessStatus["Unspecified"] = "Unspecified";
+            })(GeolocationAccessStatus || (GeolocationAccessStatus = {}));
+            let PositionStatus;
+            (function (PositionStatus) {
+                PositionStatus["Ready"] = "Ready";
+                PositionStatus["Initializing"] = "Initializing";
+                PositionStatus["NoData"] = "NoData";
+                PositionStatus["Disabled"] = "Disabled";
+                PositionStatus["NotInitialized"] = "NotInitialized";
+                PositionStatus["NotAvailable"] = "NotAvailable";
+            })(PositionStatus || (PositionStatus = {}));
+            class Geolocator {
+                static initialize() {
+                    this.positionWatches = {};
+                    if (!this.dispatchAccessRequest) {
+                        this.dispatchAccessRequest = Module.mono_bind_static_method("[Uno] Windows.Devices.Geolocation.Geolocator:DispatchAccessRequest");
+                    }
+                    if (!this.dispatchError) {
+                        this.dispatchError = Module.mono_bind_static_method("[Uno] Windows.Devices.Geolocation.Geolocator:DispatchError");
+                    }
+                    if (!this.dispatchGeoposition) {
+                        this.dispatchGeoposition = Module.mono_bind_static_method("[Uno] Windows.Devices.Geolocation.Geolocator:DispatchGeoposition");
+                    }
+                }
+                //checks for permission to the geolocation services
+                static requestAccess() {
+                    Geolocator.initialize();
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition((_) => {
+                            Geolocator.dispatchAccessRequest(GeolocationAccessStatus.Allowed);
+                        }, (error) => {
+                            if (error.code == error.PERMISSION_DENIED) {
+                                Geolocator.dispatchAccessRequest(GeolocationAccessStatus.Denied);
+                            }
+                            else if (error.code == error.POSITION_UNAVAILABLE ||
+                                error.code == error.TIMEOUT) {
+                                //position unavailable but we still have permission
+                                Geolocator.dispatchAccessRequest(GeolocationAccessStatus.Allowed);
+                            }
+                            else {
+                                Geolocator.dispatchAccessRequest(GeolocationAccessStatus.Unspecified);
+                            }
+                        }, { enableHighAccuracy: false, maximumAge: 86400000, timeout: 100 });
+                    }
+                    else {
+                        Geolocator.dispatchAccessRequest(GeolocationAccessStatus.Denied);
+                    }
+                }
+                //retrieves a single geoposition
+                static getGeoposition(desiredAccuracyInMeters, maximumAge, timeout, requestId) {
+                    Geolocator.initialize();
+                    if (navigator.geolocation) {
+                        this.getAccurateCurrentPosition((position) => Geolocator.handleGeoposition(position, requestId), (error) => Geolocator.handleError(error, requestId), desiredAccuracyInMeters, {
+                            enableHighAccuracy: desiredAccuracyInMeters < 50,
+                            maximumAge: maximumAge,
+                            timeout: timeout
+                        });
+                    }
+                    else {
+                        Geolocator.dispatchError(PositionStatus.NotAvailable, requestId);
+                    }
+                }
+                static startPositionWatch(desiredAccuracyInMeters, requestId) {
+                    Geolocator.initialize();
+                    if (navigator.geolocation) {
+                        Geolocator.positionWatches[requestId] = navigator.geolocation.watchPosition((position) => Geolocator.handleGeoposition(position, requestId), (error) => Geolocator.handleError(error, requestId));
+                        return true;
+                    }
+                    else {
+                        return false;
+                    }
+                }
+                static stopPositionWatch(desiredAccuracyInMeters, requestId) {
+                    navigator.geolocation.clearWatch(Geolocator.positionWatches[requestId]);
+                    delete Geolocator.positionWatches[requestId];
+                }
+                static handleGeoposition(position, requestId) {
+                    var serializedGeoposition = position.coords.latitude + ":" +
+                        position.coords.longitude + ":" +
+                        position.coords.altitude + ":" +
+                        position.coords.altitudeAccuracy + ":" +
+                        position.coords.accuracy + ":" +
+                        position.coords.heading + ":" +
+                        position.coords.speed + ":" +
+                        position.timestamp;
+                    Geolocator.dispatchGeoposition(serializedGeoposition, requestId);
+                }
+                static handleError(error, requestId) {
+                    if (error.code == error.TIMEOUT) {
+                        Geolocator.dispatchError(PositionStatus.NoData, requestId);
+                    }
+                    else if (error.code == error.PERMISSION_DENIED) {
+                        Geolocator.dispatchError(PositionStatus.Disabled, requestId);
+                    }
+                    else if (error.code == error.POSITION_UNAVAILABLE) {
+                        Geolocator.dispatchError(PositionStatus.NotAvailable, requestId);
+                    }
+                }
+                //this attempts to squeeze out the requested accuracy from the GPS by utilizing the set timeout
+                //adapted from https://github.com/gregsramblings/getAccurateCurrentPosition/blob/master/geo.js		
+                static getAccurateCurrentPosition(geolocationSuccess, geolocationError, desiredAccuracy, options) {
+                    var lastCheckedPosition;
+                    var locationEventCount = 0;
+                    var watchId;
+                    var timerId;
+                    var checkLocation = function (position) {
+                        lastCheckedPosition = position;
+                        locationEventCount = locationEventCount + 1;
+                        //is the accuracy enough?
+                        if (position.coords.accuracy <= desiredAccuracy) {
+                            clearTimeout(timerId);
+                            navigator.geolocation.clearWatch(watchId);
+                            foundPosition(position);
+                        }
+                    };
+                    var stopTrying = function () {
+                        navigator.geolocation.clearWatch(watchId);
+                        foundPosition(lastCheckedPosition);
+                    };
+                    var onError = function (error) {
+                        clearTimeout(timerId);
+                        navigator.geolocation.clearWatch(watchId);
+                        geolocationError(error);
+                    };
+                    var foundPosition = function (position) {
+                        geolocationSuccess(position);
+                    };
+                    watchId = navigator.geolocation.watchPosition(checkLocation, onError, options);
+                    timerId = setTimeout(stopTrying, options.timeout);
+                }
+                ;
+            }
+            Geolocation.Geolocator = Geolocator;
+        })(Geolocation = Devices.Geolocation || (Devices.Geolocation = {}));
+    })(Devices = Windows.Devices || (Windows.Devices = {}));
+})(Windows || (Windows = {}));
+var Windows;
+(function (Windows) {
+    var Devices;
+    (function (Devices) {
+        var Sensors;
+        (function (Sensors) {
+            class Accelerometer {
+                static initialize() {
+                    if (window.DeviceMotionEvent) {
+                        this.dispatchReading = Module.mono_bind_static_method("[Uno] Windows.Devices.Sensors.Accelerometer:DispatchReading");
+                        return true;
+                    }
+                    return false;
+                }
+                static startReading() {
+                    window.addEventListener("devicemotion", Accelerometer.readingChangedHandler);
+                }
+                static stopReading() {
+                    window.removeEventListener("devicemotion", Accelerometer.readingChangedHandler);
+                }
+                static readingChangedHandler(event) {
+                    Accelerometer.dispatchReading(event.accelerationIncludingGravity.x, event.accelerationIncludingGravity.y, event.accelerationIncludingGravity.z);
+                }
+            }
+            Sensors.Accelerometer = Accelerometer;
+        })(Sensors = Devices.Sensors || (Devices.Sensors = {}));
+    })(Devices = Windows.Devices || (Windows.Devices = {}));
+})(Windows || (Windows = {}));
+var Windows;
+(function (Windows) {
+    var Devices;
+    (function (Devices) {
+        var Sensors;
+        (function (Sensors) {
+            class Gyrometer {
+                static initialize() {
+                    try {
+                        if (typeof window.Gyroscope === "function") {
+                            this.dispatchReading = Module.mono_bind_static_method("[Uno] Windows.Devices.Sensors.Gyrometer:DispatchReading");
+                            let GyroscopeClass = window.Gyroscope;
+                            this.gyroscope = new GyroscopeClass({ referenceFrame: "device" });
+                            return true;
+                        }
+                    }
+                    catch (error) {
+                        //sensor not available
+                        console.log("Gyroscope could not be initialized.");
+                    }
+                    return false;
+                }
+                static startReading() {
+                    this.gyroscope.addEventListener("reading", Gyrometer.readingChangedHandler);
+                    this.gyroscope.start();
+                }
+                static stopReading() {
+                    this.gyroscope.removeEventListener("reading", Gyrometer.readingChangedHandler);
+                    this.gyroscope.stop();
+                }
+                static readingChangedHandler(event) {
+                    Gyrometer.dispatchReading(Gyrometer.gyroscope.x, Gyrometer.gyroscope.y, Gyrometer.gyroscope.z);
+                }
+            }
+            Sensors.Gyrometer = Gyrometer;
+        })(Sensors = Devices.Sensors || (Devices.Sensors = {}));
+    })(Devices = Windows.Devices || (Windows.Devices = {}));
+})(Windows || (Windows = {}));
+var Windows;
+(function (Windows) {
+    var Devices;
+    (function (Devices) {
+        var Sensors;
+        (function (Sensors) {
+            class Magnetometer {
+                static initialize() {
+                    try {
+                        if (typeof window.Magnetometer === "function") {
+                            this.dispatchReading = Module.mono_bind_static_method("[Uno] Windows.Devices.Sensors.Magnetometer:DispatchReading");
+                            let MagnetometerClass = window.Magnetometer;
+                            this.magnetometer = new MagnetometerClass({ referenceFrame: 'device' });
+                            return true;
+                        }
+                    }
+                    catch (error) {
+                        //sensor not available
+                        console.log("Magnetometer could not be initialized.");
+                    }
+                    return false;
+                }
+                static startReading() {
+                    this.magnetometer.addEventListener("reading", Magnetometer.readingChangedHandler);
+                    this.magnetometer.start();
+                }
+                static stopReading() {
+                    this.magnetometer.removeEventListener("reading", Magnetometer.readingChangedHandler);
+                    this.magnetometer.stop();
+                }
+                static readingChangedHandler(event) {
+                    Magnetometer.dispatchReading(Magnetometer.magnetometer.x, Magnetometer.magnetometer.y, Magnetometer.magnetometer.z);
+                }
+            }
+            Sensors.Magnetometer = Magnetometer;
+        })(Sensors = Devices.Sensors || (Devices.Sensors = {}));
+    })(Devices = Windows.Devices || (Windows.Devices = {}));
+})(Windows || (Windows = {}));
+var Windows;
+(function (Windows) {
+    var System;
+    (function (System) {
+        var Profile;
+        (function (Profile) {
+            class AnalyticsVersionInfo {
+                static getUserAgent() {
+                    return navigator.userAgent;
+                }
+                static getBrowserName() {
+                    // Opera 8.0+
+                    if ((!!window.opr && !!window.opr.addons) || !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0) {
+                        return "Opera";
+                    }
+                    // Firefox 1.0+
+                    if (typeof window.InstallTrigger !== 'undefined') {
+                        return "Firefox";
+                    }
+                    // Safari 3.0+ "[object HTMLElementConstructor]" 
+                    if (/constructor/i.test(window.HTMLElement) ||
+                        ((p) => p.toString() === "[object SafariRemoteNotification]")(typeof window.safari !== 'undefined' && window.safari.pushNotification)) {
+                        return "Safari";
+                    }
+                    // Edge 20+
+                    if (!!window.StyleMedia) {
+                        return "Edge";
+                    }
+                    // Chrome 1 - 71
+                    if (!!window.chrome && (!!window.chrome.webstore || !!window.chrome.runtime)) {
+                        return "Chrome";
+                    }
+                }
+            }
+            Profile.AnalyticsVersionInfo = AnalyticsVersionInfo;
+        })(Profile = System.Profile || (System.Profile = {}));
+    })(System = Windows.System || (Windows.System = {}));
 })(Windows || (Windows = {}));
 var Windows;
 (function (Windows) {
@@ -2206,69 +2761,73 @@ var Windows;
 })(Windows || (Windows = {}));
 var Windows;
 (function (Windows) {
-    var Devices;
-    (function (Devices) {
-        var Sensors;
-        (function (Sensors) {
-            class Accelerometer {
-                static initialize() {
-                    if (window.DeviceMotionEvent) {
-                        this.dispatchReading = Module.mono_bind_static_method("[Uno] Windows.Devices.Sensors.Accelerometer:DispatchReading");
-                        return true;
+    var UI;
+    (function (UI) {
+        var ViewManagement;
+        (function (ViewManagement) {
+            class ApplicationViewTitleBar {
+                static setBackgroundColor(colorString) {
+                    if (colorString == null) {
+                        //remove theme-color meta
+                        var metaThemeColorEntries = document.querySelectorAll("meta[name='theme-color']");
+                        for (let entry of metaThemeColorEntries) {
+                            entry.remove();
+                        }
                     }
-                    return false;
-                }
-                static startReading() {
-                    window.addEventListener('devicemotion', Accelerometer.readingChangedHandler);
-                }
-                static stopReading() {
-                    window.removeEventListener('devicemotion', Accelerometer.readingChangedHandler);
-                }
-                static readingChangedHandler(event) {
-                    Accelerometer.dispatchReading(event.accelerationIncludingGravity.x, event.accelerationIncludingGravity.y, event.accelerationIncludingGravity.z);
+                    else {
+                        var metaThemeColorEntries = document.querySelectorAll("meta[name='theme-color']");
+                        var metaThemeColor;
+                        if (metaThemeColorEntries.length == 0) {
+                            //create meta
+                            metaThemeColor = document.createElement("meta");
+                            metaThemeColor.setAttribute("name", "theme-color");
+                            document.head.appendChild(metaThemeColor);
+                        }
+                        else {
+                            metaThemeColor = metaThemeColorEntries[0];
+                        }
+                        metaThemeColor.setAttribute("content", colorString);
+                    }
                 }
             }
-            Sensors.Accelerometer = Accelerometer;
-        })(Sensors = Devices.Sensors || (Devices.Sensors = {}));
-    })(Devices = Windows.Devices || (Windows.Devices = {}));
+            ViewManagement.ApplicationViewTitleBar = ApplicationViewTitleBar;
+        })(ViewManagement = UI.ViewManagement || (UI.ViewManagement = {}));
+    })(UI = Windows.UI || (Windows.UI = {}));
 })(Windows || (Windows = {}));
 var Windows;
 (function (Windows) {
-    var Devices;
-    (function (Devices) {
-        var Sensors;
-        (function (Sensors) {
-            class Magnetometer {
-                static initialize() {
-                    try {
-                        if (typeof window.Magnetometer === "function") {
-                            this.dispatchReading = Module.mono_bind_static_method("[Uno] Windows.Devices.Sensors.Magnetometer:DispatchReading");
-                            let magnetometerClass = window.Magnetometer;
-                            this.magnetometer = new magnetometerClass({ referenceFrame: 'device' });
-                            return true;
-                        }
+    var UI;
+    (function (UI) {
+        var Xaml;
+        (function (Xaml) {
+            class Application {
+                static getDefaultSystemTheme() {
+                    if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+                        return Xaml.ApplicationTheme.Dark;
                     }
-                    catch (error) {
-                        //sensor not available
-                        console.log('Magnetometer could not be initialized.');
+                    if (window.matchMedia("(prefers-color-scheme: light)").matches) {
+                        return Xaml.ApplicationTheme.Light;
                     }
-                    return false;
-                }
-                static startReading() {
-                    this.magnetometer.addEventLi1stener('reading', Magnetometer.readingChangedHandler);
-                    this.magnetometer.start();
-                }
-                static stopReading() {
-                    this.magnetometer.removeEventListener('reading', Magnetometer.readingChangedHandler);
-                    this.magnetometer.stop();
-                }
-                static readingChangedHandler(event) {
-                    Magnetometer.dispatchReading(this.magnetometer.x, this.magnetometer.y, this.magnetometer.z);
+                    return null;
                 }
             }
-            Sensors.Magnetometer = Magnetometer;
-        })(Sensors = Devices.Sensors || (Devices.Sensors = {}));
-    })(Devices = Windows.Devices || (Windows.Devices = {}));
+            Xaml.Application = Application;
+        })(Xaml = UI.Xaml || (UI.Xaml = {}));
+    })(UI = Windows.UI || (Windows.UI = {}));
+})(Windows || (Windows = {}));
+var Windows;
+(function (Windows) {
+    var UI;
+    (function (UI) {
+        var Xaml;
+        (function (Xaml) {
+            let ApplicationTheme;
+            (function (ApplicationTheme) {
+                ApplicationTheme["Light"] = "Light";
+                ApplicationTheme["Dark"] = "Dark";
+            })(ApplicationTheme = Xaml.ApplicationTheme || (Xaml.ApplicationTheme = {}));
+        })(Xaml = UI.Xaml || (UI.Xaml = {}));
+    })(UI = Windows.UI || (Windows.UI = {}));
 })(Windows || (Windows = {}));
 var Windows;
 (function (Windows) {

@@ -94,7 +94,7 @@ namespace Windows.UI.Xaml.Controls
 			OnIsSpellCheckEnabledChanged(CreateInitialValueChangerEventArgs(IsSpellCheckEnabledProperty, IsSpellCheckEnabledProperty.GetMetadata(GetType()).DefaultValue, IsSpellCheckEnabled));
 			OnTextAlignmentChanged(CreateInitialValueChangerEventArgs(TextAlignmentProperty, TextAlignmentProperty.GetMetadata(GetType()).DefaultValue, TextAlignment));
 			OnTextWrappingChanged(CreateInitialValueChangerEventArgs(TextWrappingProperty, TextWrappingProperty.GetMetadata(GetType()).DefaultValue, TextWrapping));
-			OnFocusStateChanged((FocusState)FocusStateProperty.GetMetadata(GetType()).DefaultValue, FocusState);
+			OnFocusStateChanged((FocusState)FocusStateProperty.GetMetadata(GetType()).DefaultValue, FocusState, initial: true);
 
 			var buttonRef = _deleteButton?.GetTarget();
 
@@ -137,7 +137,6 @@ namespace Windows.UI.Xaml.Controls
 			}
 
 			UpdateTextBoxView();
-
 			InitializeProperties();
 		}
 
@@ -224,7 +223,7 @@ namespace Windows.UI.Xaml.Controls
 #endif
 				{
 					_isInvokingTextChanged = true;
-					TextChanged?.Invoke(this, new TextChangedEventArgs());
+					TextChanged?.Invoke(this, new TextChangedEventArgs(this));
 				}
 #if !HAS_EXPENSIVE_TRYFINALLY // Try/finally incurs a very large performance hit in mono-wasm - https://github.com/mono/mono/issues/13653
 				finally
@@ -597,20 +596,23 @@ namespace Windows.UI.Xaml.Controls
 		#endregion
 
 		protected override void OnFocusStateChanged(FocusState oldValue, FocusState newValue)
+			=> OnFocusStateChanged(oldValue, newValue, initial: false);
+		private void OnFocusStateChanged(FocusState oldValue, FocusState newValue, bool initial)
 		{
 			base.OnFocusStateChanged(oldValue, newValue);
 			OnFocusStateChangedPartial(newValue);
 
-			if (newValue == FocusState.Unfocused)
+			if (!initial && newValue == FocusState.Unfocused)
 			{
 				// Manually update Source when losing focus because TextProperty's default UpdateSourceTrigger is Explicit
 				var bindingExpression = GetBindingExpression(TextProperty);
 				bindingExpression?.UpdateSource(Text);
 			}
 
-			UpdateCommonStates();
 			UpdateButtonStates();
 		}
+		partial void OnFocusStateChangedPartial(FocusState focusState);
+
 
 		protected override void OnPointerPressed(PointerRoutedEventArgs args)
 		{
@@ -650,25 +652,6 @@ namespace Windows.UI.Xaml.Controls
 			}
 		}
 
-		private void UpdateCommonStates()
-		{
-			var commonState = "Normal";
-
-			if (FocusState != FocusState.Unfocused)
-			{
-				commonState = "Focused";
-			}
-
-			if (!IsEnabled)
-			{
-				commonState = "Disabled";
-			}
-
-			VisualStateManager.GoToState(this, commonState, true);
-		}
-
-		partial void OnFocusStateChangedPartial(FocusState focusState);
-
 		private void UpdateButtonStates()
 		{
 			if (Text.HasValue()
@@ -676,7 +659,7 @@ namespace Windows.UI.Xaml.Controls
 				&& !IsReadOnly
 				&& !AcceptsReturn
 				&& TextWrapping == TextWrapping.NoWrap
-			// TODO (https://github.com/nventive/Uno/issues/683): && ActualWidth >= TDB / Note: We also have to invoke this method on SizeChanged
+			// TODO (https://github.com/unoplatform/uno/issues/683): && ActualWidth >= TDB / Note: We also have to invoke this method on SizeChanged
 			)
 			{
 				VisualStateManager.GoToState(this, ButtonVisibleStateName, true);
@@ -721,7 +704,7 @@ namespace Windows.UI.Xaml.Controls
 
 		internal void OnSelectionChanged()
 		{
-			SelectionChanged?.Invoke(this, new RoutedEventArgs());
+			SelectionChanged?.Invoke(this, new RoutedEventArgs(this));
 		}
 
 		public void OnTemplateRecycled()

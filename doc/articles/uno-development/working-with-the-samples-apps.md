@@ -5,7 +5,9 @@ well as provide a way to write UI Tests.
 
 Those applications are structured in a way that samples can created out of normal `UserControl` instances, marked with the `SampleControlInfoAttribute` so the sample application can discover them.
 
-Those applications are located in the `SamplesApp` folder of the solution, and a live devevelopment out of the master branch version for the WebAssembly application can be found here: https://unoui-sampleapp-unoui-sampleapp-staging.azurewebsites.net
+Those applications are located in the `SamplesApp` folder of the solution, and a live development out of the master branch version for the WebAssembly application can be found here: https://unoui-sampleapp-unoui-sampleapp-staging.azurewebsites.net
+
+This article contains instructions and guidelines for authoring UI tests for Uno. For guidance on other test strategies used in the Uno codebase, see [this guide](../contributing/guidelines/creating-tests.md).
 
 ## Creating UI Tests
 
@@ -41,18 +43,23 @@ This attribute is used as follows:
 This attribute can be placed at the test or class level.
 
 ## Setup for Automated UI Tests on WebAssembly
+
 - Navigate to the `SamplesApp.Wasm.UITests` folder and run `npm i`. This will download Puppeteer and the Chrome driver.
 - Deploy and run the `SamplesApp.Wasm` application once.
 
 ## Setup for Automated UI Tests on Android
+
 - Setup an android simulator or device, start it
 - Deploy and run the `SamplesApp.Droid` application on that device
+- After you have added a new test page, you must launch the samples application once before running the test, otherwise the code for that page is not generated and the test will fail.
 
 ## Running UI Tests
-- Open the [`Constants.cs](src/SamplesApp/SamplesApp.UITests/Constants.cs) file and change the `CurrentPlatform` field to the platform you want to test.
+
+- Open the [`Constants.cs`](src/SamplesApp/SamplesApp.UITests/Constants.cs) file and change the `CurrentPlatform` field to the platform you want to test.
 - Select a test in the `SamplesApp.UITests` project and run a specific test.
 
 ## Troubleshooting tests running during the CI
+
 The build artifacts contain the tests output, as well as the device logs (in the case of Android).
 
 # Requirements for UI tests
@@ -65,13 +72,13 @@ using for bitmap comparison during regression testing, or used by the an automat
 
 # Creating Non-UI Tests
 
-In the context of non-UI tests, a special sample control is available in the samples app (Unit Tests Runner). This control looks for tests in the `Uno.UI.RuntimeTests` project.
+In the context of non-UI tests, a [special sample control](https://github.com/unoplatform/uno/blob/master/src/SamplesApp/SamplesApp.UnitTests.Shared/Controls/UnitTest/UnitTestsControl.cs) is available in the samples app (Unit Tests Runner). This control [looks for tests in the `Uno.UI.RuntimeTests` project](https://github.com/unoplatform/uno/blob/master/src/SamplesApp/SamplesApp.Shared/Samples/UnitTests/UnitTestsPage.xaml.cs).
 
 Those tests use the MSTests format, and can be run as part of the running application to test for features that depend on the current platform.
 
 To create a Non-UI Test:
 - Create or reuse a folder named from the namespace of the class your want to test, replacing "`.`" by "`_`"
-- Name your class `Given_Your_Class_Name` 
+- Name your class `Given_Your_Class_Name`
 - Create your test methods using `When_Your_Scenario`
 - An optional ViewModel type may be provided as an attribute so the browser automatically sets an instance as the DataContext of the sample
 
@@ -86,6 +93,20 @@ To run the tests:
 - The screen shots are placed in a folder named `out`
 
 Note that the same operation is run during the CI, in a specific job running under Linux. The screen shots are located in the Unit Tests section under `Screenshots Compare Test Run` as well as in the build artifact.
+
+## Running iOS UI Tests in a Simulator on macOS 
+
+Running UI Tests in iOS Simulators on macOS requires, as of VS4Mac 8.4, to build and run the tests from the command line. Editing the Uno.UI solution is not a particularly stable experience yet.
+
+In a terminal, run the following:
+``` bash
+cd build
+./local-ios-uitest-run.sh
+```
+
+The Uno.UI solution will build, and the UI tests will run. You may need to adjust some of the parameters in the script, such as:
+- `UITEST_SNAPSHOTS_ONLY` which runs automated or snapshots tests
+- `UITEST_SNAPSHOTS_GROUP` which controls which group of tests will be run. Note that this feature is mainly used for build performance, where tests from different groups can be run in parallel during the CI.
 
 ## Validating the WebAssembly UI Tests results
 
