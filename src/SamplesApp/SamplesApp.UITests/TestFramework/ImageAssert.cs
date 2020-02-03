@@ -13,6 +13,8 @@ namespace SamplesApp.UITests.TestFramework
 {
 	public static class ImageAssert
 	{
+		private static readonly Rectangle Entirety = new Rectangle(0, 0, int.MaxValue, int.MaxValue);
+
 		public static void AreEqual(FileInfo expected, FileInfo actual, IAppRect rect)
 			=> AreEqual(expected, actual, new Rectangle((int)rect.X, (int)rect.Y, (int)rect.Width, (int)rect.Height));
 
@@ -142,6 +144,74 @@ namespace SamplesApp.UITests.TestFramework
 			}
 		}
 
+		/// <summary>
+		/// Asserts the difference between two screenshots within the specified rect are less than <paramref name="threshold"/>.
+		/// </summary>
+		/// <param name="threshold">Percentage of permitted difference; 1% = 0.01f</param>
+		public static void AreAlmostSame(FileInfo expected, FileInfo actual, IAppRect rect, float threshold = 0.01f)
+			=> AreAlmostSame(expected, rect, actual, rect, threshold);
+
+		/// <summary>
+		/// Asserts the difference between two screenshots within the specified rect are less than <paramref name="threshold"/>.
+		/// </summary>
+		/// <param name="threshold">Percentage of permitted difference; 1% = 0.01f</param>
+		public static void AreAlmostSame(FileInfo expected, FileInfo actual, Rectangle? rect = null, float threshold = 0.01f)
+			=> AreAlmostSame(expected, rect ?? Entirety, actual, rect ?? Entirety, threshold);
+
+		/// <summary>
+		/// Asserts the difference between two screenshots within the specified rect are less than <paramref name="threshold"/>.
+		/// </summary>
+		/// <param name="threshold">Percentage of permitted difference; 1% = 0.01f</param>
+		public static void AreAlmostSame(FileInfo expected, IAppRect expectedRect, FileInfo actual, IAppRect actualRect, float threshold = 0.01f)
+			=> AreAlmostSame(expected, expectedRect.ToRectangle(), actual, actualRect.ToRectangle(), threshold);
+
+		/// <summary>
+		/// Asserts the difference between two screenshots within the specified rect are less than <paramref name="threshold"/>.
+		/// </summary>
+		/// <param name="threshold">Percentage of permitted difference; 1% = 0.01f</param>
+		public static void AreAlmostSame(FileInfo expected, Rectangle expectedRect, FileInfo actual, Rectangle actualRect, float threshold = 0.01f)
+		{
+			Assert.AreEqual(expectedRect.Width, actualRect.Width, "Rect Width");
+			Assert.AreEqual(expectedRect.Height, actualRect.Height, "Rect Height");
+
+			using (var expectedBitmap = new Bitmap(expected.FullName))
+			using (var actualBitmap = new Bitmap(actual.FullName))
+			{
+				Assert.AreEqual(expectedBitmap.Size.Width, actualBitmap.Size.Width, "Screenshot Width");
+				Assert.AreEqual(expectedBitmap.Size.Height, actualBitmap.Size.Height, "Screenshot Height");
+
+				var width = Math.Min(expectedRect.Width, expectedBitmap.Size.Width);
+				var height = Math.Min(expectedRect.Height, expectedBitmap.Size.Height);
+
+				var expectedOffset = (
+					x: expectedRect.X < 0 ? expectedBitmap.Size.Width + expectedRect.X : expectedRect.X,
+					y: expectedRect.Y < 0 ? expectedBitmap.Size.Height + expectedRect.Y : expectedRect.Y
+				);
+				var actualOffset = (
+					x: actualRect.X < 0 ? actualBitmap.Size.Width + actualRect.X : actualRect.X,
+					y: actualRect.Y < 0 ? actualBitmap.Size.Height + actualRect.Y : actualRect.Y
+				);
+
+				var thresholdPixelCount = width * height * threshold;
+				var diffPixelCount = 0;
+
+				for (int x = 0; x < width; x++)
+					for (int y = 0; y < height; y++)
+					{
+						var expectedPixel = expectedBitmap.GetPixel(x + expectedOffset.x, y + expectedOffset.y);
+						var actualPixel = actualBitmap.GetPixel(x + actualOffset.x, y + actualOffset.y);
+
+						if (expectedPixel != actualPixel)
+						{
+							if (++diffPixelCount > thresholdPixelCount)
+							{
+								Assert.Fail($"Difference between expected and actual exceeded the permitted threshold of {threshold:P}");
+							}
+						}
+					}
+			}
+		}
+
 		public static void AreNotEqual(FileInfo expected, FileInfo actual, IAppRect rect)
 			=> AreNotEqual(expected, actual, new Rectangle((int)rect.X, (int)rect.Y, (int)rect.Width, (int)rect.Height));
 		public static void AreNotEqual(FileInfo expected, FileInfo actual, Rectangle? rect = null)
@@ -234,5 +304,8 @@ namespace SamplesApp.UITests.TestFramework
 		}
 		private static string ToArgbCode(Color color)
 			=> $"{color.A:X2}{color.R:X2}{color.G:X2}{color.B:X2}";
+
+		private static Rectangle ToRectangle(this IAppRect rect)
+			=> new Rectangle((int)rect.X, (int)rect.Y, (int)rect.Width, (int)rect.Height);
 	}
 }
