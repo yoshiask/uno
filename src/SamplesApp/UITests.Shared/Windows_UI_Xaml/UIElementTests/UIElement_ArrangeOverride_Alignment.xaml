@@ -9,9 +9,9 @@
 	Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
 	<StackPanel Margin="20" Spacing="10">
-		<TextBlock FontSize="14" FontWeight="Bold">
+		<!--<TextBlock FontSize="14" FontWeight="Bold">
 			Using a 100x100 arranged control, measured at 75x75:
-		</TextBlock>
+		</TextBlock>-->
 
 		<TextBlock FontSize="14">
 			No constrains (using measured size):
@@ -21,7 +21,7 @@
 			<local:RectArranged100x100 />
 		</Border>
 
-		<TextBlock FontSize="14">
+		<!--<TextBlock FontSize="14">
 			Stretch arranged in a 150 height border:
 			<LineBreak />(square shouldn't be clipped, vertically centered)
 		</TextBlock>
@@ -35,7 +35,7 @@
 		</TextBlock>
 		<Border HorizontalAlignment="Stretch" Height="150" BorderThickness="1" BorderBrush="Blue">
 			<local:RectArranged100x100 VerticalAlignment="Bottom" />
-		</Border>
+		</Border>-->
 
 	</StackPanel>
 </Page>

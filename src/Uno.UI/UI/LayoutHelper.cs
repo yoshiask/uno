@@ -88,6 +88,8 @@ namespace Uno.UI
 		[Pure]
 		internal static (Point offset, bool overflow) GetAlignmentOffset(this IFrameworkElement e, Size clientSize, Size renderSize)
 		{
+			clientSize = clientSize.AtLeastZero();
+
 			// Start with Bottom-Right alignment, multiply by 0/0.5/1 for Top-Left/Center/Bottom-Right alignment
 			var offset = new Point(
 				clientSize.Width - renderSize.Width,

@@ -23,6 +23,8 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using UITests.Windows_UI_Xaml.UIElementTests;
+using Uno.UI.Samples.Content.UITests.TextBlockControl;
 
 namespace SamplesApp
 {
@@ -118,7 +120,7 @@ namespace SamplesApp
 					// When the navigation stack isn't restored navigate to the first page,
 					// configuring the new page by passing required information as a navigation
 					// parameter
-					rootFrame.Navigate(typeof(MainPage), e.Arguments);
+					rootFrame.Navigate(typeof(UIElement_ArrangeOverride_Alignment), e.Arguments);
 				}
 				// Ensure the current window is active
 				Windows.UI.Xaml.Window.Current.Activate();

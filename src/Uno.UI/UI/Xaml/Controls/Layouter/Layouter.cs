@@ -143,11 +143,22 @@ namespace Windows.UI.Xaml.Controls
 			return a < b - SIZE_EPSILON;
 		}
 
+		private Rect _previousArrangeRect = Rect.Empty;
+		private Size _clippedInkSize;
+		private Size _innerInkSize;
+
 		/// <summary>
 		/// Places the children of the panel using a specific size, in logical pixels.
 		/// </summary>
 		public void Arrange(Rect finalRect)
 		{
+			if(finalRect == _previousArrangeRect)
+			{
+				return; // nothing to do
+			}
+
+			_previousArrangeRect = finalRect;
+
 			var uiElement = Panel as UIElement;
 
 			if (uiElement != null)
@@ -233,18 +244,65 @@ namespace Windows.UI.Xaml.Controls
 					}
 				}
 
-				var renderSize = ArrangeOverride(arrangeSize);
+				_innerInkSize = ArrangeOverride(arrangeSize);
+
+				var clientSize = finalRect.Size
+					.AtLeastZero();
+
+				_clippedInkSize = _innerInkSize
+					.AtMost(maxSize)
+					.AtMost(clientSize);
 
 				if (uiElement != null)
 				{
-					uiElement.RenderSize = renderSize.AtMost(maxSize);
+					uiElement.RenderSize = needsClipToSlot ? _clippedInkSize : _innerInkSize;
 					uiElement.NeedsClipToSlot = needsClipToSlot;
-					uiElement.ApplyClip();
+				}
 
-					if (Panel is FrameworkElement fe)
-					{
-						fe.OnLayoutUpdated();
-					}
+				SetNativeFinalLayout(finalRect);
+			}
+		}
+
+		internal void SetNativeFinalLayout(Rect finalRect)
+		{
+			if (Panel is FrameworkElement frameworkElement)
+			{
+				_clippedInkSize = frameworkElement.AdjustArrange(_clippedInkSize);
+				var (offset, overflow) = frameworkElement.GetAlignmentOffset(finalRect.Size, _clippedInkSize);
+				offset = new Point(
+					offset.X + finalRect.X,
+					offset.Y + finalRect.Y
+				);
+
+				if (overflow)
+				{
+					frameworkElement.NeedsClipToSlot = true;
+				}
+
+				var frame = new Rect(offset, _innerInkSize);
+
+				frameworkElement.LayoutSlotWithMarginsAndAlignments = frame;
+				frameworkElement.ClippedFrame = new Rect(offset, _clippedInkSize);
+
+				ArrangeChildOverride(frameworkElement, frame);
+
+				frameworkElement.OnLayoutUpdated();
+			}
+			else
+			{
+				// TODO
+#if !DEBUG
+#error TODO
+#endif
+			}
+
+			if (Panel is UIElement uiElement)
+			{
+				uiElement.ApplyClip();
+
+				if (Panel is FrameworkElement fe)
+				{
+					fe.OnLayoutUpdated();
 				}
 			}
 		}
@@ -421,30 +479,26 @@ namespace Windows.UI.Xaml.Controls
 		/// <param name="frame">The rectangle to use, in Logical position</param>
 		public void ArrangeChild(View view, Rect frame)
 		{
-			ArrangeChild(view, frame, true);
-		}
-
-		internal void ArrangeChild(View view, Rect frame, bool raiseLayoutUpdated)
-		{
-			if ((view as IFrameworkElement)?.Visibility == Visibility.Collapsed)
+			if (view is UIElement uiElement)
 			{
-				return;
-			}
-			var (finalFrame, clippedFrame) = ApplyMarginAndAlignments(view, frame);
-			if (view is UIElement elt)
-			{
-				elt.LayoutSlotWithMarginsAndAlignments = finalFrame;
-				elt.ClippedFrame = clippedFrame;
-			}
-
-			ArrangeChildOverride(view, finalFrame);
-
-			if (view is FrameworkElement fe)
-			{
-				if (raiseLayoutUpdated)
+				if(uiElement.Visibility == Visibility.Collapsed)
 				{
-					fe?.OnLayoutUpdated();
+					return; // nothing to do
 				}
+
+				var (finalFrame, clippedFrame) = ApplyMarginAndAlignments(view, frame);
+
+				// Managed element
+				uiElement.Arrange(frame);
+
+				(uiElement as FrameworkElement)?.OnLayoutUpdated();
+			}
+			else
+			{
+				// Native element
+				var (finalFrame, _) = ApplyMarginAndAlignments(view, frame);
+
+				ArrangeChildOverride(view, finalFrame);
 			}
 		}
 
@@ -726,7 +780,7 @@ namespace Windows.UI.Xaml.Controls
 		/// </remarks>
 		void ILayouter.ArrangeChild(View view, Rect frame)
 		{
-			ArrangeChild(view, frame);
+			//ArrangeChild(view, frame);
 		}
 
 		/// <summary>

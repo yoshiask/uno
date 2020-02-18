@@ -60,8 +60,16 @@ namespace Uno.UI.RemoteControl
 					var s = new ClientWebSocket();
 #endif
 
-					if(port == 443)
+					if (endpoint.Contains(":"))
 					{
+						var addressPart = endpoint.Split(new[] {'%'});
+						// Fix IPv6 address
+						endpoint = $"[{addressPart[0]}]";
+					}
+
+					if (port == 443)
+					{
+
 #if __WASM__
 						if (endpoint.EndsWith("gitpod.io"))
 						{
@@ -127,7 +135,7 @@ namespace Uno.UI.RemoteControl
 
 				var index = await allCts.Task;
 
-				for (int i = 0; i < connections.Length; i++)
+				for (var i = 0; i < connections.Length; i++)
 				{
 					if (i != index)
 					{

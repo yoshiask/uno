@@ -2,6 +2,7 @@
 using Windows.UI.Xaml.Controls;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using Uno.UI;
 using System.Linq;
@@ -188,7 +189,12 @@ namespace Windows.UI.Xaml
 		public override void Arrange(Rect finalRect)
 		{
 			_layouter.Arrange(finalRect);
-			_layouter.ArrangeChild(this, finalRect, raiseLayoutUpdated: false);
+#if !DEBUG
+#error fix this
+#else
+			//Debugger.Break();
+#endif
+			//_layouter.ArrangeChild(this, finalRect, raiseLayoutUpdated: false);
 		}
 #endif
 
@@ -607,7 +613,10 @@ namespace Windows.UI.Xaml
 
 			public Size MeasureElement(View element, Size availableSize) => MeasureChild(element, availableSize);
 
-			public void ArrangeElement(View element, Rect finalRect) => ArrangeChild(element, finalRect);
+			public void ArrangeElement(View element, Rect finalRect)
+			{
+				ArrangeChild(element, finalRect);
+			}
 
 			protected override string Name => Panel.Name;
 

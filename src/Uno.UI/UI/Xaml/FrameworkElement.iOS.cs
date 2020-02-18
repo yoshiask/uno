@@ -46,18 +46,28 @@ namespace Windows.UI.Xaml
 				{
 					_inLayoutSubviews = true;
 
+					Rect bounds = Bounds;
+
 					if (RequiresMeasure)
 					{
 						// Add back the Margin (which is normally 'outside' the view's bounds) - the layouter will subtract it again
-						XamlMeasure(Bounds.Size.Add(Margin));
+						XamlMeasure(bounds.Size.Add(Margin));
 					}
 
-					OnBeforeArrange();
 
-					var size = SizeFromUISize(Bounds.Size);
-					_layouter.Arrange(new Rect(0, 0, size.Width, size.Height));
+					var before = this.ShowLocalVisualTree();
 
-					OnAfterArrange();
+					var size = SizeFromUISize(bounds.Size);
+					if (!(Parent is UIElement))// || this.LayoutSlot != bounds)
+					{
+						OnBeforeArrange();
+
+						_layouter.Arrange(new Rect(default, bounds.Size));
+
+						OnAfterArrange();
+					}
+
+					var after = this.ShowLocalVisualTree();
 				}
 				finally
 				{

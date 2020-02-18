@@ -68,6 +68,8 @@ namespace Windows.UI.Xaml.Controls
 
 		protected override bool IsItemItsOwnContainerOverride(object item) => item is ComboBoxItem;
 
+		protected override Size ArrangeOverride(Size finalSize) => base.ArrangeOverride(finalSize);
+
 		protected override void OnApplyTemplate()
 		{
 			base.OnApplyTemplate();

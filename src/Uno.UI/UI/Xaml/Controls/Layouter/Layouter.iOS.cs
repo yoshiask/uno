@@ -1,6 +1,7 @@
 ﻿#if XAMARIN_IOS
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Uno.Extensions;
@@ -87,7 +88,7 @@ namespace Windows.UI.Xaml.Controls
 			return ret;
 		}
 
-		protected void ArrangeChildOverride(View view, Rect frame)
+		private void ArrangeChildOverride(View view, Rect frame)
 		{
 			var nativeFrame = ViewHelper.LogicalToPhysicalPixels(frame);
 
@@ -97,6 +98,7 @@ namespace Windows.UI.Xaml.Controls
 
 				using (SettingFrame(view))
 				{
+					//view.AutoresizingMask = UIViewAutoresizing.None;
 					view.Frame = nativeFrame;
 				}
 			}

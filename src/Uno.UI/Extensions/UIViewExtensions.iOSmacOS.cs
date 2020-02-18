@@ -578,7 +578,8 @@ namespace AppKit
 
 			StringBuilder AppendView(_View innerView)
 			{
-				var name = (innerView as IFrameworkElement)?.Name;
+				var frameworkElement = innerView as FrameworkElement;
+				var name = frameworkElement?.Name;
 				var namePart = string.IsNullOrEmpty(name) ? "" : $"-'{name}'";
 
 				return sb
@@ -590,6 +591,7 @@ namespace AppKit
 #if __IOS__
 						.Append($" {(innerView.Hidden ? "Hidden" : "Visible")}")
 #endif
+						.Append(frameworkElement?.NeedsClipToSlot == true ? " [CLIPPED TO BOUNDS]" : "")
 						.AppendLine();
 			}
 		}

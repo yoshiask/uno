@@ -1,3 +1,4 @@
+using System.Linq;
 using Uno.UI.Helpers.WinUI;
 using Windows.Foundation;
 using Windows.UI.ViewManagement;
@@ -59,9 +60,7 @@ namespace Microsoft.UI.Xaml.Controls
 
 					if (rects.Count == 2)
 					{
-						info.Regions = new Rect[rects.Count];
-						info.Regions[0] = new Rect(rects[0].Location.PhysicalToLogicalPixels(), rects[0].Size.PhysicalToLogicalPixels());
-						info.Regions[1] = new Rect(rects[1].Location.PhysicalToLogicalPixels(), rects[1].Size.PhysicalToLogicalPixels());
+						info.Regions = rects.ToArray();
 
 						// Determine orientation. If neither of these are true, default to doing nothing.
 						if (info.Regions[0].X < info.Regions[1].X && info.Regions[0].Y == info.Regions[1].Y)
