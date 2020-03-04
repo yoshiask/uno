@@ -24,6 +24,27 @@ namespace Uno.UI
 			var difference = Math.Abs(value1 - value2);
 			return (difference > epsilon, difference);
 		}
+
+		internal static void Validate(double expected, double value, double epsilon, string because, object[] becauseArgs,  string field)
+		{
+			var ep = Math.Abs(epsilon);
+			var d = SizeAssertionExtensions.CheckDifference(expected, value, ep);
+
+			if (ep == 0d)
+			{
+				Execute.Assertion
+					.BecauseOf(because, becauseArgs)
+					.ForCondition(!d.isDifferent)
+					.FailWith($"Expected {field} of {{context}} {{reason}} to be {expected}, but seems to be {value} (difference of {d.difference}).");
+			}
+			else
+			{
+				Execute.Assertion
+					.BecauseOf(because, becauseArgs)
+					.ForCondition(!d.isDifferent)
+					.FailWith($"Expected {field} of {{context}} {{reason}} to be {expected - ep} <= value <= {expected + ep}, but seems to be {value} (difference of {d.difference}).");
+			}
+		}
 	}
 
 	internal class SizeAssertion : ReferenceTypeAssertions<Size, SizeAssertion>
@@ -50,28 +71,29 @@ namespace Uno.UI
 			return new AndConstraint<SizeAssertion>(this);
 		}
 
+		public AndConstraint<SizeAssertion> Be(double width, double height, double? epsilon = null, string because = null, params object[] becauseArgs)
+		{
+			using (new AssertionScope())
+			{
+				SizeAssertionExtensions.Validate(width, _size.Width, epsilon ?? _epsilon, because, becauseArgs, "Width");
+				SizeAssertionExtensions.Validate(height, _size.Height, epsilon ?? _epsilon, because, becauseArgs, "Height");
+			}
+
+			return new AndConstraint<SizeAssertion>(this);
+		}
+
 		public AndConstraint<SizeAssertion> BeOfWidth(double expectedWidth, double? epsilon = null, string because = null, params object[] becauseArgs)
 		{
-			Validate(expectedWidth, _size.Width, epsilon, because, becauseArgs, "Width");
+			SizeAssertionExtensions.Validate(expectedWidth, _size.Width, epsilon ?? _epsilon, because, becauseArgs, "Width");
 
 			return new AndConstraint<SizeAssertion>(this);
 		}
 
 		public AndConstraint<SizeAssertion> BeOfHeight(double expectedHeight, double? epsilon = null, string because = null, params object[] becauseArgs)
 		{
-			Validate(expectedHeight, _size.Height, epsilon, because, becauseArgs, "Height");
+			SizeAssertionExtensions.Validate(expectedHeight, _size.Height, epsilon ?? _epsilon, because, becauseArgs, "Height");
 
 			return new AndConstraint<SizeAssertion>(this);
-		}
-
-		private void Validate(double expected, double value, double? epsilon, string because, object[] becauseArgs,  string field)
-		{
-			var ep = epsilon ?? _epsilon;
-			var d = SizeAssertionExtensions.CheckDifference(expected, value, ep);
-			Execute.Assertion
-				.BecauseOf(because, becauseArgs)
-				.ForCondition(!d.isDifferent)
-				.FailWith($"Expected {field} of {_size}{{reason}} to be {expected}, but seems to be {value} (difference of {d.difference}) with a tolerance of {ep}.");
 		}
 	}
 
@@ -88,38 +110,34 @@ namespace Uno.UI
 
 		protected override string Identifier => "point";
 
+		public AndConstraint<PointAssertion> Be(double x, double y, double? epsilon = null, string because = null, params object[] becauseArgs)
+		{
+			using (new AssertionScope(_point.ToString()))
+			{
+				return _point.Should().BeAtX(x, epsilon, because, becauseArgs)
+					.And.BeAtY(y, epsilon, because, becauseArgs);
+			}
+		}
+
 		public AndConstraint<PointAssertion> Be(Point expectedPoint, double? epsilon = null, string because = null, params object[] becauseArgs)
 		{
 			using (new AssertionScope(_point.ToString()))
 			{
-				_point.Should().BeAtX(expectedPoint.X, epsilon, because, becauseArgs)
+				return _point.Should().BeAtX(expectedPoint.X, epsilon, because, becauseArgs)
 					.And.BeAtY(expectedPoint.Y, epsilon, because, becauseArgs);
 			}
-
-			return new AndConstraint<PointAssertion>(this);
-		}
-
-		private void Validate(double expected, double value, double? epsilon, string because, object[] becauseArgs,
-			string field)
-		{
-			var ep = epsilon ?? _epsilon;
-			var d = SizeAssertionExtensions.CheckDifference(expected, value, ep);
-			Execute.Assertion
-				.BecauseOf(because, becauseArgs)
-				.ForCondition(!d.isDifferent)
-				.FailWith($"Expected {field} of {_point}{{reason}} to be at {expected}, but seems to be at {value} (difference of {d.difference}) with a tolerance of {ep}.");
 		}
 
 		public AndConstraint<PointAssertion> BeAtX(double expectedX, double? epsilon = null, string because = null, params object[] becauseArgs)
 		{
-			Validate(expectedX, _point.X, epsilon, because, becauseArgs, "X");
+			SizeAssertionExtensions.Validate(expectedX, _point.X, epsilon ?? _epsilon, because, becauseArgs, "X");
 
 			return new AndConstraint<PointAssertion>(this);
 		}
 
 		public AndConstraint<PointAssertion> BeAtY(double expectedY, double? epsilon = null, string because = null, params object[] becauseArgs)
 		{
-			Validate(expectedY, _point.Y, epsilon, because, becauseArgs, "Y");
+			SizeAssertionExtensions.Validate(expectedY, _point.Y, epsilon ?? _epsilon, because, becauseArgs, "Y");
 
 			return new AndConstraint<PointAssertion>(this);
 		}
@@ -138,11 +156,22 @@ namespace Uno.UI
 
 		protected override string Identifier => "rect";
 
+		public AndConstraint<RectAssertion> Be(double x, double y, double width, double height, double? epsilon = null, string because = null, params object[] becauseArgs)
+		{
+			using (new AssertionScope(_rect.ToString()))
+			{
+				new Size(_rect.Width, _rect.Height).Should(_epsilon).Be(width, height, epsilon, because, becauseArgs);
+				new Point(_rect.X, _rect.Y).Should(_epsilon).Be(x, y, epsilon, because, becauseArgs);
+			}
+
+			return new AndConstraint<RectAssertion>(this);
+		}
+
 		public AndConstraint<RectAssertion> Be(Rect expectedRect, double? epsilon = null, string because = null, params object[] becauseArgs)
 		{
 			using (new AssertionScope(_rect.ToString()))
 			{
-				new Size(_rect.Width, _rect.Height).Should(_epsilon).Be(new Size(expectedRect.Width, expectedRect.Height), epsilon, because, becauseArgs);
+				new Size(_rect.Width, _rect.Height).Should(_epsilon).Be(expectedRect.Width, expectedRect.Height, epsilon, because, becauseArgs);
 				new Point(_rect.X, _rect.Y).Should(_epsilon).Be(new Point(expectedRect.X, expectedRect.Y), epsilon, because, becauseArgs);
 			}
 

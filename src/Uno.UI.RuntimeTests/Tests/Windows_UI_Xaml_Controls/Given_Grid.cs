@@ -11,6 +11,9 @@ using Windows.Foundation;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
+using Windows.UI.Xaml.Shapes;
+using FluentAssertions;
+using FluentAssertions.Execution;
 
 namespace Uno.UI.RuntimeTests.Tests.Windows_UI_Xaml_Controls
 {
@@ -180,6 +183,109 @@ namespace Uno.UI.RuntimeTests.Tests.Windows_UI_Xaml_Controls
 				}
 
 				await Task.Delay(50);
+			}
+		}
+
+		//[DataRow("cc", 0d, "17,17,6,6", null)]
+		[DataRow("cc", 2d, "15,15,10,10", null)]
+		[DataRow("cc", 15d, "15,15,10,10", null)]
+		[DataRow("cc", 16d, "16,16,8,8", null)]
+		[DataRow("cc", 18d, "17,17,6,6", "1,1,4,4")]
+		[DataRow("cc", 20d, "17,17,6,6", "3,3,0,0")]
+		[DataRow("cc", 30d, "17,17,6,6", "empty")]
+		[DataRow("cc", 50d, "17,17,6,6", "empty")]
+		[DataRow("cb", 2d, "15,28,10,10", null)]
+		[DataRow("ct", 2d, "15,2,10,10", null)]
+		[DataRow("ss", 0d, "0,0,40,40", null)]
+		[DataRow("ss", 2d, "2,2,36,36", null)]
+		[DataRow("ss", 16d, "16,16,8,8", null)]
+		[DataRow("ss", 18d, "18,18,6,6", "0,0,4,4")]
+		[DataRow("ss", 20d, "20,20,6,6", "0,0,0,0")]
+		[DataRow("ss", 30d, "30,30,6,6", "0,0,0,0")]
+		[DataRow("ss", 50d, "50,50,6,6", "0,0,0,0")]
+		[DataRow("lt", 2d, "2,2,10,10", null)]
+		[DataRow("rt", 2d, "28,2,10,10", null)]
+		[DataRow("rb", 2d, "28,28,10,10", null)]
+		[DataRow("lb", 2d, "2,28,10,10", null)]
+		[TestMethod]
+		[RunsOnUIThread]
+		public async Task When_One_Child_Alignment(string alignment, double margin, string expected, string expectedClippedFrame)
+		{
+			var SUT = new Grid { Name = "test" };
+
+			HorizontalAlignment GetH()
+			{
+				switch (alignment[0])
+				{
+					case 's': return HorizontalAlignment.Stretch;
+					case 'l': return HorizontalAlignment.Left;
+					case 'c': return HorizontalAlignment.Center;
+					case 'r': return HorizontalAlignment.Right;
+				}
+				return default;
+			}
+
+			VerticalAlignment GetV()
+			{
+				switch (alignment[1])
+				{
+					case 's': return VerticalAlignment.Stretch;
+					case 't': return VerticalAlignment.Top;
+					case 'c': return VerticalAlignment.Center;
+					case 'b': return VerticalAlignment.Bottom;
+				}
+				return default;
+			}
+
+			Rect GetRect(string s)
+			{
+				return s == "empty" ? Rect.Empty : (Rect)s;
+			}
+
+			Rect GetExpectedClippedRect()
+			{
+				if (expectedClippedFrame == null)
+				{
+					var rect = GetRect(expected);
+					return new Rect(default, new Size(rect.Width, rect.Height));
+				}
+				else
+				{
+					return GetRect(expectedClippedFrame);
+				}
+			}
+
+			var c1 = new Rectangle
+			{
+				Name = "Child01",
+				HorizontalAlignment = GetH(),
+				VerticalAlignment = GetV(),
+				MinWidth = 6,
+				MinHeight = 6,
+				Margin = new Thickness(margin),
+			};
+
+			SUT.Children.Add(c1);
+
+			SUT.Children.Should().HaveCount(1);
+
+			var availableSize = new Size(40, 40);
+			var unclippedExpectedSize = new Size(6d + margin * 2, 6d + margin * 2);
+			var expectedDesiredSize = unclippedExpectedSize.AtMost(availableSize);
+
+			SUT.Measure(availableSize);
+
+			TestServices.WindowHelper.WindowContent = new Border {Width = 40, Height = 40, Child = SUT}
+			await TestServices.WindowHelper.WaitForIdle();
+
+			using (new AssertionScope())
+			{
+				SUT.DesiredSize.Should().Be(expectedDesiredSize, because: "SUT.DesiredSize");
+				SUT.UnclippedDesiredSize.Should().Be(expectedDesiredSize, because: "SUT.UnclippedDesiredSize");
+				c1.DesiredSize.Should().Be(expectedDesiredSize.AtLeast(new Size(margin * 2, margin * 2)), because: "c1.DesiredSize");
+				c1.UnclippedDesiredSize.Should().Be(6d, 6d, because: "c1.UnclippedDesiredSize"); // Unclipped doesn't include margins!
+				c1.LayoutSlot.Should().Be(GetRect(expected), because: "c1.LayoutSlotWithMarginsAndAlignments");
+				c1.ClippedFrame.Should().Be(GetExpectedClippedRect(), because: "c1.ClippedFrame");
 			}
 		}
 	}

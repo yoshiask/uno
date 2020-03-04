@@ -10,6 +10,7 @@ using Uno;
 using Uno.Logging;
 using View = Windows.UI.Xaml.UIElement;
 using Windows.UI.Xaml.Media;
+using Uno.UI;
 
 namespace Windows.UI.Xaml.Controls
 {

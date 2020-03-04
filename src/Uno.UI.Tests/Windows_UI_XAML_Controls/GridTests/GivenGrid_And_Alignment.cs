@@ -6,6 +6,7 @@ using Windows.Foundation;
 using FluentAssertions;
 using View = Windows.UI.Xaml.FrameworkElement;
 using System;
+using FluentAssertions.Execution;
 
 namespace Uno.UI.Tests.GridTests
 {
@@ -351,16 +352,29 @@ namespace Uno.UI.Tests.GridTests
 			);
 
 			SUT.Measure(new Size(100, 20));
-			var measuredSize = SUT.DesiredSize;
-			Assert.AreEqual(new Size(20, 10), measuredSize);
-			Assert.AreEqual(new Size(10, 10), c1.RequestedDesiredSize);
+
+			using (new AssertionScope("AFTER MEASURE"))
+			{
+				SUT.DesiredSize.Should().Be(20, 10);
+				c1.RequestedDesiredSize.Should().NotBeNull();
+				c1.RequestedDesiredSize?.Should().Be(10, 10);
+				c1.MeasureCallCount.Should().Be(1);
+				c1.ArrangeCallCount.Should().Be(0);
+			}
 
 			SUT.Arrange(new Rect(0, 0,100, 20));
 
-			Assert.AreEqual(new Size(10, 10), c1.RequestedDesiredSize);
-			Assert.AreEqual(new Rect(5, 0, 10, 10), c1.Arranged);
+			using (new AssertionScope("AFTER ARRANGE"))
+			{
+				c1.RequestedDesiredSize.Should().NotBeNull();
+				c1.RequestedDesiredSize?.Should().Be(10, 10);
 
-			Assert.AreEqual(1, SUT.GetChildren().Count());
+				c1.Arranged.Should().Be(5, 0, 10, 10);
+
+				// c1.MeasureCallCound should be 1 here, but it's 2 currently
+				c1.ArrangeCallCount.Should().Be(1);
+				SUT.GetChildren().Should().HaveCount(1);
+			}
 		}
 
 		[TestMethod]
@@ -399,52 +413,62 @@ namespace Uno.UI.Tests.GridTests
 			);
 
 			SUT.Measure(new Size(100, 20));
-			var measuredSize = SUT.DesiredSize;
-			Assert.AreEqual(new Size(31, 11), measuredSize);
-			Assert.AreEqual(new Size(20, 5), c1.RequestedDesiredSize);
-			Assert.AreEqual(new Size(11, 11), c2.RequestedDesiredSize);
-			Assert.AreEqual(1, c1.MeasureCallCount);
-			Assert.AreEqual(1, c2.MeasureCallCount); // The measure count is 1 beceause the grid has a recognized pattern (Nx1). It would be 2 otherwise.
-			Assert.AreEqual(0, c1.ArrangeCallCount);
-			Assert.AreEqual(0, c2.ArrangeCallCount);
+
+			using (new AssertionScope("AFTER MEASURE"))
+			{
+				SUT.DesiredSize.Should().Be(31, 11);
+				c1.RequestedDesiredSize.Should().NotBeNull();
+				c2.RequestedDesiredSize.Should().NotBeNull();
+				c1.RequestedDesiredSize?.Should().Be(20, 5);
+				c2.RequestedDesiredSize?.Should().Be(11, 11);
+				c1.MeasureCallCount.Should().Be(1);
+				c2.MeasureCallCount.Should().Be(1); // The measure count is 1 because the grid has a recognized pattern (Nx1). It would be 2 otherwise.
+				c1.ArrangeCallCount.Should().Be(0);
+				c2.ArrangeCallCount.Should().Be(0);
+			}
 
 			SUT.Arrange(new Rect(0, 0,100, 20));
 
-			Assert.AreEqual(new Size(20, 5), c1.RequestedDesiredSize);
-			Assert.AreEqual(new Size(11, 11), c2.RequestedDesiredSize);
-			Assert.AreEqual(new Rect(45.5f, 3, 20, 5), c1.Arranged);
-			Assert.AreEqual(new Rect(0, 0, 11, 11), c2.Arranged);
-			Assert.AreEqual(1, c1.MeasureCallCount);
-			Assert.AreEqual(1, c2.MeasureCallCount); // The measure count is 1 because the grid has a recognized pattern (Nx1). It would be 2 otherwise.
-			Assert.AreEqual(1, c1.ArrangeCallCount);
-			Assert.AreEqual(1, c2.ArrangeCallCount);
+			using (new AssertionScope("AFTER ARRANGE"))
+			{
+				c1.RequestedDesiredSize.Should().NotBeNull();
+				c2.RequestedDesiredSize.Should().NotBeNull();
+				c1.RequestedDesiredSize?.Should().Be(20, 5);
+				c2.RequestedDesiredSize?.Should().Be(11, 11);
 
-			Assert.AreEqual(2, SUT.GetChildren().Count());
+				c1.Arranged.Should().Be(45.5, 3, 20, 5);
+				c2.Arranged.Should().Be(0, 0, 11, 11);
+
+				c1.MeasureCallCount.Should().Be(1);
+				c2.MeasureCallCount.Should().Be(1);
+				c1.ArrangeCallCount.Should().Be(1);
+				c2.ArrangeCallCount.Should().Be(1);
+				SUT.GetChildren().Should().HaveCount(2);
+			}
 		}
 
-		[DataRow("cc", 0d, "17,17,6,6", null)]
-		[DataRow("cc", 2d, "15,15,10,10", null)]
-		[DataRow("cc", 15d, "15,15,10,10", null)]
-		[DataRow("cc", 16d, "16,16,8,8", null)]
-		[DataRow("cc", 18d, "17,17,6,6", "1,1,4,4")]
-		[DataRow("cc", 20d, "17,17,6,6", "3,3,0,0")]
-		[DataRow("cc", 30d, "17,17,6,6", "empty")]
-		[DataRow("cc", 50d, "17,17,6,6", "empty")]
+		//[DataRow("cc", 0d, "17,17,6,6", null)]
+		//[DataRow("cc", 2d, "15,15,10,10", null)]
+		//[DataRow("cc", 15d, "15,15,10,10", null)]
+		//[DataRow("cc", 16d, "16,16,8,8", null)]
+		//[DataRow("cc", 18d, "17,17,6,6", "1,1,4,4")]
+		//[DataRow("cc", 20d, "17,17,6,6", "3,3,0,0")]
+		//[DataRow("cc", 30d, "17,17,6,6", "empty")]
+		//[DataRow("cc", 50d, "17,17,6,6", "empty")]
 		[DataRow("cb", 2d, "15,28,10,10", null)]
-		[DataRow("ct", 2d, "15,2,10,10", null)]
-		[DataRow("ss", 0d, "0,0,40,40", null)]
-		[DataRow("ss", 2d, "2,2,36,36", null)]
-		[DataRow("ss", 16d, "16,16,8,8", null)]
-		[DataRow("ss", 18d, "18,18,6,6", "0,0,4,4")]
-		[DataRow("ss", 20d, "20,20,6,6", "0,0,0,0")]
-		[DataRow("ss", 30d, "30,30,6,6", "0,0,0,0")]
-		[DataRow("ss", 50d, "50,50,6,6", "0,0,0,0")]
-		[DataRow("lt", 2d, "2,2,10,10", null)]
-		[DataRow("rt", 2d, "28,2,10,10", null)]
-		[DataRow("rb", 2d, "28,28,10,10", null)]
-		[DataRow("lb", 2d, "2,28,10,10", null)]
+		//[DataRow("ct", 2d, "15,2,10,10", null)]
+		//[DataRow("ss", 0d, "0,0,40,40", null)]
+		//[DataRow("ss", 2d, "2,2,36,36", null)]
+		//[DataRow("ss", 16d, "16,16,8,8", null)]
+		//[DataRow("ss", 18d, "18,18,6,6", "0,0,4,4")]
+		//[DataRow("ss", 20d, "20,20,6,6", "0,0,0,0")]
+		//[DataRow("ss", 30d, "30,30,6,6", "0,0,0,0")]
+		//[DataRow("ss", 50d, "50,50,6,6", "0,0,0,0")]
+		//[DataRow("lt", 2d, "2,2,10,10", null)]
+		//[DataRow("rt", 2d, "28,2,10,10", null)]
+		//[DataRow("rb", 2d, "28,28,10,10", null)]
+		//[DataRow("lb", 2d, "2,28,10,10", null)]
 		[TestMethod]
-		[Ignore("https://github.com/unoplatform/uno/issues/2733")]
 		public void When_One_Child_Alignment(string alignment, double margin, string expected, string expectedClippedFrame)
 		{
 			var SUT = new Grid { Name = "test" };
@@ -478,6 +502,18 @@ namespace Uno.UI.Tests.GridTests
 				return s == "empty" ? Rect.Empty : (Rect)s;
 			}
 
+			Rect GetExpectedClippedRect()
+			{
+				if (expectedClippedFrame == null)
+				{
+					return new Rect(default, GetRect(expected).Size);
+				}
+				else
+				{
+					return GetRect(expectedClippedFrame);
+				}
+			}
+
 			var c1 = new View
 			{
 				Name = "Child01",
@@ -500,18 +536,21 @@ namespace Uno.UI.Tests.GridTests
 			SUT.Measure(availableSize);
 
 
-			SUT.DesiredSize.Should().Be(expectedDesiredSize);
-			SUT.UnclippedDesiredSize.Should().Be(expectedDesiredSize);
-			c1.DesiredSize.Should().Be(expectedDesiredSize.AtLeast(new Size(margin * 2, margin * 2)));
-			c1.UnclippedDesiredSize.Should().Be(new Size(6d, 6d)); // Unclipped doesn't include margins!
+			using (new AssertionScope("BEFORE ARRANGE"))
+			{
+				SUT.DesiredSize.Should().Be(expectedDesiredSize);
+				SUT.UnclippedDesiredSize.Should().Be(expectedDesiredSize);
+				c1.DesiredSize.Should().Be(expectedDesiredSize.AtLeast(new Size(margin * 2, margin * 2)));
+				c1.UnclippedDesiredSize.Should().Be(6d, 6d); // Unclipped doesn't include margins!
+			}
 
 			SUT.Arrange(new Rect(default, availableSize));
 
-			c1.Arranged.Should().Be(GetRect(expected));
-			var expectedClippedFrameRect = expectedClippedFrame == null
-				? new Rect(default, (GetRect(expected)).Size)
-				: GetRect(expectedClippedFrame);
-			c1.ClippedFrame.Should().Be(expectedClippedFrameRect);
+			using (new AssertionScope("AFTER ARRANGE"))
+			{
+				c1.Arranged.Should().Be(GetRect(expected));
+				c1.ClippedFrame.Should().Be(GetExpectedClippedRect());
+			}
 		}
 
 		[TestMethod]
@@ -530,14 +569,20 @@ namespace Uno.UI.Tests.GridTests
 
 			SUT.Measure(new Size(100, 100));
 			var measuredSize = SUT.DesiredSize;
-			Assert.AreEqual(new Size(100, 100), measuredSize);
-			Assert.AreEqual(new Size(100, 100), c1.DesiredSize);
+
+			using (new AssertionScope("BEFORE ARRANGE"))
+			{
+				measuredSize.Should().Be(100, 100);
+				c1.DesiredSize.Should().Be(100, 100);
+			}
 
 			SUT.Arrange(new Rect(0, 0,20, 20));
-			
-			Assert.AreEqual(new Rect(0, 0, 20, 20), c1.Arranged);
 
-			Assert.AreEqual(1, SUT.GetChildren().Count());
+			using (new AssertionScope("AFTER ARRANGE"))
+			{
+				c1.Arranged.Should().Be(0, 0, 20, 20);
+				SUT.GetChildren().Should().HaveCount(1);
+			}
 		}
 	}
 }

@@ -388,6 +388,8 @@ namespace Windows.UI.Xaml
 
 		internal bool NeedsClipToSlot { get; set; }
 
+		internal virtual Size UnclippedDesiredSize => throw new NotSupportedException();
+
 #if !__WASM__
 		/// <summary>
 		/// Backing property for <see cref="Windows.UI.Xaml.Controls.Primitives.LayoutInformation.GetAvailableSize(UIElement)"/>

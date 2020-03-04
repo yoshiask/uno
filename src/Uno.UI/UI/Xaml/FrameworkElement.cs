@@ -45,8 +45,12 @@ namespace Windows.UI.Xaml
 
 #if !__WASM__
 		private FrameworkElementLayouter _layouter;
+
+		internal override Size UnclippedDesiredSize => _layouter._unclippedDesiredSize;
 #else
 		private readonly static IEventProvider _trace = Tracing.Get(FrameworkElement.TraceProvider.Id);
+
+		internal override Size UnclippedDesiredSize => _unclippedDesiredSize;
 #endif
 
 		private bool _constraintsChanged;
