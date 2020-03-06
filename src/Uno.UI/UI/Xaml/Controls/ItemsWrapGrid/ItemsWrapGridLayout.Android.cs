@@ -26,6 +26,7 @@ namespace Windows.UI.Xaml.Controls
 
 		protected override Line CreateLine(GeneratorDirection direction,
 			int extentOffset,
+			int trueExtent,
 			int breadthOffset,
 			int availableBreadth,
 			RecyclerView.Recycler recycler,
@@ -110,6 +111,7 @@ namespace Windows.UI.Xaml.Controls
 					GeneratorDirection.Forward,
 					//We always lay out view 'top down' so that it is aligned correctly if its height is less than the line height
 					direction == GeneratorDirection.Forward ? extentOffset : extentOffset - ResolveItemExtent().Value,
+					-1,
 					breadthOffset + usedBreadth,
 					slotSize
 				);

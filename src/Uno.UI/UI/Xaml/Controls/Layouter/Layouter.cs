@@ -429,6 +429,12 @@ namespace Windows.UI.Xaml.Controls
 			var (finalFrame, clippedFrame) = ApplyMarginAndAlignments(view, frame);
 			if (view is UIElement elt)
 			{
+				//if (elt.GetType().Name.Contains("PeekingFlipViewItem"))
+				//{
+				//	Console.WriteLine($"LAYOUTING ITEM - applied frame: {view} ({view.GetHashCode():X8}) at [{finalFrame.X},{finalFrame.Y},{finalFrame.Width},{finalFrame.Height}]"
+				//		+ $" | native: {UIElement.GetPosition(elt)}");
+				//}
+
 				elt.LayoutSlotWithMarginsAndAlignments = finalFrame;
 				elt.ClippedFrame = clippedFrame;
 			}

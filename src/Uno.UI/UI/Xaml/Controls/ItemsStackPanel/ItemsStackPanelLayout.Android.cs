@@ -17,6 +17,7 @@ namespace Windows.UI.Xaml.Controls
 
 		protected override Line CreateLine(GeneratorDirection direction,
 			int extentOffset,
+			int trueExtentOffset,
 			int breadthOffset,
 			int availableBreadth,
 			RecyclerView.Recycler recycler,
@@ -25,13 +26,13 @@ namespace Windows.UI.Xaml.Controls
 			bool isNewGroup
 		)
 		{
-			var item = GetFlatItemIndex(nextVisibleItem);
-			var view = recycler.GetViewForPosition(item, state);
+			var index = GetFlatItemIndex(nextVisibleItem);
+			var view = recycler.GetViewForPosition(index, state);
 			if (!(view is SelectorItem))
 			{
 				throw new InvalidOperationException($"Expected {nameof(SelectorItem)} but received {view?.GetType().ToString() ?? "<null>"}");
 			}
-			var size = AddViewAtOffset(view, direction, extentOffset, breadthOffset, availableBreadth);
+			var size = AddViewAtOffset(view, direction, extentOffset, trueExtentOffset, breadthOffset, availableBreadth);
 			var physicalSize = size.LogicalToPhysicalPixels();
 
 			var breadth = (int)(ScrollOrientation == Orientation.Vertical ? physicalSize.Width : physicalSize.Height);

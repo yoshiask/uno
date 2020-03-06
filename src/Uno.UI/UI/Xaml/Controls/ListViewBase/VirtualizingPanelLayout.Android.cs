@@ -744,11 +744,14 @@ namespace Windows.UI.Xaml.Controls
 			_pendingGroupOperations.Clear();
 		}
 
+		protected Size AddViewAtOffset(View child, GeneratorDirection direction, int extentOffset, int breadthOffset, int availableBreadth, ViewType viewType = ViewType.Item)
+			=> AddViewAtOffset(child, direction, extentOffset, -1, breadthOffset, availableBreadth, viewType);
+
 		/// <summary>
 		/// Add view and layout it with a particular offset.
 		/// </summary>
 		/// <returns>Child's frame in logical pixels, including its margins</returns>
-		protected Size AddViewAtOffset(View child, GeneratorDirection direction, int extentOffset, int breadthOffset, int availableBreadth, ViewType viewType = ViewType.Item)
+		protected Size AddViewAtOffset(View child, GeneratorDirection direction, int extentOffset, int trueOffset, int breadthOffset, int availableBreadth, ViewType viewType = ViewType.Item)
 		{
 			AddView(child, direction, viewType);
 
@@ -770,7 +773,7 @@ namespace Windows.UI.Xaml.Controls
 			{
 				UnoViewGroup.StartLayoutingFromMeasure();
 			}
-			LayoutChild(child, direction, extentOffset, breadthOffset, size);
+			LayoutChild(child, direction, extentOffset, trueOffset, breadthOffset, size);
 
 			if (!child.IsInLayout)
 			{
@@ -808,12 +811,13 @@ namespace Windows.UI.Xaml.Controls
 		/// <summary>
 		/// Layout child view at desired offsets.
 		/// </summary>
-		protected void LayoutChild(View child, GeneratorDirection direction, int extentOffset, int breadthOffset, Size size)
+		protected void LayoutChild(View child, GeneratorDirection direction, int extentOffset, int trueExtent, int breadthOffset, Size size)
 		{
 			var logicalBreadthOffset = ViewHelper.PhysicalToLogicalPixels(breadthOffset);
 			var logicalExtentOffset = ViewHelper.PhysicalToLogicalPixels(extentOffset);
+			var logicalTrueExtent = ViewHelper.PhysicalToLogicalPixels(trueExtent);
 
-			double left, top;
+			double left, top, effectiveSlotLeft, effectiveSlotTop;
 			const double eps = 1e-8;
 			if (ScrollOrientation == Orientation.Vertical)
 			{
@@ -821,17 +825,46 @@ namespace Windows.UI.Xaml.Controls
 				left = logicalBreadthOffset;
 				// Subtracting a very small number mitigates floating point errors when converting negative numbers between physical and logical pixels (because it can happen that a/b*b != a)
 				top = direction == GeneratorDirection.Forward ? logicalExtentOffset : logicalExtentOffset - size.Height - eps;
+
+				effectiveSlotLeft = logicalBreadthOffset;
+				effectiveSlotTop = direction == GeneratorDirection.Forward ? logicalTrueExtent : logicalTrueExtent - size.Height - eps;
 			}
 			else
 			{
 				left = direction == GeneratorDirection.Forward ? logicalExtentOffset : logicalExtentOffset - size.Width - eps;
 				top = logicalBreadthOffset;
+
+				effectiveSlotLeft = direction == GeneratorDirection.Forward ? logicalTrueExtent : logicalTrueExtent - size.Width - eps;
+				effectiveSlotTop = logicalBreadthOffset;
 			}
 			var frame = new Windows.Foundation.Rect(new Windows.Foundation.Point(left, top), size);
-			_layouter.ArrangeChild(child, frame);
+
+			Console.WriteLine($"LAYOUTING ITEM: {child} ({child.GetHashCode():X8}) at [{left},{top},{size.Width},{size.Height}]");
+			try
+			{
+				IsLayoutingItem = true;
+				_layouter.ArrangeChild(child, frame);
+
+				// here we can use the extentOffset to fix the LayoutSlot
+				if (child is UIElement elt)
+				{
+					elt.LayoutSlotWithMarginsAndAlignments = new Windows.Foundation.Rect(new Windows.Foundation.Point(effectiveSlotLeft, effectiveSlotTop), size);
+
+					Console.WriteLine($"LAYOUTING ITEM - altered frame: {elt} ({elt.GetHashCode():X8}) at"
+						+ $" [{elt.LayoutSlotWithMarginsAndAlignments.X},{elt.LayoutSlotWithMarginsAndAlignments.Y},{elt.LayoutSlotWithMarginsAndAlignments.Width},{elt.LayoutSlotWithMarginsAndAlignments.Height}]"
+						+ $" | native: {UIElement.GetPosition(elt)}");
+				}
+
+			} finally
+			{
+				IsLayoutingItem = false;
+			}
+
 
 			Debug.Assert(direction == GeneratorDirection.Forward || GetChildEndWithMargin(child) == extentOffset, GetAssertMessage("Extent offset not applied correctly"));
 		}
+
+		public static bool IsLayoutingItem;
 
 		/// <summary>
 		/// Adds a child view to the list in either the leading or trailing direction, incrementing the count of the corresponding
@@ -1229,6 +1262,7 @@ namespace Windows.UI.Xaml.Controls
 			var group = GetLeadingGroup(fillDirection);
 			var line = CreateLine(fillDirection,
 				GetLeadingEdgeWithinGroup(group, fillDirection),
+				group.Extent,
 				group.ItemsBreadthOffset + InitialBreadthPadding,
 				availableBreadth,
 				recycler,
@@ -1253,6 +1287,7 @@ namespace Windows.UI.Xaml.Controls
 		/// <returns>An object containing information about the created line.</returns>
 		protected abstract Line CreateLine(GeneratorDirection fillDirection,
 			int extentOffset,
+			int extentLocation,
 			int breadthOffset,
 			int availableBreadth,
 			RecyclerView.Recycler recycler,
@@ -1752,19 +1787,26 @@ namespace Windows.UI.Xaml.Controls
 		/// Get the edge of the leading item of the group in the desired fill direction. Note that this may differ from the Start/End of 
 		/// the group because if the group header is <see cref="RelativeHeaderPlacement.Adjacent"/>, it may take up more extent than the items themselves.
 		/// </summary>
-		private int GetLeadingEdgeWithinGroup(Group group, GeneratorDirection fillDirection)
+		private /*(int physical, int @virtual)*/ int GetLeadingEdgeWithinGroup(Group group, GeneratorDirection fillDirection)
 		{
+			int physical;//, @virtual;
+
 			var leadingLine = group.GetLeadingLine(fillDirection);
 			if (leadingLine == null)
 			{
-				return fillDirection == GeneratorDirection.Forward ?
+				physical = fillDirection == GeneratorDirection.Forward ?
 					group.Start + group.ItemsExtentOffset :
 					group.End;
 			}
-			var view = GetLeadingItemView(fillDirection);
-			return fillDirection == GeneratorDirection.Forward ?
-				GetChildStartWithMargin(view) + leadingLine.Extent :
-				GetChildStartWithMargin(view);
+			else
+			{
+				var view = GetLeadingItemView(fillDirection);
+				physical = fillDirection == GeneratorDirection.Forward ?
+					GetChildStartWithMargin(view) + leadingLine.Extent :
+					GetChildStartWithMargin(view);
+			}
+
+			return physical;
 		}
 
 		/// <summary>
@@ -1832,6 +1874,12 @@ namespace Windows.UI.Xaml.Controls
 		{
 			var start = GetChildStart(child);
 			int margin = 0;
+
+			//if (child is UIElement elt)
+			//{
+			//	return (int)ViewHelper.LogicalToPhysicalPixels(elt.LayoutSlotWithMarginsAndAlignments.Left);
+			//}
+
 			var asFrameworkElement = child as IFrameworkElement;
 			if (asFrameworkElement != null)
 			{

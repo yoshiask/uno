@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Windows.Foundation;
 using Android.Support.V7.Widget;
 using Android.Views;
 using Uno.Extensions;
 using Uno.UI;
 using Windows.UI.Xaml.Controls.Primitives;
+using Resource = Uno.UI.Resource;
 
 namespace Windows.UI.Xaml.Controls
 {
@@ -244,8 +246,17 @@ namespace Windows.UI.Xaml.Controls
 			var vh = GetChildViewHolder(child);
 			if (vh != null)
 			{
+				if (vh.IsDetached)
+				{
+					if (index >= 0)
+					{
+						AdjustLayoutSlots(index, child, 1);
+					}
+				}
+
 				vh.IsDetached = false;
 			}
+
 			base.AttachViewToParent(child, index, layoutParams);
 		}
 
@@ -257,10 +268,92 @@ namespace Windows.UI.Xaml.Controls
 				var vh = GetChildViewHolder(view);
 				if (vh != null)
 				{
+					if (!vh.IsDetached)
+					{
+
+						AdjustLayoutSlots(index, view, -1);
+					}
+
 					vh.IsDetached = true;
 				}
+
 			}
+
 			base.DetachViewFromParent(index);
+		}
+
+		private static readonly Func<Rect, double, Rect> AdjustX = (Rect slot, double correction) =>
+		{
+			slot.X += correction;
+			return slot;
+		};
+		private static readonly Func<Rect, double, Rect> AdjustY = (Rect slot, double correction) =>
+		{
+			slot.Y += correction;
+			return slot;
+		};
+		private void AdjustLayoutSlots(int fromIndex, View view, int direction)
+		{
+			//Func<Rect, double, Rect> adjust;
+			//double correction;
+			//switch (NativeLayout.Orientation)
+			//{
+			//	case Orientation.Horizontal:
+			//		adjust = AdjustX;
+			//		correction = ViewHelper.PhysicalToLogicalPixels(direction * view.Width);
+			//		break;
+
+			//	default:
+			//	case Orientation.Vertical:
+			//		adjust = AdjustY;
+			//		correction = ViewHelper.PhysicalToLogicalPixels(direction * view.Height);
+			//		break;
+			//}
+
+			var sb = new StringBuilder();
+			sb.AppendLine();
+			sb.AppendLine();
+			sb.AppendLine();
+			sb.AppendLine("--------------------------");
+			sb.AppendLine($"VIEW child {fromIndex} {view} ({view.GetHashCode():X8}) has been {(direction > 0 ? "ATTACHED" : "DETACHED")}");
+			sb.AppendLine("--------------------------");
+
+			//var from = fromIndex + 1;
+			//var to = ChildCount;
+			//sb.AppendLine($"Updating children from {from} to {to - 1}");
+
+			//for (var i = from; i < to; i++)
+			//{
+			//	if (GetChildAt(i) is UIElement elt)
+			//	{
+			//		elt.LayoutSlot = adjust(elt.LayoutSlot, correction);
+			//		elt.LayoutSlotWithMarginsAndAlignments = adjust(elt.LayoutSlotWithMarginsAndAlignments, correction);
+
+			//		sb.AppendLine($"UPDATING SLOTS of child {i}, {elt} ({elt.GetHashCode():X8}) by {correction}, now at "
+			//			+ $"slot: [{elt.LayoutSlot.X},{elt.LayoutSlot.Y},{elt.LayoutSlot.Width},{elt.LayoutSlot.Height}]"
+			//			+ $"slot_margs: [{elt.LayoutSlotWithMarginsAndAlignments.X},{elt.LayoutSlotWithMarginsAndAlignments.Y},{elt.LayoutSlotWithMarginsAndAlignments.Width},{elt.LayoutSlotWithMarginsAndAlignments.Height}]");
+			//	}
+			//}
+
+			//sb.AppendLine("--------------------------");
+
+			for (var i = 0; i < ChildCount; i++)
+			{
+				if (GetChildAt(i) is UIElement elt)
+				{
+					sb.AppendLine($"CURRENT SLOTS of child {i}, {elt} ({elt.GetHashCode():X8}), now at "
+						+ $" slot: [{elt.LayoutSlot.X},{elt.LayoutSlot.Y},{elt.LayoutSlot.Width},{elt.LayoutSlot.Height}]"
+						+ $" | slot_margs: [{elt.LayoutSlotWithMarginsAndAlignments.X},{elt.LayoutSlotWithMarginsAndAlignments.Y},{elt.LayoutSlotWithMarginsAndAlignments.Width},{elt.LayoutSlotWithMarginsAndAlignments.Height}]"
+						+ $" | native: {UIElement.GetPosition(elt)}");
+				}
+			}
+
+			sb.AppendLine("--------------------------");
+			sb.AppendLine();
+			sb.AppendLine();
+			sb.AppendLine();
+
+			Console.WriteLine(sb.ToString());
 		}
 
 		protected override void RemoveDetachedView(View child, bool animate)
