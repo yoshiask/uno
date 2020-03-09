@@ -297,12 +297,8 @@ namespace Windows.UI.Xaml.Shapes
 			{
 				return default;
 			}
-			var bounds = path.PathBoundingBox;
 
-			if (bounds.IsEmpty)
-			{
-				return default;
-			}
+			var bounds = path.PathBoundingBox;
 
 			// On iOS 11, the origin (X, Y) of bounds could be infinite, leading to strange results.
 			if (nfloat.IsInfinity(bounds.X))
@@ -317,6 +313,10 @@ namespace Windows.UI.Xaml.Shapes
 
 			var pathWidth = bounds.Width;
 			var pathHeight = bounds.Height;
+			if (pathWidth == 0 && pathHeight == 0)
+			{
+				return default;
+			}
 
 			if (ShouldPreserveOrigin)
 			{
@@ -340,12 +340,13 @@ namespace Windows.UI.Xaml.Shapes
 			var strokeThickness = this.ActualStrokeThickness;
 			var strokeThicknessF = (float)strokeThickness;
 
-			_scaleX = (nfloat)(calculatedWidth - strokeThicknessF) / pathWidth;
-			_scaleY = (nfloat)(calculatedHeight - strokeThicknessF) / pathHeight;
+			// At this point 'path<Width|Height>' might be 0, especially for vertical / horizontal Line
+			_scaleX = pathWidth == 0 ? 1 : (nfloat)(calculatedWidth - strokeThicknessF) / pathWidth;
+			_scaleY = pathHeight == 0 ? 1 : (nfloat)(calculatedHeight - strokeThicknessF) / pathHeight;
 
 			//Make sure that we have a valid scale if both of them are not set
-			if (double.IsInfinity((double)_scaleX) &&
-			   double.IsInfinity((double)_scaleY))
+			if (double.IsInfinity((double)_scaleX)
+				&& double.IsInfinity((double)_scaleY))
 			{
 				_scaleX = 1;
 				_scaleY = 1;
