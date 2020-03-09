@@ -11,7 +11,69 @@ using Uno.Logging;
 
 namespace Windows.UI.Input
 {
-	public partial class GestureRecognizer
+	internal interface IGestureRecognizer
+	{
+		GestureSettings GestureSettings { get; set; }
+		bool IsActive { get; }
+
+		/// <summary>
+		/// This is the owner provided in the ctor. It might be `null` if none provided.
+		/// It's purpose it to allow usage of static event handlers.
+		/// </summary>
+		object Owner { get; }
+
+		GestureRecognizer.Manipulation PendingManipulation { get; }
+		float InertiaRotationDeceleration { get; set; }
+		float InertiaTranslationDeceleration { get; set; }
+		float InertiaExpansionDeceleration { get; set; }
+		float InertiaExpansion { get; set; }
+		bool AutoProcessInertia { get; set; }
+		global::Windows.UI.Input.CrossSlideThresholds CrossSlideThresholds { get; set; }
+		bool CrossSlideExact { get; set; }
+		float InertiaRotationAngle { get; set; }
+		bool ShowGestureFeedback { get; set; }
+		float PivotRadius { get; set; }
+		bool CrossSlideHorizontally { get; set; }
+		global::Windows.Foundation.Point PivotCenter { get; set; }
+		bool ManipulationExact { get; set; }
+		float InertiaTranslationDisplacement { get; set; }
+		bool IsInertial { get; }
+		global::Windows.UI.Input.MouseWheelParameters MouseWheelParameters { get; }
+
+		void ProcessDownEvent(PointerPoint value);
+
+		void ProcessMoveEvents(IList<PointerPoint> value);
+
+		void ProcessMoveEvents(IList<PointerPoint> value, bool isRelevant);
+
+		void ProcessUpEvent(PointerPoint value);
+
+		void ProcessUpEvent(PointerPoint value, bool isRelevant);
+
+		void CompleteGesture();
+
+		void PreventHolding(uint pointerId);
+
+		event TypedEventHandler<GestureRecognizer, ManipulationStartingEventArgs> ManipulationStarting; // This is not on the public API!
+		event TypedEventHandler<GestureRecognizer, ManipulationCompletedEventArgs> ManipulationCompleted;
+		event TypedEventHandler<GestureRecognizer, ManipulationInertiaStartingEventArgs> ManipulationInertiaStarting;
+		event TypedEventHandler<GestureRecognizer, ManipulationStartedEventArgs> ManipulationStarted;
+		event TypedEventHandler<GestureRecognizer, ManipulationUpdatedEventArgs> ManipulationUpdated;
+		event TypedEventHandler<GestureRecognizer, TappedEventArgs> Tapped;
+		event TypedEventHandler<GestureRecognizer, RightTappedEventArgs> RightTapped;
+		event TypedEventHandler<GestureRecognizer, HoldingEventArgs> Holding;
+
+		bool CanBeDoubleTap(PointerPoint value);
+
+		void ProcessMouseWheelEvent( global::Windows.UI.Input.PointerPoint value,  bool isShiftKeyDown,  bool isControlKeyDown);
+
+		void ProcessInertia();
+
+		event global::Windows.Foundation.TypedEventHandler<global::Windows.UI.Input.GestureRecognizer, global::Windows.UI.Input.CrossSlidingEventArgs> CrossSliding;
+		event global::Windows.Foundation.TypedEventHandler<global::Windows.UI.Input.GestureRecognizer, global::Windows.UI.Input.DraggingEventArgs> Dragging;
+	}
+
+	public sealed partial class GestureRecognizer : IGestureRecognizer
 	{
 		private const int _defaultGesturesSize = 2; // Number of pointers before we have to resize the gestures dictionary
 
@@ -36,6 +98,7 @@ namespace Windows.UI.Input
 		/// It's purpose it to allow usage of static event handlers.
 		/// </summary>
 		internal object Owner { get; }
+		object IGestureRecognizer.Owner => Owner;
 
 		public GestureRecognizer()
 		{
@@ -90,6 +153,7 @@ namespace Windows.UI.Input
 
 		public void ProcessMoveEvents(IList<PointerPoint> value) => ProcessMoveEvents(value, true);
 
+		void IGestureRecognizer.ProcessMoveEvents(IList<PointerPoint> value, bool isRelevant) => ProcessMoveEvents(value, isRelevant);
 		internal void ProcessMoveEvents(IList<PointerPoint> value, bool isRelevant)
 		{
 			// Even if the pointer was considered as irrelevant, we still buffer it as it is part of the user interaction
@@ -113,6 +177,7 @@ namespace Windows.UI.Input
 
 		public void ProcessUpEvent(PointerPoint value) => ProcessUpEvent(value, true);
 
+		void IGestureRecognizer.ProcessUpEvent(PointerPoint value, bool isRelevant) => ProcessUpEvent(value, isRelevant);
 		internal void ProcessUpEvent(PointerPoint value, bool isRelevant)
 		{
 #if NET461 || __WASM__
@@ -156,6 +221,7 @@ namespace Windows.UI.Input
 			_manipulation?.Complete();
 		}
 
+		void IGestureRecognizer.PreventHolding(uint pointerId) => PreventHolding(pointerId);
 		internal void PreventHolding(uint pointerId)
 		{
 			if (_gestures.TryGetValue(pointerId, out var gesture))
@@ -165,6 +231,11 @@ namespace Windows.UI.Input
 		}
 
 		#region Manipulations
+		event TypedEventHandler<GestureRecognizer, ManipulationStartingEventArgs> IGestureRecognizer.ManipulationStarting
+		{
+			add => ManipulationStarting += value;
+			remove => ManipulationStarting -= value;
+		}
 		internal event TypedEventHandler<GestureRecognizer, ManipulationStartingEventArgs> ManipulationStarting; // This is not on the public API!
 		public event TypedEventHandler<GestureRecognizer, ManipulationCompletedEventArgs> ManipulationCompleted;
 #pragma warning disable  // Event not raised: intertia is not supported yet
@@ -176,6 +247,7 @@ namespace Windows.UI.Input
 		private bool _isManipulationEnabled;
 		private Manipulation _manipulation;
 
+		Manipulation IGestureRecognizer.PendingManipulation => _manipulation;
 		internal Manipulation PendingManipulation => _manipulation;
 		#endregion
 
