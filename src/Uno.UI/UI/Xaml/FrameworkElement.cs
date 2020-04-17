@@ -55,6 +55,7 @@ namespace Windows.UI.Xaml
 		private bool _suppressIsEnabled;
 
 		private bool _defaultStyleApplied = false;
+		private protected bool IsDefaultStyleApplied => _defaultStyleApplied;
 		/// <summary>
 		/// The current user-determined 'active Style'.
 		/// </summary>
@@ -375,7 +376,7 @@ namespace Windows.UI.Xaml
 		/// <summary>
 		/// Apply the default style for this element, if one is defined.
 		/// </summary>
-		private void ApplyDefaultStyle()
+		private protected void ApplyDefaultStyle()
 		{
 			if (_defaultStyleApplied)
 			{
