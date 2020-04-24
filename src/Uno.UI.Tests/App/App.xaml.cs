@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Uno.UI.Tests.App.Views;
 using Windows.ApplicationModel.Activation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
@@ -13,6 +14,7 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using Windows.UI.Xaml.Resources;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -27,6 +29,7 @@ namespace UnitTestsApp
 
 		public App()
 		{
+			CustomXamlResourceLoader.Current = new MyResourceLoader();
 			this.InitializeComponent();
 		}
 
@@ -65,7 +68,7 @@ namespace UnitTestsApp
 				application.OnLaunched(null);
 			}
 
-			var app = Current as App;			
+			var app = Current as App;
 			app.HostView.Children.Clear();
 
 #if !NETFX_CORE
