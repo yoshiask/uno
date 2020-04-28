@@ -36,6 +36,9 @@ namespace SamplesApp.Droid
 				activity.Window.ClearFlags(WindowManagerFlags.Fullscreen);
 			}
 		}
+
+		[Export("GetVisibleBounds")]
+		public string GetVisibleBounds() => App.GetVisibleBounds();
 	}
 }
 

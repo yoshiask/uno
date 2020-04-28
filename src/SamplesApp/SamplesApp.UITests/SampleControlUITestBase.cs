@@ -263,5 +263,31 @@ namespace SamplesApp.UITests
 				return _app.GetScreenDimensions();
 			}
 		}
+
+		internal Rectangle GetVisibleBounds()
+		{
+			switch (AppInitializer.GetLocalPlatform())
+			{
+				case Platform.Browser: throw new NotImplementedException(nameof(GetVisibleBounds));
+			}
+
+			string result = null;
+			try
+			{
+				result = _app.InvokeGeneric(nameof(GetVisibleBounds), default)?.ToString();
+				var ltwh = result.Split(',');
+
+				return new Rectangle(
+					(int)double.Parse(ltwh[0]),
+					(int)double.Parse(ltwh[1]),
+					(int)double.Parse(ltwh[2]),
+					(int)double.Parse(ltwh[3])
+				);
+			}
+			catch (Exception e)
+			{
+				throw new FormatException($"Invalid value returned by {nameof(GetVisibleBounds)}: " + (result ?? throw e), e);
+			}
+		}
 	}
 }
