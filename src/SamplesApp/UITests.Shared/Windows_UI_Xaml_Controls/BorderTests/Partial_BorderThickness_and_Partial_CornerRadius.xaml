@@ -1,0 +1,92 @@
+﻿<UserControl x:Class="Uno.UI.Samples.UITests.BorderTestsControl.Partial_BorderThickness_and_Partial_CornerRadius"
+			 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:controls="using:Uno.UI.Samples.Controls"
+			 xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 mc:Ignorable="d"
+			 d:DesignHeight="300"
+			 d:DesignWidth="400">
+
+	<UserControl.Resources>
+		<Style x:Key="CommonPartialBorderStyle" TargetType="Border">
+			<Setter Property="Margin" Value="4" />
+			<Setter Property="Height" Value="32" />
+			<Setter Property="Background" Value="SkyBlue" />
+			<Setter Property="BorderBrush" Value="Black" />
+		</Style>
+	</UserControl.Resources>
+
+	<controls:SampleControl SampleDescription="note: The numbers refer to their relative position on the numpad keyboard.">
+		<controls:SampleControl.SampleContent>
+			<DataTemplate>
+				<ScrollViewer>
+					<StackPanel>
+
+						<TextBlock Text="=== Single corner:" />
+						<Grid>
+							<Grid.RowDefinitions>
+								<RowDefinition Height="Auto" />
+								<RowDefinition Height="*" />
+								<RowDefinition Height="Auto" />
+								<RowDefinition Height="*" />
+							</Grid.RowDefinitions>
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="*" />
+								<ColumnDefinition Width="*" />
+							</Grid.ColumnDefinitions>
+
+							<!-- order: 7, 9, 3, 1 (numpad position) -->
+							<TextBlock Grid.Row="0" Grid.Column="0" Text="7: Top-Left corner: ⎾" />
+							<Border Grid.Row="1" Grid.Column="0" BorderThickness="1,1,0,0" CornerRadius="16,0,0,0" Style="{StaticResource CommonPartialBorderStyle}" />
+							<TextBlock Grid.Row="0" Grid.Column="1" Text="9: Top-Right corner: ⏋" />
+							<Border Grid.Row="1" Grid.Column="1" BorderThickness="0,1,1,0" CornerRadius="0,16,0,0" Style="{StaticResource CommonPartialBorderStyle}" />
+							<TextBlock Grid.Row="2" Grid.Column="1" Text="3: Bottom-Right corner: ⏌" />
+							<Border Grid.Row="3" Grid.Column="1" BorderThickness="0,0,1,1" CornerRadius="0,0,16,0" Style="{StaticResource CommonPartialBorderStyle}" />
+							<TextBlock Grid.Row="2" Grid.Column="0" Text="1: Bottom-Left corner: ⎿" />
+							<Border Grid.Row="3" Grid.Column="0" BorderThickness="1,0,0,1" CornerRadius="0,0,0,16" Style="{StaticResource CommonPartialBorderStyle}" />
+						</Grid>
+
+						<TextBlock Text="=== Double corners:" />
+						<StackPanel>
+							<TextBlock Text="79: top-left + top-right corners: ∩" />
+							<Border BorderThickness="1,1,1,0" CornerRadius="16,16,0,0" Style="{StaticResource CommonPartialBorderStyle}" />
+							<TextBlock Text="13: bottom-left + bottom-right corners: ∪" />
+							<Border BorderThickness="1,0,1,1" CornerRadius="0,0,16,16" Style="{StaticResource CommonPartialBorderStyle}" />
+
+							<TextBlock Text="79: top-left + top-right corners: ⊂" />
+							<Border BorderThickness="1,1,0,1" CornerRadius="16,0,0,16" Style="{StaticResource CommonPartialBorderStyle}" />
+							<TextBlock Text="13: bottom-left + bottom-right corners: ⊃" />
+							<Border BorderThickness="0,1,1,1" CornerRadius="0,16,16,0" Style="{StaticResource CommonPartialBorderStyle}" />
+						</StackPanel>
+
+						<TextBlock Text="=== Triple corners: (indicated by the missing one)" />
+						<Grid>
+							<Grid.RowDefinitions>
+								<RowDefinition Height="Auto" />
+								<RowDefinition Height="*" />
+								<RowDefinition Height="Auto" />
+								<RowDefinition Height="*" />
+							</Grid.RowDefinitions>
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="*" />
+								<ColumnDefinition Width="*" />
+							</Grid.ColumnDefinitions>
+
+							<!-- order: 7, 9, 3, 1 (numpad position) -->
+							<TextBlock Grid.Row="0" Grid.Column="0" Text="7: Top-Left corner: ⎾" />
+							<Border Grid.Row="1" Grid.Column="0" BorderThickness="1,1,1,1" CornerRadius="0,16,16,16" Style="{StaticResource CommonPartialBorderStyle}" />
+							<TextBlock Grid.Row="0" Grid.Column="1" Text="9: Top-Right corner: ⏋" />
+							<Border Grid.Row="1" Grid.Column="1" BorderThickness="1,1,1,1" CornerRadius="16,0,16,16" Style="{StaticResource CommonPartialBorderStyle}" />
+							<TextBlock Grid.Row="2" Grid.Column="1" Text="3: Bottom-Right corner: ⏌" />
+							<Border Grid.Row="3" Grid.Column="1" BorderThickness="1,1,1,1" CornerRadius="16,16,0,16" Style="{StaticResource CommonPartialBorderStyle}" />
+							<TextBlock Grid.Row="2" Grid.Column="0" Text="1: Bottom-Left corner: ⎿" />
+							<Border Grid.Row="3" Grid.Column="0" BorderThickness="1,1,1,1" CornerRadius="16,16,16,0" Style="{StaticResource CommonPartialBorderStyle}" />
+						</Grid>
+
+					</StackPanel>
+				</ScrollViewer>
+			</DataTemplate>
+		</controls:SampleControl.SampleContent>
+	</controls:SampleControl>
+</UserControl>

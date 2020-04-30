@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using Uno.UI;
 using Android.Support.V4.View;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Windows.UI.Xaml.Controls
 {
@@ -118,37 +119,45 @@ namespace Windows.UI.Xaml.Controls
 
 			if (cornerRadius != 0)
 			{
-				var adjustedLineWidth = physicalBorderThickness.Top; // TODO: handle non-uniform BorderThickness correctly
-				var adjustedArea = drawArea;
-				adjustedArea.Inflate(-adjustedLineWidth / 2, -adjustedLineWidth / 2);
-				using (var path = cornerRadius.GetOutlinePath(adjustedArea.ToRectF()))
-				{
-					path.SetFillType(Path.FillType.EvenOdd);
+				var halfThicknessAdjustment = new Thickness( // WIP: handle non-uniform BorderThickness correctly
+					-physicalBorderThickness.Left / 2,
+					-physicalBorderThickness.Top / 2,
+					-physicalBorderThickness.Right / 2,
+					-physicalBorderThickness.Bottom / 2
+				);
+				var adjustedArea = drawArea.InflateBy(halfThicknessAdjustment).ToRectF();
 
-					//We only need to set a background if the drawArea is non-zero
+				using (var fillPath = cornerRadius.GetFillPath(adjustedArea))
+				using (var borderPath = cornerRadius.GetOutlinePath(adjustedArea, physicalBorderThickness))
+				{
+					fillPath.SetFillType(Path.FillType.EvenOdd);
+
+					// Paint background if the drawArea is non-zero
 					if (!drawArea.HasZeroArea())
 					{
 						var imageBrushBackground = background as ImageBrush;
 						if (imageBrushBackground != null)
 						{
 							//Copy the path because it will be disposed when we exit the using block
-							var pathCopy = new Path(path);
+							var pathCopy = new Path(fillPath);
 							var setBackground = DispatchSetImageBrushAsBackground(view, imageBrushBackground, drawArea, onImageSet, pathCopy);
 							disposables.Add(setBackground);
 						}
 						else
 						{
 							var fillPaint = background?.GetFillPaint(drawArea) ?? new Paint() { Color = Android.Graphics.Color.Transparent };
-							ExecuteWithNoRelayout(view, v => v.SetBackgroundDrawable(GetBackgroundDrawable(background, drawArea, fillPaint, path)));
+							ExecuteWithNoRelayout(view, v => v.SetBackgroundDrawable(GetBackgroundDrawable(background, drawArea, fillPaint, fillPath)));
 						}
+
 						disposables.Add(() => ExecuteWithNoRelayout(view, v => v.SetBackgroundDrawable(null)));
 					}
 
+					// Paint border
 					if (borderThickness != Thickness.Empty && borderBrush != null && !(borderBrush is ImageBrush))
 					{
 						using (var strokePaint = new Paint(borderBrush.GetStrokePaint(drawArea)))
 						{
-							var overlay = GetOverlayDrawable(strokePaint, physicalBorderThickness, new global::System.Drawing.Size((int)drawArea.Width, (int)drawArea.Height), path);
+							var overlay = GetOverlayDrawable(new global::System.Drawing.Size((int)drawArea.Width, (int)drawArea.Height), strokePaint, physicalBorderThickness, cornerRadius);
 
 							if (overlay != null)
 							{
@@ -183,7 +192,7 @@ namespace Windows.UI.Xaml.Controls
 					//TODO: Handle case that BorderBrush is an ImageBrush
 					using (var strokePaint = borderBrush.GetStrokePaint(drawArea))
 					{
-						var overlay = GetOverlayDrawable(strokePaint, physicalBorderThickness, new global::System.Drawing.Size(view.Width, view.Height));
+						var overlay = GetOverlayDrawable(new global::System.Drawing.Size(view.Width, view.Height), strokePaint, physicalBorderThickness, CornerRadius.None);
 
 						if (overlay != null)
 						{
@@ -332,7 +341,97 @@ namespace Windows.UI.Xaml.Controls
 			}
 		}
 
-		private static Drawable GetOverlayDrawable(Paint strokePaint, Thickness physicalBorderThickness, global::System.Drawing.Size viewSize, Path path = null)
+		private static IEnumerable<(double StrokeWidth, Path Path)> GetBorderPaths(RectF rect, Thickness thickness, CornerRadius cornerRadius)
+		{
+			if (thickness == Thickness.Empty)
+			{
+				yield break;
+			}
+
+			// when the thickness is uniform, we can just use a single path
+			if (thickness.IsUniform())
+			{
+				if (cornerRadius == 0) // simple rectangle
+				{
+					yield return BuildPathPart(thickness.Top, x => x.AddRect(rect, Path.Direction.Cw));
+				}
+				else // round rect
+				{
+					var radii = new float[]
+					{
+						ViewHelper.LogicalToPhysicalPixels(cornerRadius.TopLeft),
+						ViewHelper.LogicalToPhysicalPixels(cornerRadius.TopLeft),
+						ViewHelper.LogicalToPhysicalPixels(cornerRadius.TopRight),
+						ViewHelper.LogicalToPhysicalPixels(cornerRadius.TopRight),
+						ViewHelper.LogicalToPhysicalPixels(cornerRadius.BottomRight),
+						ViewHelper.LogicalToPhysicalPixels(cornerRadius.BottomRight),
+						ViewHelper.LogicalToPhysicalPixels(cornerRadius.BottomLeft),
+						ViewHelper.LogicalToPhysicalPixels(cornerRadius.BottomLeft)
+					};
+					yield return BuildPathPart(thickness.Top, x => x.AddRoundRect(rect, radii, Path.Direction.Cw));
+				}
+			}
+			// when the thickness is uneven, we have to draw each section separately
+			else
+			{
+				if (cornerRadius == 0) // simple rectangle
+				{
+					yield return BuildPathPart(
+						thickness.Left,
+						x => x.MoveTo(rect.Left, rect.Bottom),
+						x => x.LineTo(rect.Left, rect.Top)
+					);
+					yield return BuildPathPart(
+						thickness.Top,
+						x => x.MoveTo(rect.Left, rect.Top),
+						x => x.LineTo(rect.Right, rect.Top)
+					);
+					yield return BuildPathPart(
+						thickness.Right,
+						x => x.MoveTo(rect.Right, rect.Top),
+						x => x.LineTo(rect.Right, rect.Bottom)
+					);
+					yield return BuildPathPart(
+						thickness.Bottom,
+						x => x.MoveTo(rect.Right, rect.Bottom),
+						x => x.LineTo(rect.Left, rect.Bottom)
+					);
+				}
+				else // round rect
+				{
+					// ╭2───────────3╮
+					// 1             4
+					// │             │
+					// 0             5
+					// ╰7───────────6╯
+
+					// compromise: draw half way between 1-2 if left or top is missing, draw using avg(top,left) width if not uniform
+					// uwp: assume 0-1 and 2-3 are both rectangle of different thickness (could be 0), 
+					//      we need to draw 2 arcs connecting the outter edges and the inner edges
+					//      it would kind of look like a triangle/trapeziod distorted to have one side rotated by 90'
+
+					// todo: move CornerRadius::GetOutlinePath to here
+				}
+			}
+
+			(double StrokeWidth, Path Path) BuildPathPart(double strokeWidth, params Action<Path>[] actions)
+			{
+				if (strokeWidth == 0)
+				{
+					return default;
+				}
+
+				var path = new Path();
+				foreach (var action in actions)
+				{
+					action(path);
+				}
+
+				return (strokeWidth, path);
+			}
+		}
+
+		private static Drawable GetOverlayDrawable(global::System.Drawing.Size viewSize, Paint strokePaint, Thickness physicalBorderThickness, CornerRadius logicalCornerRadius)
 		{
 			if (strokePaint != null)
 			{
@@ -343,6 +442,7 @@ namespace Windows.UI.Xaml.Controls
 				{
 					var drawable = new PaintDrawable();
 					drawable.Shape = new PathShape(path, viewSize.Width, viewSize.Height);
+
 					var paint = drawable.Paint;
 					paint.Color = strokePaint.Color;
 					paint.SetShader(strokePaint.Shader);

@@ -18,7 +18,7 @@ namespace Uno.UI
 
 			var cornerRadius = GetCornerRadius(view);
 
-			var path = cornerRadius.GetOutlinePath(rect);
+			var path = cornerRadius.GetFillPath(rect);
 
 			outline.SetConvexPath(path);
 		}

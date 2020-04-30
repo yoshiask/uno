@@ -341,6 +341,14 @@
 		</ProjectReference>
 	</ItemGroup>
 
+	<ItemGroup>
+	  <None Remove="UI\LayoutHelper.Android.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <UpToDateCheckInput Remove="UI\LayoutHelper.Android.cs" />
+	</ItemGroup>
+
 
 	<ItemGroup>
 	  <None Update="BaseActivity.Callbacks.Implementation.Android.tt">

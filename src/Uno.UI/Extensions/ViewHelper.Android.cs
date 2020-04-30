@@ -280,6 +280,17 @@ namespace Uno.UI
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static CornerRadius LogicalToPhysicalPixels(this CornerRadius value)
+		{
+			return new CornerRadius(
+				topLeft: LogicalToPhysicalPixels(value.TopLeft),
+				topRight: LogicalToPhysicalPixels(value.TopRight),
+				bottomRight: LogicalToPhysicalPixels(value.BottomRight),
+				bottomLeft: LogicalToPhysicalPixels(value.BottomLeft)
+			);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Rect PhysicalToLogicalPixels(this Rect size)
 		{
 			return new Rect(

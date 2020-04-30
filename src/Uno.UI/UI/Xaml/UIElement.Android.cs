@@ -81,7 +81,7 @@ namespace Windows.UI.Xaml
 			if (cornerRadius != CornerRadius.None)
 			{
 				var rect = new RectF(canvas.ClipBounds);
-				var clipPath = cornerRadius.GetOutlinePath(rect);
+				var clipPath = cornerRadius.GetFillPath(rect);
 				canvas.ClipPath(clipPath);
 			}
 		}

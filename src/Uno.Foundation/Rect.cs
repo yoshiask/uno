@@ -148,29 +148,6 @@ namespace Windows.Foundation
 			}
 		}
 
-		/// <summary>Expands or shrinks the rectangle by using the specified width and height amounts, in all directions. </summary>
-		/// <param name="width">The amount by which to expand or shrink the left and right sides of the rectangle.</param>
-		/// <param name="height">The amount by which to expand or shrink the top and bottom sides of the rectangle.</param>
-		/// <exception cref="T:System.InvalidOperationException">This method is called on the <see cref="P:System.Windows.Rect.Empty" /> rectangle.</exception>
-		internal void Inflate(double width, double height)
-		{
-			if (this.IsEmpty)
-			{
-				throw new InvalidOperationException("Can't inflate empty rectangle");
-			}
-
-			this.X -= width;
-			this.Y -= height;
-			this.Width += width;
-			this.Width += width;
-			this.Height += height;
-			this.Height += height;
-
-			if (this.Width < 0.0 || this.Height < 0.0)
-			{
-				this = Rect.Empty;
-			}
-		}
 
 		public bool Contains(Point point) =>
 			point.X >= X

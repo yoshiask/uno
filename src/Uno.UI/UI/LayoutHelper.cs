@@ -8,7 +8,7 @@ using static System.Math;
 
 namespace Uno.UI
 {
-	internal static class LayoutHelper
+	internal static partial class LayoutHelper
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static void Deconstruct(this Rect rect, out double x, out double y, out double width, out double height)
@@ -444,6 +444,18 @@ namespace Uno.UI
 		{
 			var root = Window.Current.Content;
 			return GetBoundsRectRelativeTo(element, root);
+		}
+
+		/// <summary>
+		/// Check if every side of a thickness (left, top, right, bottom) are the same
+		/// </summary>
+		[Pure]
+		internal static bool IsUniform(this Thickness x)
+		{
+			return
+				x.Left == x.Top &&
+				x.Top == x.Right &&
+				x.Right == x.Bottom;
 		}
 	}
 }
