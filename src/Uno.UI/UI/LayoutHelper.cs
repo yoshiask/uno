@@ -270,6 +270,14 @@ namespace Uno.UI
 		}
 
 		[Pure]
+		internal static Point FiniteOrDefault(this Point value, Point defaultValue)
+		{
+			return new Point(
+				value.X.FiniteOrDefault(defaultValue.X),
+				value.Y.FiniteOrDefault(defaultValue.Y));
+		}
+
+		[Pure]
 		internal static Size FiniteOrDefault(this Size value, Size defaultValue)
 		{
 			return new Size(
@@ -277,6 +285,18 @@ namespace Uno.UI
 				value.Height.FiniteOrDefault(defaultValue.Height)
 			);
 		}
+
+		[Pure]
+		internal static Rect FiniteOrDefault(this Rect value, Rect defaultValue)
+		{
+			return new Rect(
+				value.X.FiniteOrDefault(defaultValue.X),
+				value.Y.FiniteOrDefault(defaultValue.Y),
+				value.Width.FiniteOrDefault(defaultValue.Width),
+				value.Height.FiniteOrDefault(defaultValue.Height));
+		}
+
+
 
 		[Pure]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

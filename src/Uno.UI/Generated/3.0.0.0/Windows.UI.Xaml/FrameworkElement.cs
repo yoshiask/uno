@@ -424,7 +424,7 @@ namespace Windows.UI.Xaml
 		// Forced skipping of method Windows.UI.Xaml.FrameworkElement.IsLoaded.get
 		// Forced skipping of method Windows.UI.Xaml.FrameworkElement.EffectiveViewportChanged.add
 		// Forced skipping of method Windows.UI.Xaml.FrameworkElement.EffectiveViewportChanged.remove
-		#if __ANDROID__ || __IOS__ || NET461 || __WASM__ || __MACOS__
+		#if false
 		[global::Uno.NotImplemented]
 		protected  void InvalidateViewport()
 		{
@@ -504,7 +504,7 @@ namespace Windows.UI.Xaml
 			}
 		}
 		#endif
-		#if __ANDROID__ || __IOS__ || NET461 || __WASM__ || __MACOS__
+		#if false
 		[global::Uno.NotImplemented]
 		public  event global::Windows.Foundation.TypedEventHandler<global::Windows.UI.Xaml.FrameworkElement, global::Windows.UI.Xaml.EffectiveViewportChangedEventArgs> EffectiveViewportChanged
 		{
