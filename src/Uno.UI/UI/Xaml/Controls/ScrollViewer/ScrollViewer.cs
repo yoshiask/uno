@@ -66,6 +66,8 @@ namespace Windows.UI.Xaml.Controls
 		{
 			DefaultStyleKey = typeof(ScrollViewer);
 
+			UIElement.RegisterAsScrollPort(this);
+
 			UpdatesMode = Uno.UI.Xaml.Controls.ScrollViewer.GetUpdatesMode(this);
 			InitializePartial();
 		}
@@ -805,6 +807,10 @@ namespace Windows.UI.Xaml.Controls
 
 			HorizontalOffset = _pendingHorizontalOffset;
 			VerticalOffset = _pendingVerticalOffset;
+
+			// Effective viewport support
+			ScrollOffsets = new Point(_pendingHorizontalOffset, _pendingVerticalOffset);
+			InvalidateViewport();
 
 			ViewChanged?.Invoke(this, new ScrollViewerViewChangedEventArgs { IsIntermediate = isIntermediate });
 		}
