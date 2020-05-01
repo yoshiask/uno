@@ -554,6 +554,9 @@ namespace Windows.UI.Xaml.Controls
 			);
 		#endregion
 
+		[global::Uno.NotImplemented]
+		public UIElement CurrentAnchor => null;
+
 		/// <summary>
 		/// Cached value of <see cref="Uno.UI.Xaml.Controls.ScrollViewer.UpdatesModeProperty"/>,
 		/// in order to not access the DP on each scroll (perf considerations)
