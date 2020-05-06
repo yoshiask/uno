@@ -17,7 +17,7 @@ using CoreGraphics;
 
 namespace Windows.UI.Xaml.Controls
 {
-	public partial class ScrollViewer : ContentControl
+	public partial class ScrollViewer : ContentControl, ICustomClippingElement
 	{
 		/// <summary>
 		/// On iOS 10-, we set a flag on the view controller such that the CommandBar doesn't automatically affect ScrollViewer content 
@@ -156,5 +156,8 @@ namespace Windows.UI.Xaml.Controls
 			base.WillMoveToSuperview(newsuper);
 			UpdateSizeChangedSubscription(isCleanupRequired: newsuper == null);
 		}
+
+		bool ICustomClippingElement.AllowClippingToLayoutSlot => true;
+		bool ICustomClippingElement.ForceClippingToLayoutSlot => true; // force scrollviewer to always clip
 	}
 }
