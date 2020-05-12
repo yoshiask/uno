@@ -296,27 +296,24 @@ namespace Windows.UI.Xaml
 				throw new InvalidOperationException($"{this}: Invalid frame size {newRect}. No dimension should be NaN or negative value.");
 			}
 
-			Rect? getClip()
+			// Clip transform not supported yet on Wasm
+
+			var clipRect = Clip?.Rect;
+			if (RequiresClipping)
 			{
-				// Clip transform not supported yet on Wasm
-
-				if (RequiresClipping) // if control should be clipped by layout constrains
-				{
-					if (Clip != null)
-					{
-						return clippedFrame.IntersectWith(Clip.Rect);
-					}
-					return clippedFrame;
-				}
-
-				return Clip?.Rect;
+				clipRect = clipRect.HasValue
+					? clippedFrame.IntersectWith(clipRect.Value)
+					: clippedFrame;
 			}
 
-			var clipRect = getClip();
+			// Disable clipping for Scrollviewer (edge seems to disable scrolling if 
+			// the clipping is enabled to the size of the scrollviewer, even if overflow-y is auto)
+
+			var applyClipNatively = RequiresClipping && !IsScrollPort;
 
 			_logDebug?.Trace($"{DepthIndentation}{this}.ArrangeElementNative({newRect}, clip={clipRect} (RequiresClipping={RequiresClipping})");
 
-			ArrangeElementNative(newRect, RequiresClipping, clipRect);
+			ArrangeElementNative(newRect, applyClipNatively, clipRect);
 		}
 	}
 }
