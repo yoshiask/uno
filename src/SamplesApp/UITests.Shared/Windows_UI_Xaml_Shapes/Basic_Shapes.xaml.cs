@@ -160,6 +160,26 @@ namespace UITests.Windows_UI_Xaml_Shapes
 		};
 		#endregion
 
+		#region Test automation support
+		public static readonly DependencyProperty RunTestProperty = DependencyProperty.Register(
+			"RunTest", typeof(string), typeof(Basic_Shapes), new PropertyMetadata(default(string), (snd, e) => ((Basic_Shapes)snd).RenderById((string)e.NewValue)));
+
+		public string RunTest
+		{
+			get => (string)GetValue(RunTestProperty);
+			set => SetValue(RunTestProperty, value);
+		}
+
+		public static readonly DependencyProperty RunningTestProperty = DependencyProperty.Register(
+			"RunningTest", typeof(string), typeof(Basic_Shapes), new PropertyMetadata(default(string), (snd, e) => ((Basic_Shapes)snd)._runningTest.Text = e.NewValue?.ToString()));
+
+		public string RunningTest
+		{
+			get => (string)GetValue(RunningTestProperty);
+			set { SetValue(RunningTestProperty, value); }
+		}
+		#endregion
+
 		public Basic_Shapes()
 		{
 			this.InitializeComponent();
@@ -212,6 +232,7 @@ namespace UITests.Windows_UI_Xaml_Shapes
 			}
 
 			_root.Visibility = Visibility.Visible;
+			RunningTest = "";
 			_testZone.Child = null;
 			_root.Content = shapesPanel;
 		}
@@ -258,8 +279,13 @@ namespace UITests.Windows_UI_Xaml_Shapes
 
 		private void RenderById(object sender, RoutedEventArgs e)
 		{
-			var parsedId = Regex.Match(_idInput.Text, @"(?<shape>[a-zA-Z]+)(_(?<alteratorId>[a-zA-Z]+))+");
+			RenderById(_idInput.Text);
+		}
 
+		private void RenderById(string id)
+		{
+			RunningTest = "";
+			var parsedId = Regex.Match(id, @"(?<shape>[a-zA-Z]+)(_(?<alteratorId>[a-zA-Z]+))+");
 			if (!parsedId.Success)
 			{
 				_testZone.Child = new TextBlock
@@ -267,6 +293,7 @@ namespace UITests.Windows_UI_Xaml_Shapes
 					Text = $"Failed to parse {parsedId}",
 					Foreground = new SolidColorBrush(Colors.Red)
 				};
+				RunningTest = id; // We set the test id to prevent hang of the automated test engine
 				return;
 			}
 
@@ -278,7 +305,8 @@ namespace UITests.Windows_UI_Xaml_Shapes
 				var alteratorIds = parsedId.Groups["alteratorId"].Captures.Cast<Capture>().Select(c => c.Value);
 				var alterators = alteratorIds.Select(id => _stretches.Concat(_sizes).Single(a => a.Id == id)).ToArray();
 
-				RenderHoriVertGridForScreenshot(shape, alterators);
+				var grid = RenderHoriVertGridForScreenshot(shape, alterators);
+				grid.Loaded += (snd, e) => RunningTest = id;
 
 				_idInput.Text = ""; // Clear for next automated test!
 			}
@@ -289,6 +317,7 @@ namespace UITests.Windows_UI_Xaml_Shapes
 					Text = $"Failed to render {parsedId}: {error.Message}",
 					Foreground = new SolidColorBrush(Colors.Red)
 				};
+				RunningTest = id; // We set the test id to prevent hang of the automated test engine
 			}
 		}
 

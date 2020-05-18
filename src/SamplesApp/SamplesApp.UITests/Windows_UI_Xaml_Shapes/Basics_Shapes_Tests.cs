@@ -21,6 +21,7 @@ namespace SamplesApp.UITests.Windows_UI_Xaml_Shapes
 		{
 			Run("UITests.Windows_UI_Xaml_Shapes.Basic_Shapes", skipInitialScreenshot: true);
 
+			var ctrl = new QueryEx(q => q.Marked("_basicShapesTestRoot"));
 			var expectedDirectory = Path.Combine(TestContext.CurrentContext.TestDirectory, "Windows_UI_Xaml_Shapes/Basics_Shapes_Tests_EpectedResults");
 			var tolerance = new PixelTolerance()
 				.WithColor(96) // We are almost only trying to detect edges
@@ -38,8 +39,11 @@ namespace SamplesApp.UITests.Windows_UI_Xaml_Shapes
 						Assert.Fail($"Expected screenshot does not exists ({expected.FullName})");
 					}
 
-					_app.EnterText("_idInput", test);
-					_app.Tap("_renderId");
+					ctrl.SetDependencyPropertyValue("RunTest", test);
+					_app.WaitForDependencyPropertyValue(ctrl, "RunningTest", test);
+
+					//_app.EnterText("_idInput", test);
+					//_app.Tap("_renderId");
 
 					var actual = TakeScreenshot(test, ignoreInSnapshotCompare: true);
 					var testZone = _app.WaitForElement("_testZone").Single().Rect;
