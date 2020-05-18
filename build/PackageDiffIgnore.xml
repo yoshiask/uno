@@ -983,6 +983,8 @@
 				fullName="Windows.UI.Xaml.Shapes.ArbitraryShapeBase"
 				reason="iOS only, not part of the WinUI API." />
 		</Types>
+		<Events>
+		</Events>
 		<Methods>
 			<Member
 				fullName="System.Void Windows.UI.Xaml.Controls.Maps.MapTileSource..ctor()"
