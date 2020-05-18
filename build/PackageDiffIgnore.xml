@@ -806,11 +806,6 @@
 			</Properties>
 		</IgnoreSet>
 		<IgnoreSet baseVersion="2.2.0">
-			<Types>
-				<Member
-					fullName="Windows.UI.Xaml.Shapes.ArbitraryShapeBase"
-					reason="iOS only, not part of the WinUI API." />
-			</Types>
 			<Methods>
 				<Member
 					fullName="System.Void Windows.Data.Xml.Dom.DtdEntity..ctor()"
@@ -861,28 +856,6 @@
 					fullName="System.Void Windows.UI.Xaml.Controls.IAnimatedVisualSource.Play(System.Boolean looped)"
 					reason="Refactoring, not part of WinUI contract anyway." />
 					
-				<Member
-					fullName="System.Void Windows.UI.Xaml.Shapes.Shape.OnFillChanged(Windows.UI.Xaml.Media.Brush newValue)"
-					reason="Not part of the WinUI API." />
-				<Member
-					fullName="System.Void Windows.UI.Xaml.Shapes.Shape.OnFillUpdated(Windows.UI.Xaml.Media.Brush newValue)"
-					reason="Not part of the WinUI API." />
-				<Member
-					fullName="System.Void Windows.UI.Xaml.Shapes.Shape.OnStrokeUpdated(Windows.UI.Xaml.Media.Brush newValue)"
-					reason="Not part of the WinUI API." />
-				<Member
-					fullName="System.Void Windows.UI.Xaml.Shapes.Shape.OnStretchUpdated(Windows.UI.Xaml.Media.Stretch newValue)"
-					reason="Not part of the WinUI API." />
-				<Member
-					fullName="System.Void Windows.UI.Xaml.Shapes.Shape.OnStrokeThicknessUpdated(System.Double newValue)"
-					reason="Not part of the WinUI API." />
-				<Member
-					fullName="System.Void Windows.UI.Xaml.Shapes.Shape.OnStrokeDashArrayUpdated(Windows.UI.Xaml.Media.DoubleCollection newValue)"
-					reason="Not part of the WinUI API." />
-				<Member
-					fullName="System.Void Windows.UI.Xaml.Shapes.Shape.RefreshShape(System.Boolean forceRefresh)"
-					reason="Not part of the WinUI API." />
-
 				<Member
 					fullName="System.Void Windows.UI.Xaml.Controls.TextBox..ctor(System.Boolean isPassword)"
 					reason="macOS only breaking change" />
@@ -1007,6 +980,60 @@
 				<Member
 					fullName="Windows.UI.Xaml.DependencyProperty Windows.UI.Xaml.Media.GradientBrush::MappingModeProperty()"
 					reason="GradientStops/MappingMode moved to base GradientBrush to follow UWP/WinUI hierarchy"/>
+			</Properties>
+		</IgnoreSet>
+		<IgnoreSet baseVersion="2.4.0">
+			<Types>
+				<Member
+					fullName="Windows.UI.Xaml.Shapes.ArbitraryShapeBase"
+					reason="iOS only, not part of the WinUI API." />
+			</Types>
+			<Methods>
+				<Member
+					fullName="System.Void Windows.UI.Xaml.Shapes.Shape.OnFillChanged(Windows.UI.Xaml.Media.Brush newValue)"
+					reason="Not part of the WinUI API." />
+				<Member
+					fullName="System.Void Windows.UI.Xaml.Shapes.Shape.OnFillUpdated(Windows.UI.Xaml.Media.Brush newValue)"
+					reason="Not part of the WinUI API." />
+				<Member
+					fullName="System.Void Windows.UI.Xaml.Shapes.Shape.OnStrokeUpdated(Windows.UI.Xaml.Media.Brush newValue)"
+					reason="Not part of the WinUI API." />
+				<Member
+					fullName="System.Void Windows.UI.Xaml.Shapes.Shape.OnStretchUpdated(Windows.UI.Xaml.Media.Stretch newValue)"
+					reason="Not part of the WinUI API." />
+				<Member
+					fullName="System.Void Windows.UI.Xaml.Shapes.Shape.OnStrokeThicknessUpdated(System.Double newValue)"
+					reason="Not part of the WinUI API." />
+				<Member
+					fullName="System.Void Windows.UI.Xaml.Shapes.Shape.OnStrokeDashArrayUpdated(Windows.UI.Xaml.Media.DoubleCollection newValue)"
+					reason="Not part of the WinUI API." />
+				<Member
+					fullName="System.Void Windows.UI.Xaml.Shapes.Shape.RefreshShape(System.Boolean forceRefresh)"
+					reason="Not part of the WinUI API." />
+			</Methods>
+			<Events>
+			</Events>
+			<Fields>
+				<Member
+					fullName="Windows.UI.Xaml.DependencyProperty Windows.UI.Xaml.Media.LinearGradientBrush::GradientStopsProperty"
+					reason="GradientStops/MappingMode moved to base GradientBrush to follow UWP/WinUI hierarchy"/>
+				<Member
+					fullName="Windows.UI.Xaml.DependencyProperty Windows.UI.Xaml.Shapes.Shape::FillProperty"
+					reason="Converted as property, as WinUI." />
+				<Member
+					fullName="Windows.UI.Xaml.DependencyProperty Windows.UI.Xaml.Shapes.Shape::StrokeProperty"
+					reason="Converted as property, as WinUI." />
+				<Member
+					fullName="Windows.UI.Xaml.DependencyProperty Windows.UI.Xaml.Shapes.Shape::StrokeThicknessProperty"
+					reason="Converted as property, as WinUI." />
+				<Member
+					fullName="Windows.UI.Xaml.DependencyProperty Windows.UI.Xaml.Shapes.Shape::StretchProperty"
+					reason="Converted as property, as WinUI." />
+				<Member
+					fullName="Windows.UI.Xaml.DependencyProperty Windows.UI.Xaml.Shapes.Shape::StrokeDashArrayProperty"
+					reason="Converted as property, as WinUI." />
+			</Fields>
+			<Properties>
 			</Properties>
 		</IgnoreSet>
 	</IgnoreSets>
