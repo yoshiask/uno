@@ -38,7 +38,6 @@
 				Margin="5,0,0,0" />
 			<TextBox
 				x:Name="_idInput"
-				KeyUp="OnIdInputChanged"
 				Margin="5,0,0,0" />
 			<Button
 				x:Name="_renderId"
