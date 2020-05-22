@@ -102,7 +102,10 @@ namespace SamplesApp.UITests.TestFramework
 			{
 				if (expectedRect == FirstQuadrant && actualRect == FirstQuadrant)
 				{
-					Assert.AreEqual(expectedBitmap.Size, actualBitmap.Size, WithContext("Screenshots don't have the same size"));
+					var effectiveExpectedBitmapSize = new Size(
+						(int)(expectedBitmap.Size.Width * expectedToActualScale),
+						(int)(expectedBitmap.Size.Height * expectedToActualScale));
+					Assert.AreEqual(effectiveExpectedBitmapSize, actualBitmap.Size, WithContext("Screenshots don't have the same size"));
 				}
 
 				expectedRect = Normalize(expectedRect, expectedBitmap.Size);
