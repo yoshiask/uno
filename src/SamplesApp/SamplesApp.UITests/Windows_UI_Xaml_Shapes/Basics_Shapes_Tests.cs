@@ -4,34 +4,79 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using NUnit.Framework;
 using SamplesApp.UITests.TestFramework;
 using Uno.UITest.Helpers.Queries;
-using Uno.UITests.Helpers;
 
 namespace SamplesApp.UITests.Windows_UI_Xaml_Shapes
 {
 	public class Basics_Shapes_Tests : SampleControlUITestBase
 	{
 		[Test]
-		[AutoRetry(1)]
 		[ActivePlatforms(Platform.iOS)]
-		public void ValidateAllShapesBasicStrechesAlignemntsAndSize()
+		public void When_Rectangle()
+			=> ValidateShape("Rectangle");
+
+		[Test]
+		[ActivePlatforms(Platform.iOS)]
+		public void When_Ellipse()
+			=> ValidateShape("Ellipse");
+
+		[Test]
+		[ActivePlatforms(Platform.iOS)]
+		public void When_Line()
+			=> ValidateShape("Line");
+
+		[Test]
+		[ActivePlatforms(Platform.iOS)]
+		public void When_Polyline()
+			=> ValidateShape("Polyline");
+
+		[Test]
+		[ActivePlatforms(Platform.iOS)]
+		public void When_Polygon()
+			=> ValidateShape("Polygon");
+
+		[Test]
+		[ActivePlatforms(Platform.iOS)]
+		public void When_Path()
+		{
+			// For Path, the connection between the begin and the end of the path is not as smooth as WinUI (on iOS),
+			// se we increase the pixel offset tolerance to ignore it.
+			var tolerance = new PixelTolerance()
+				.WithColor(132) // We are almost only trying to detect edges
+				.WithOffset(6, 6, LocationToleranceKind.PerPixel) 
+				.Discrete(20); // Way toooooooo long otherwise!
+
+			ValidateShape("Path", tolerance);
+		}
+
+		public void ValidateShape(string shapeName, PixelTolerance? tolerance = null)
 		{
 			Run("UITests.Windows_UI_Xaml_Shapes.Basic_Shapes", skipInitialScreenshot: true);
 
 			var ctrl = new QueryEx(q => q.Marked("_basicShapesTestRoot"));
-			var expectedDirectory = Path.Combine(TestContext.CurrentContext.TestDirectory, "Windows_UI_Xaml_Shapes/Basics_Shapes_Tests_EpectedResults");
-			var tolerance = new PixelTolerance()
+			var expectedDirectory = Path.Combine(
+				TestContext.CurrentContext.TestDirectory,
+				"Windows_UI_Xaml_Shapes/Basics_Shapes_Tests_EpectedResults");
+			var actualDirectory  = Path.Combine(
+				TestContext.CurrentContext.WorkDirectory,
+				nameof(Windows_UI_Xaml_Shapes),
+				nameof(Basics_Shapes_Tests),
+				shapeName);
+
+			tolerance ??= new PixelTolerance()
 				.WithColor(132) // We are almost only trying to detect edges
 				.WithOffset(3, 3, LocationToleranceKind.PerPixel)
-				//.WithOffset(6, 6, LocationToleranceKind.PerPixel)
 				.Discrete(20); // Way toooooooo long otherwise!
 
 			var failures = new List<(string test, Exception error)>();
-			foreach (var testGroup in _tests.Where(t => t.StartsWith("Ellipse")).GroupBy(t => string.Join("_", t.Split(new []{'_'},3, StringSplitOptions.RemoveEmptyEntries).Take(2))))
+			// To improve performance, we run all test for a given stretch at once.
+			var testGroups = _tests
+				.Where(t => t.StartsWith(shapeName))
+				.GroupBy(t => string.Join("_", t.Split(new[] {'_'}, 3, StringSplitOptions.RemoveEmptyEntries).Take(2)));
+
+			foreach (var testGroup in testGroups)
 			{
 				ctrl.SetDependencyPropertyValue("RunTest", string.Join(";", testGroup));
 				_app.WaitFor(() => !string.IsNullOrWhiteSpace(ctrl.GetDependencyPropertyValue<string>("TestResult")));
@@ -41,28 +86,28 @@ namespace SamplesApp.UITests.Windows_UI_Xaml_Shapes
 					.Split(new[] {'\r', '\n'}, StringSplitOptions.RemoveEmptyEntries)
 					.Select(line => line.Split(new[] {';'}, 3, StringSplitOptions.RemoveEmptyEntries))
 					.Where(line => line.Length == 3)
-					.Select(line =>
-					{
-						var data = Convert.FromBase64String(line[2]);
-						var target = Path.Combine(
-								TestContext.CurrentContext.WorkDirectory,
-								nameof(Windows_UI_Xaml_Shapes),
-								nameof(Basics_Shapes_Tests),
-								//nameof(ValidateAllShapesBasicStrechesAlignemntsAndSize),
-								TestContext.CurrentContext.Test.MethodName,
-								AppInitializer.TestEnvironment.CurrentPlatform.ToString(),
-								line[0] + ".png");
-
-						new FileInfo(target).Directory.Create();
-						File.WriteAllBytes(target, data);
-
-						return line;
-					})
 					.ToDictionary(
 						line => line[0],
-						line => line[1] == "SUCCESS"
-							? new Bitmap(new MemoryStream(Convert.FromBase64String(line[2])))
-							: new Exception(Encoding.UTF8.GetString(Convert.FromBase64String(line[2]))) as object);
+						line =>
+						{
+							var testName = line[0];
+							var isSuccess = line[1] == "SUCCESS";
+							var data = Convert.FromBase64String(line[2]);
+
+							var target =Path
+								.Combine(actualDirectory, testName + (isSuccess ? ".png" : ".txt"))
+								.GetNormalizedLongPath();
+							var targetFile = new FileInfo(target);
+
+							targetFile.Directory.Create();
+							File.WriteAllBytes(target, data);
+							SetOptions(targetFile, new ScreenshotOptions {IgnoreInSnapshotCompare = true});
+							TestContext.AddTestAttachment(target, testName);
+
+							return isSuccess
+								? new Bitmap(new MemoryStream(Convert.FromBase64String(line[2])))
+								: new Exception(Encoding.UTF8.GetString(Convert.FromBase64String(line[2]))) as object;
+						});
 
 				foreach (var test in testGroup)
 				{
@@ -86,34 +131,9 @@ namespace SamplesApp.UITests.Windows_UI_Xaml_Shapes
 
 						using (var actual = (Bitmap)testResult)
 						{
-
-							//var target = Path.Combine(
-							//	TestContext.CurrentContext.WorkDirectory,
-							//	nameof(Windows_UI_Xaml_Shapes),
-							//	nameof(Basics_Shapes_Tests),
-							//	//nameof(ValidateAllShapesBasicStrechesAlignemntsAndSize),
-							//	TestContext.CurrentContext.Test.MethodName,
-							//	AppInitializer.TestEnvironment.CurrentPlatform.ToString(),
-							//	test + ".png");
-
-							//actual.Save(target);
-
-							//TestContext.CurrentContext.Test.FullName
-							//TestContext.CurrentContext.Result.Outcome
-
 							var scale = 2.0;
-							ImageAssert.AreAlmostEqual(expected, ImageAssert.FirstQuadrant, actual, ImageAssert.FirstQuadrant, scale, tolerance);
+							ImageAssert.AreAlmostEqual(expected, ImageAssert.FirstQuadrant, actual, ImageAssert.FirstQuadrant, scale, tolerance.Value);
 						}
-
-						//_app.WaitForDependencyPropertyValue(ctrl, "RunningTest", test);
-
-						//var actual = TakeScreenshot(test, ignoreInSnapshotCompare: true);
-
-
-						//var testZone = _app.WaitForElement("_testZone").Single().Rect;
-						//var scale = 2.0;
-
-						//ImageAssert.AreAlmostEqual(expected, ImageAssert.FirstQuadrant, actual, testZone.ToRectangle(), scale, tolerance);
 					}
 					catch (Exception e)
 					{
@@ -126,8 +146,12 @@ namespace SamplesApp.UITests.Windows_UI_Xaml_Shapes
 			if (failures.Any())
 			{
 				throw new AggregateException(
-					$"Failed tests ({failures.Count} of {_tests.Length}):\r\n{string.Join("\r\n", failures.Select(t => t.test))}\r\n",
+					$"Failed tests ({failures.Count} of {testGroups.Sum(g => g.Count())}):\r\n{string.Join("\r\n", failures.Select(t => t.test))}\r\n",
 					failures.Select(t => t.error));
+			}
+			else
+			{
+				Console.WriteLine($"All {testGroups.Sum(g => g.Count())} ran successfully.");
 			}
 		}
 
@@ -669,7 +693,7 @@ namespace SamplesApp.UITests.Windows_UI_Xaml_Shapes
 			//"Rectangle_None_Unconstrained",
 			"Rectangle_UniformToFill_FixedHeightLarge",
 			"Rectangle_UniformToFill_FixedHeightSmall",
-			"Rectangle_UniformToFill_FixedLarge", // This is kind of buggy on WinUI, so we ignore it
+			"Rectangle_UniformToFill_FixedLarge",
 			"Rectangle_UniformToFill_FixedSmall",
 			"Rectangle_UniformToFill_FixedWidthLarge",
 			"Rectangle_UniformToFill_FixedWidthSmall",
