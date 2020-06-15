@@ -28,6 +28,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <UpToDateCheckInput Remove="ts\Windows\UI\Xaml\Media\Animation\RenderingLoopFloatAnimator.ts" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <EmbeddedResource Include="LinkerDefinition.xml">
 		<LogicalName>$(AssemblyName).xml</LogicalName>
 	  </EmbeddedResource>

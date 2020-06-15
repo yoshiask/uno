@@ -57,6 +57,7 @@ namespace Uno.Foundation.Interop
 		public void Dispose()
 		{
 			_metadata.DestroyNativeInstance(_managedHandle, _jsHandle);
+			_target.Target = default;
 
 			GC.SuppressFinalize(this);
 		}

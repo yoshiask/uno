@@ -41,6 +41,7 @@ namespace Uno.Foundation.Interop
 			if (!jsObjectHandle.TryGetManaged(out var target))
 			{
 				jsObjectHandle.Log().Debug($"Cannot invoke '{method}' as target has been collected!");
+				jsObjectHandle.Dispose();
 				return;
 			}
 

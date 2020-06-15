@@ -1048,7 +1048,9 @@ declare namespace Windows.UI.ViewManagement {
 }
 declare namespace Windows.UI.Xaml {
     class Application {
+        private static dispatchThemeChange;
         static getDefaultSystemTheme(): string;
+        static observeSystemTheme(): void;
     }
 }
 declare namespace Windows.UI.Xaml {
@@ -1066,5 +1068,26 @@ declare namespace Windows.Phone.Devices.Notification {
     class VibrationDevice {
         static initialize(): boolean;
         static vibrate(duration: number): boolean;
+    }
+}
+declare namespace Windows.UI.Xaml.Media.Animation {
+    class RenderingLoopFloatAnimator {
+        private managedHandle;
+        private static activeInstances;
+        static createInstance(managedHandle: string, jsHandle: number): void;
+        static getInstance(jsHandle: number): RenderingLoopFloatAnimator;
+        static destroyInstance(jsHandle: number): void;
+        private _delayRequestId?;
+        private _frameRequestId?;
+        private _isEnabled;
+        private constructor();
+        SetStartFrameDelay(delay: number): void;
+        SetAnimationFramesInterval(): void;
+        EnableFrameReporting(): void;
+        DisableFrameReporting(): void;
+        private onFrame;
+        private unscheduleFrame;
+        private scheduleDelayedFrame;
+        private scheduleAnimationFrame;
     }
 }

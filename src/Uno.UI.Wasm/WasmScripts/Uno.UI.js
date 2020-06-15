@@ -3442,13 +3442,25 @@ var Windows;
         (function (Xaml) {
             class Application {
                 static getDefaultSystemTheme() {
-                    if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-                        return Xaml.ApplicationTheme.Dark;
-                    }
-                    if (window.matchMedia("(prefers-color-scheme: light)").matches) {
-                        return Xaml.ApplicationTheme.Light;
+                    if (window.matchMedia) {
+                        if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+                            return Xaml.ApplicationTheme.Dark;
+                        }
+                        if (window.matchMedia("(prefers-color-scheme: light)").matches) {
+                            return Xaml.ApplicationTheme.Light;
+                        }
                     }
                     return null;
+                }
+                static observeSystemTheme() {
+                    if (!this.dispatchThemeChange) {
+                        this.dispatchThemeChange = Module.mono_bind_static_method("[Uno] Windows.UI.Xaml.Application:DispatchSystemThemeChange");
+                    }
+                    if (window.matchMedia) {
+                        window.matchMedia('(prefers-color-scheme: dark)').addEventListener("change", () => {
+                            Application.dispatchThemeChange();
+                        });
+                    }
                 }
             }
             Xaml.Application = Application;
@@ -3493,4 +3505,93 @@ var Windows;
             })(Notification = Devices.Notification || (Devices.Notification = {}));
         })(Devices = Phone.Devices || (Phone.Devices = {}));
     })(Phone = Windows.Phone || (Windows.Phone = {}));
+})(Windows || (Windows = {}));
+var Windows;
+(function (Windows) {
+    var UI;
+    (function (UI) {
+        var Xaml;
+        (function (Xaml) {
+            var Media;
+            (function (Media) {
+                var Animation;
+                (function (Animation) {
+                    class RenderingLoopFloatAnimator {
+                        constructor(managedHandle) {
+                            this.managedHandle = managedHandle;
+                            this._isEnabled = false;
+                        }
+                        static createInstance(managedHandle, jsHandle) {
+                            RenderingLoopFloatAnimator.activeInstances[jsHandle] = new RenderingLoopFloatAnimator(managedHandle);
+                        }
+                        static getInstance(jsHandle) {
+                            return RenderingLoopFloatAnimator.activeInstances[jsHandle];
+                        }
+                        static destroyInstance(jsHandle) {
+                            // For safety we make sure to stop the frame rendering when the managed instance is being collected.
+                            const target = this.activeInstances[jsHandle];
+                            if (target) {
+                                target.DisableFrameReporting();
+                            }
+                            delete RenderingLoopFloatAnimator.activeInstances[jsHandle];
+                        }
+                        SetStartFrameDelay(delay) {
+                            this.unscheduleFrame();
+                            if (this._isEnabled) {
+                                this.scheduleDelayedFrame(delay);
+                            }
+                        }
+                        SetAnimationFramesInterval() {
+                            this.unscheduleFrame();
+                            if (this._isEnabled) {
+                                this.onFrame();
+                            }
+                        }
+                        EnableFrameReporting() {
+                            if (this._isEnabled) {
+                                return;
+                            }
+                            this._isEnabled = true;
+                            this.scheduleAnimationFrame();
+                        }
+                        DisableFrameReporting() {
+                            this._isEnabled = false;
+                            this.unscheduleFrame();
+                        }
+                        onFrame() {
+                            Uno.Foundation.Interop.ManagedObject.dispatch(this.managedHandle, "OnFrame", null);
+                            // Schedule a new frame only if still enabled and no frame was scheduled by the managed OnFrame
+                            if (this._isEnabled && this._frameRequestId == null && this._delayRequestId == null) {
+                                this.scheduleAnimationFrame();
+                            }
+                        }
+                        unscheduleFrame() {
+                            if (this._delayRequestId != null) {
+                                clearTimeout(this._delayRequestId);
+                                this._delayRequestId = null;
+                            }
+                            if (this._frameRequestId != null) {
+                                window.cancelAnimationFrame(this._frameRequestId);
+                                this._frameRequestId = null;
+                            }
+                        }
+                        scheduleDelayedFrame(delay) {
+                            this._delayRequestId = setTimeout(() => {
+                                this._delayRequestId = null;
+                                this.onFrame();
+                            }, delay);
+                        }
+                        scheduleAnimationFrame() {
+                            this._frameRequestId = window.requestAnimationFrame(() => {
+                                this._frameRequestId = null;
+                                this.onFrame();
+                            });
+                        }
+                    }
+                    RenderingLoopFloatAnimator.activeInstances = {};
+                    Animation.RenderingLoopFloatAnimator = RenderingLoopFloatAnimator;
+                })(Animation = Media.Animation || (Media.Animation = {}));
+            })(Media = Xaml.Media || (Xaml.Media = {}));
+        })(Xaml = UI.Xaml || (UI.Xaml = {}));
+    })(UI = Windows.UI || (Windows.UI = {}));
 })(Windows || (Windows = {}));
