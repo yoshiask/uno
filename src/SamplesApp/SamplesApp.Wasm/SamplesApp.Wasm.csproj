@@ -8,7 +8,8 @@
 		<NoWarn>NU1701,CS1998</NoWarn>
 		<LangVersion>7.3</LangVersion>
 		<IsUiAutomationMappingEnabled>true</IsUiAutomationMappingEnabled>
-	<UseUnoXamlParser>true</UseUnoXamlParser>
+		<UseUnoXamlParser>true</UseUnoXamlParser>
+		<WasmShellMonoRuntimeExecutionMode>InterpreterAndAOT</WasmShellMonoRuntimeExecutionMode>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
@@ -34,6 +35,65 @@
 	
 	<ItemGroup>
 		<LinkerDescriptor Include="LinkerConfig.xml" />
+
+		<MonoRuntimeMixedModeExcludedAssembly Include="Microsoft.CodeAnalysis" />
+		<MonoRuntimeMixedModeExcludedAssembly Include="Microsoft.CodeAnalysis.CSharp" />
+		<MonoRuntimeMixedModeExcludedAssembly Include="Newtonsoft.Json" />
+		<MonoRuntimeMixedModeExcludedAssembly Include="System.Xml.XPath.XDocument" />
+		<MonoRuntimeMixedModeExcludedAssembly Include="System.CodeDom" />
+		<MonoRuntimeMixedModeExcludedAssembly Include="System.Runtime.Serialization.Formatters" />
+		<MonoRuntimeMixedModeExcludedAssembly Include="Microsoft.CSharp" />
+		<MonoRuntimeMixedModeExcludedAssembly Include="System.Xml.Linq" />
+		<MonoRuntimeMixedModeExcludedAssembly Include="System.Dynamic.Runtime" />
+		<MonoRuntimeMixedModeExcludedAssembly Include="Microsoft.Identity.Client" />
+		<MonoRuntimeMixedModeExcludedAssembly Include="System.Data" />
+		<MonoRuntimeMixedModeExcludedAssembly Include="Microsoft.Graph" />
+		<MonoRuntimeMixedModeExcludedAssembly Include="Microsoft.Graph.Core" />
+		<MonoRuntimeMixedModeExcludedAssembly Include="System.Data.DataSetExtensions" />
+		<MonoRuntimeMixedModeExcludedAssembly Include="System.Runtime.Serialization.Primitives" />
+		<MonoRuntimeMixedModeExcludedAssembly Include="System.Management" />
+		<MonoRuntimeMixedModeExcludedAssembly Include="System.Xml" />
+		<MonoRuntimeMixedModeExcludedAssembly Include="BenchmarkDotNet" />
+		<MonoRuntimeMixedModeExcludedAssembly Include="System.Reflection.Metadata" />
+
+
+		<!--
+		Disable AOT on
+
+		[00:19:54.3239107] FAILED: SamplesApp.Wasm.dll.o 
+		[00:19:54.3413114] bash -c 'source ./emsdk_env.sh && emcc -Oz -g -s USE_ZLIB=1 -s FORCE_FILESYSTEM=1  -lidbfs.js  -lidbfs.js -s DISABLE_EXCEPTION_CATCHING=0 -s ALLOW_TABLE_GROWTH=1 -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_MEMORY=134217728 -s NO_EXIT_RUNTIME=1 -s ERROR_ON_UNDEFINED_SYMBOLS=1 -s "EXTRA_EXPORTED_RUNTIME_METHODS=['ccall', 'cwrap', 'setValue', 'getValue', 'UTF8ToString', 'addFunction']" -s "EXPORTED_FUNCTIONS=['___cxa_is_pointer_type', '___cxa_can_catch']" -s "DEFAULT_LIBRARY_FUNCS_TO_INCLUDE=['setThrew', 'memset']"  -c -o SamplesApp.Wasm.dll.o SamplesApp.Wasm.dll.bc'
+		[00:19:54.3414042] clang++: /b/s/w/ir/cache/builder/emscripten-releases/llvm-project/llvm/lib/CodeGen/SelectionDAG/SelectionDAG.cpp:9735: void llvm::SelectionDAG::createOperands(llvm::SDNode *, ArrayRef<llvm::SDValue>): Assertion `SDNode::getMaxNumOperands() >= Vals.size() && "too many operands to fit into SDNode"' failed.
+		[00:19:54.3414276] Stack dump:
+		[00:19:54.3415493] 0.	Program arguments: /home/vsts_azpcontainer/emsdk/upstream/bin/clang++ -target wasm32-unknown-emscripten -D__EMSCRIPTEN_major__=1 -D__EMSCRIPTEN_minor__=39 -D__EMSCRIPTEN_tiny__=11 -D_LIBCPP_ABI_VERSION=2 -Dunix -D__unix -D__unix__ -Werror=implicit-function-declaration -Xclang -nostdsysteminc -Xclang -isystem/home/vsts_azpcontainer/emsdk/upstream/emscripten/system/include/libcxx -Xclang -isystem/home/vsts_azpcontainer/emsdk/upstream/emscripten/system/lib/libcxxabi/include -Xclang -isystem/home/vsts_azpcontainer/emsdk/upstream/emscripten/system/lib/libunwind/include -Xclang -isystem/home/vsts_azpcontainer/emsdk/upstream/emscripten/system/include/compat -Xclang -isystem/home/vsts_azpcontainer/emsdk/upstream/emscripten/system/include -Xclang -isystem/home/vsts_azpcontainer/emsdk/upstream/emscripten/system/include/libc -Xclang -isystem/home/vsts_azpcontainer/emsdk/upstream/emscripten/system/lib/libc/musl/arch/emscripten -Xclang -isystem/home/vsts_azpcontainer/emsdk/upstream/emscripten/syste...
+		[00:19:54.3416910] 1.	Code generation
+		[00:19:54.3417044] 2.	Running pass 'Function Pass Manager' on module 'SamplesApp.Wasm.dll.bc'.
+		[00:19:54.3417183] 3.	Running pass 'WebAssembly Instruction Selection' on function '@mono_aot_SamplesApp_Wasm_init_aotconst'
+		[00:19:54.3417314]  #0 0x00007f6e23fade24 PrintStackTraceSignalHandler(void*) (/home/vsts_azpcontainer/emsdk/upstream/bin/../lib/libLLVM-11git.so+0x750e24)
+		[00:19:54.3417655]  #1 0x00007f6e23fababe llvm::sys::RunSignalHandlers() (/home/vsts_azpcontainer/emsdk/upstream/bin/../lib/libLLVM-11git.so+0x74eabe)
+		[00:19:54.3417800]  #2 0x00007f6e23facfcd llvm::sys::CleanupOnSignal(unsigned long) (/home/vsts_azpcontainer/emsdk/upstream/bin/../lib/libLLVM-11git.so+0x74ffcd)
+		[00:19:54.3418332]  #3 0x00007f6e23eea4e3 (anonymous namespace)::CrashRecoveryContextImpl::HandleCrash(int, unsigned long) (/home/vsts_azpcontainer/emsdk/upstream/bin/../lib/libLLVM-11git.so+0x68d4e3)
+		[00:19:54.3418507]  #4 0x00007f6e23eea61c CrashRecoverySignalHandler(int) (/home/vsts_azpcontainer/emsdk/upstream/bin/../lib/libLLVM-11git.so+0x68d61c)
+		[00:19:54.3418639]  #5 0x00007f6e23650890 __restore_rt (/lib/x86_64-linux-gnu/libpthread.so.0+0x12890)
+		[00:19:54.3418774]  #6 0x00007f6e1f405e97 raise (/lib/x86_64-linux-gnu/libc.so.6+0x3ee97)
+		[00:19:54.3418885]  #7 0x00007f6e1f407801 abort (/lib/x86_64-linux-gnu/libc.so.6+0x40801)
+		[00:19:54.3418996]  #8 0x00007f6e1f3f739a (/lib/x86_64-linux-gnu/libc.so.6+0x3039a)
+		[00:19:54.3419119]  #9 0x00007f6e1f3f7412 (/lib/x86_64-linux-gnu/libc.so.6+0x30412)
+		[00:19:54.3419229] #10 0x00007f6e2477a994 (/home/vsts_azpcontainer/emsdk/upstream/bin/../lib/libLLVM-11git.so+0xf1d994)
+		[00:19:54.3419351] #11 0x00007f6e24793daf llvm::SelectionDAG::getNode(unsigned int, llvm::SDLoc const&, llvm::EVT, llvm::ArrayRef<llvm::SDValue>, llvm::SDNodeFlags) (/home/vsts_azpcontainer/emsdk/upstream/bin/../lib/libLLVM-11git.so+0xf36daf)
+		[00:19:54.3419515] #12 0x00007f6e25b80d35 llvm::WebAssemblyTargetLowering::LowerBR_JT(llvm::SDValue, llvm::SelectionDAG&) const (/home/vsts_azpcontainer/emsdk/upstream/bin/../lib/libLLVM-11git.so+0x2323d35)
+		[00:19:54.3419948] #13 0x00007f6e25b803fa llvm::WebAssemblyTargetLowering::LowerOperation(llvm::SDValue, llvm::SelectionDAG&) const (/home/vsts_azpcontainer/emsdk/upstream/bin/../lib/libLLVM-11git.so+0x23233fa)
+		[00:19:54.3420116] #14 0x00007f6e2464b60f (anonymous namespace)::SelectionDAGLegalize::LegalizeOp(llvm::SDNode*) (/home/vsts_azpcontainer/emsdk/upstream/bin/../lib/libLLVM-11git.so+0xdee60f)
+		[00:19:54.3420255] #15 0x00007f6e2464a96a llvm::SelectionDAG::Legalize() (/home/vsts_azpcontainer/emsdk/upstream/bin/../lib/libLLVM-11git.so+0xded96a)
+		[00:19:54.3420394] #16 0x00007f6e247c2153 llvm::SelectionDAGISel::CodeGenAndEmitDAG() (/home/vsts_azpcontainer/emsdk/upstream/bin/../lib/libLLVM-11git.so+0xf65153)
+		[00:19:54.3420522] #17 0x00007f6e247c558b llvm::SelectionDAGISel::FinishBasicBlock() (/home/vsts_azpcontainer/emsdk/upstream/bin/../lib/libLLVM-11git.so+0xf6858b)
+		[00:19:54.3420650] #18 0x00007f6e247c03d5 llvm::SelectionDAGISel::SelectAllBasicBlocks(llvm::Function const&) (/home/vsts_azpcontainer/emsdk/upstream/bin/../lib/libLLVM-11git.so+0xf633d5)
+		[00:19:54.3421042] #19 0x00007f6e247bc874 llvm::SelectionDAGISel::runOnMachineFunction(llvm::MachineFunction&) (/home/vsts_azpcontainer/emsdk/upstream/bin/../lib/libLLVM-11git.so+0xf5f874)
+		[00:19:54.3421199] #20 0x00007f6e2433fb1e llvm::MachineFunctionPass::runOnFunction(llvm::Function&) (/home/vsts_azpcontainer/emsdk/upstream/bin/../lib/libLLVM-11git.so+0xae2b1e)
+		[00:19:54.3421332] #21 0x00007f6e2410cd84 llvm::FPPassManager::runOnFunction(llvm::Function&) (/home/vsts_azpcontainer/emsdk/upstream/bin/../lib/libLLVM-11git.so+0x8afd84)
+		[00:19:54.3421477] #22 0x00007f6e2410d068 llvm::FPPassManager::runOnModule(llvm::Module&) (/home/vsts_azpcontainer/emsdk/upstream/bin/../lib/libLLVM-11git.so+0x8b0068)
+		
+		-->
+		<MonoRuntimeMixedModeExcludedAssembly Include="SamplesApp.Wasm" />
 	</ItemGroup>
 	
 	<ItemGroup>

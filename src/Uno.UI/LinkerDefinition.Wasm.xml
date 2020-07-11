@@ -10,6 +10,7 @@
     <type fullname="Uno.Media.GeometryConverter" />
     <type fullname="Windows.UI.Xaml.ThicknessConverter" />
     <type fullname="Windows.UI.Xaml.ObservableVectorWrapper" />
+    <type fullname="Uno.UI.Helpers.Automation" />
 	<type fullname="Windows.UI.Xaml.Input.FocusManager">
 	  <method name="ReceiveFocusNative" />
 	</type>
