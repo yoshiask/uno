@@ -42,7 +42,7 @@ jobs:
 
   - bash: |
       source ~/emsdk/emsdk_env.sh
-      msbuild /r /p:Configuration=Release src/SamplesApp/SamplesApp.Wasm/SamplesApp.Wasm.csproj /p:UnoSourceGeneratorUseGenerationHost=true /p:UnoSourceGeneratorUseGenerationController=false
+      msbuild /r /p:Configuration=Release src/SamplesApp/SamplesApp.Wasm/SamplesApp.Wasm.csproj /p:WasmShellMonoRuntimeExecutionMode=Interpreter /p:UnoSourceGeneratorUseGenerationHost=true /p:UnoSourceGeneratorUseGenerationController=false
 
     displayName: 'Build Interpreter Sample App'
 
