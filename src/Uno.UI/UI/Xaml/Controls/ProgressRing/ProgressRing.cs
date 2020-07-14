@@ -36,7 +36,7 @@ namespace Windows.UI.Xaml.Controls
 		}
 
 		public static DependencyProperty ForegroundProperty { get ; } =
-			DependencyProperty.Register("Foreground", typeof(Brush), typeof(ProgressRing), new PropertyMetadata(SolidColorBrushHelper.Black, OnForegroundChanged));
+			DependencyProperty.Register("Foreground", typeof(Brush), typeof(ProgressRing), new FrameworkPropertyMetadata(SolidColorBrushHelper.Black, OnForegroundChanged));
 
 		#endregion
 #endif
@@ -53,7 +53,7 @@ namespace Windows.UI.Xaml.Controls
 		}
 
 		public static DependencyProperty IsActiveProperty { get ; } =
-			DependencyProperty.Register("IsActive", typeof(bool), typeof(ProgressRing), new PropertyMetadata(false, OnIsActiveChanged));
+			DependencyProperty.Register("IsActive", typeof(bool), typeof(ProgressRing), new FrameworkPropertyMetadata(false, OnIsActiveChanged));
 
 		#endregion
 	}

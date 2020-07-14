@@ -57,7 +57,7 @@ namespace Windows.UI.Xaml.Controls
 			DependencyProperty.Register(
 				"CompactPaneLength",
 				typeof(double), typeof(SplitView),
-				new PropertyMetadata(
+				new FrameworkPropertyMetadata(
 					(double)48,
 					(s, e) => ((SplitView)s)?.OnCompactPaneLengthChanged(e)
 				)
@@ -83,7 +83,7 @@ namespace Windows.UI.Xaml.Controls
 				"Content",
 				typeof(View),
 				typeof(SplitView),
-				new PropertyMetadata(
+				new FrameworkPropertyMetadata(
 					null,
 					(s, e) => ((SplitView)s)?.OnContentChanged(e)
 				)
@@ -109,7 +109,7 @@ namespace Windows.UI.Xaml.Controls
 				"Pane",
 				typeof(View),
 				typeof(SplitView),
-				new PropertyMetadata(
+				new FrameworkPropertyMetadata(
 					null,
 					(s, e) => ((SplitView)s)?.OnPaneChanged(e)
 				)
@@ -134,7 +134,7 @@ namespace Windows.UI.Xaml.Controls
 				"DisplayMode",
 				typeof(SplitViewDisplayMode),
 				typeof(SplitView),
-				new PropertyMetadata(
+				new FrameworkPropertyMetadata(
 					SplitViewDisplayMode.Overlay,
 					(s, e) => ((SplitView)s)?.OnDisplayModeChanged(e)
 				)
@@ -161,7 +161,7 @@ namespace Windows.UI.Xaml.Controls
 				"IsPaneOpen",
 				typeof(bool),
 				typeof(SplitView),
-				new PropertyMetadata(
+				new FrameworkPropertyMetadata(
 					false,
 					(s, e) => ((SplitView)s)?.OnIsPaneOpenChanged(e)
 				)
@@ -187,7 +187,7 @@ namespace Windows.UI.Xaml.Controls
 				"OpenPaneLength",
 				typeof(double),
 				typeof(SplitView),
-				new PropertyMetadata(
+				new FrameworkPropertyMetadata(
 					(double)320,
 					(s, e) => ((SplitView)s)?.OnOpenPaneLengthChanged(e)
 				)
@@ -213,7 +213,7 @@ namespace Windows.UI.Xaml.Controls
 				"PaneBackground",
 				typeof(Brush),
 				typeof(SplitView),
-				new PropertyMetadata(
+				new FrameworkPropertyMetadata(
 					SolidColorBrushHelper.Transparent,
 					(s, e) => ((SplitView)s)?.OnPaneBackgroundChanged(e)
 				)
@@ -238,7 +238,7 @@ namespace Windows.UI.Xaml.Controls
 				"PanePlacement",
 				typeof(SplitViewPanePlacement),
 				typeof(SplitView),
-				new PropertyMetadata(
+				new FrameworkPropertyMetadata(
 					SplitViewPanePlacement.Left,
 					(s, e) => ((SplitView)s)?.OnPanePlacementChanged(e)
 				)
@@ -264,7 +264,7 @@ namespace Windows.UI.Xaml.Controls
 				"TemplateSettings",
 				typeof(SplitViewTemplateSettings),
 				typeof(SplitView),
-				new PropertyMetadata(
+				new FrameworkPropertyMetadata(
 					new SplitViewTemplateSettings(null),
 					(s, e) => ((SplitView)s)?.OnTemplateSettingsPropertyChanged(e)
 				)
