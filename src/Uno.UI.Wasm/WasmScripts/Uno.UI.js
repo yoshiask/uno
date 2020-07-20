@@ -912,6 +912,9 @@ var Uno;
             }
             static onPointerEventReceived(evt) {
                 const element = evt.currentTarget;
+                WindowManager.dispatchPointerEvent(element, evt);
+            }
+            static dispatchPointerEvent(element, evt) {
                 const payload = WindowManager.pointerEventExtractor(evt);
                 const handled = WindowManager.current.dispatchEvent(element, evt.type, payload);
                 if (handled) {
@@ -969,20 +972,21 @@ var Uno;
                     // It's common to get a move right after the leave with the same pointer's location,
                     // so we wait up to 3 pointer move before dropping the leave event.
                     var attempt = 3;
+                    // Note: We make sure to capture the 'element' as the 'evt.currentTarget' is expected to be 'null' when not in the event handler.
+                    //		 https://developer.mozilla.org/en-US/docs/Web/API/Event/currentTarget
+                    const target = evt.currentTarget;
                     WindowManager.current.ensurePendingLeaveEventProcessing();
                     WindowManager.current.processPendingLeaveEvent = (move) => {
                         if (!move.isOverDeep(element)) {
-                            // Raising deferred pointerleave on element " + element.id);
-                            WindowManager.onPointerEventReceived(evt);
+                            // Raising deferred pointerleave on element target.id
+                            WindowManager.dispatchPointerEvent(target, evt);
                             WindowManager.current.processPendingLeaveEvent = null;
                         }
                         else if (--attempt <= 0) {
-                            // Drop deferred pointerleave on element " + element.id);
+                            // Drop deferred pointerleave on element target.id
                             WindowManager.current.processPendingLeaveEvent = null;
                         }
-                        else {
-                            // Requeue deferred pointerleave on element " + element.id);
-                        }
+                        // else: Requeue deferred pointerleave on element target.id
                     };
                 }
                 else {
@@ -3399,6 +3403,9 @@ var Windows;
                     if (navigator.wakeLock) {
                         DisplayRequest.activeScreenLockPromise = navigator.wakeLock.request(WakeLockType.screen);
                         DisplayRequest.activeScreenLockPromise.catch(reason => console.log("Could not acquire screen lock (" + reason + ")"));
+                    }
+                    else {
+                        console.log("Wake Lock API is not available in this browser.");
                     }
                 }
                 static deactivateScreenLock() {

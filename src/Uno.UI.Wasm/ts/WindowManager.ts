@@ -794,6 +794,10 @@ namespace Uno.UI {
 
 		public static onPointerEventReceived(evt: PointerEvent): void {
 			const element = evt.currentTarget as HTMLElement | SVGElement;
+			WindowManager.dispatchPointerEvent(element, evt);
+		}
+
+		public static dispatchPointerEvent(element: HTMLElement | SVGElement, evt: PointerEvent): void {
 			const payload = WindowManager.pointerEventExtractor(evt);
 			const handled = WindowManager.current.dispatchEvent(element, evt.type, payload);
 			if (handled) {
@@ -861,20 +865,23 @@ namespace Uno.UI {
 				// so we wait up to 3 pointer move before dropping the leave event.
 				var attempt = 3;
 
+				// Note: We make sure to capture the 'element' as the 'evt.currentTarget' is expected to be 'null' when not in the event handler.
+				//		 https://developer.mozilla.org/en-US/docs/Web/API/Event/currentTarget
+				const target = evt.currentTarget as HTMLElement | SVGElement;
+
 				WindowManager.current.ensurePendingLeaveEventProcessing();
 				WindowManager.current.processPendingLeaveEvent = (move: PointerEvent) => {
 					if (!move.isOverDeep(element)) {
-						// Raising deferred pointerleave on element " + element.id);
-						WindowManager.onPointerEventReceived(evt);
+						// Raising deferred pointerleave on element target.id
+						WindowManager.dispatchPointerEvent(target, evt);
 
 						WindowManager.current.processPendingLeaveEvent = null;
 					} else if (--attempt <= 0) {
-						// Drop deferred pointerleave on element " + element.id);
+						// Drop deferred pointerleave on element target.id
 
 						WindowManager.current.processPendingLeaveEvent = null;
-					} else {
-						// Requeue deferred pointerleave on element " + element.id);
 					}
+					// else: Requeue deferred pointerleave on element target.id
 				};
 
 			} else {
