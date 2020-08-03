@@ -14,6 +14,7 @@ using Windows.UI.Core;
 using Windows.Foundation;
 using System.Threading;
 using System.Numerics;
+using Uno.UI.DataBinding;
 
 namespace Windows.UI.Xaml
 {
@@ -40,8 +41,8 @@ namespace Windows.UI.Xaml
 
 				PropagateEvent(args, e =>
 				{
-					var pointer = new Pointer(args.CurrentPoint.PointerId, PointerDeviceType.Mouse, false, isInRange: true);
-					var pointerArgs = new PointerRoutedEventArgs(args, pointer, e);
+					var pointerArgs = new PointerRoutedEventArgs(args, e);
+
 					e.OnNativePointerWheel(pointerArgs);
 				});
 			}
@@ -60,185 +61,329 @@ namespace Windows.UI.Xaml
 				{
 					this.Log().Trace($"CoreWindow_PointerExited ({args.CurrentPoint.Position})");
 				}
-
-
 			}
 
 			private void CoreWindow_PointerReleased(CoreWindow sender, PointerEventArgs args)
 			{
-				if (this.Log().IsEnabled(LogLevel.Trace))
+				if (FindOriginalSource(args) is { } originalSource)
 				{
-					this.Log().Trace($"CoreWindow_PointerReleased ({args.CurrentPoint.Position})");
-				}
-
-				var pointer = new Pointer(args.CurrentPoint.PointerId, PointerDeviceType.Mouse, false, isInRange: true);
-				if (UIElement.PointerCapture.TryGet(pointer, out var capture))
-				{
-					foreach(var target in capture.Targets.ToArray())
+					if (this.Log().IsEnabled(LogLevel.Trace))
 					{
-						var pointerArgs = new PointerRoutedEventArgs(args, pointer, target.Element);
-						target.Element.OnNativePointerUp(pointerArgs);
+						this.Log().Trace($"CoreWindow_PointerReleased [{originalSource}/{originalSource.GetHashCode():X8}");
+					}
+
+					var routedArgs = new PointerRoutedEventArgs(args, originalSource);
+
+					if (UIElement.PointerCapture.TryGet(routedArgs.Pointer, out var capture))
+					{
+						foreach (var target in capture.Targets.ToArray())
+						{
+							target.Element.OnNativePointerUp(routedArgs);
+						}
+					}
+					else
+					{
+						originalSource.OnNativePointerUp(routedArgs);
 					}
 				}
-				else
+				else if (this.Log().IsEnabled(LogLevel.Trace))
 				{
-					PropagateEvent(args, e =>
-					{
-						if (this.Log().IsEnabled(LogLevel.Trace))
-						{
-							this.Log().Trace($"PointerManager.Released [{e}/{e.GetHashCode():X8}");
-						}
-
-						var pointerArgs = new PointerRoutedEventArgs(args, pointer, e);
-
-						TraverseAncestors(e, e => e.OnNativePointerUp(pointerArgs));
-					});
+					this.Log().Trace($"CoreWindow_PointerReleased ({args.CurrentPoint.Position}) **undispatched**");
 				}
 			}
 
 			private void CoreWindow_PointerPressed(CoreWindow sender, PointerEventArgs args)
 			{
-				if (this.Log().IsEnabled(LogLevel.Trace))
-				{
-					this.Log().Trace($"CoreWindow_PointerPressed ({args.CurrentPoint.Position})");
-				}
-
-				PropagateEvent(args, e =>
+				var source = FindOriginalSource(args, _pressedCache, isStale: _isPressed);
+				if (source.element is null)
 				{
 					if (this.Log().IsEnabled(LogLevel.Trace))
 					{
-						this.Log().Trace($"PointerManager.Pressed [{e}/{e.GetHashCode():X8}]");
+						this.Log().Trace($"CoreWindow_PointerMoved ({args.CurrentPoint.Position}) **undispatched**");
 					}
 
-					var pointer = new Pointer(args.CurrentPoint.PointerId, PointerDeviceType.Mouse, false, isInRange: true);
-					var pointerArgs = new PointerRoutedEventArgs(args, pointer, e);
+					return;
+				}
 
-					TraverseAncestors(e, e => e.OnNativePointerDown(pointerArgs));
-				});
-			}
-
-			private void TraverseAncestors(UIElement element, Func<UIElement, bool> action)
-			{
-				if (!action(element))
+				if (FindOriginalSource(args) is { } originalSource)
 				{
-					foreach (var parent in element.GetParents().OfType<UIElement>())
+					if (this.Log().IsEnabled(LogLevel.Trace))
 					{
-						if (this.Log().IsEnabled(LogLevel.Trace))
-						{
-							this.Log().Trace($"TraverseAncestors for [{element}/{element.GetHashCode():X8}] = {parent}/{parent.GetHashCode():X8}");
-						}
-
-						if (action(parent))
-						{
-							return;
-						}
+						this.Log().Trace($"CoreWindow_PointerPressed ({args.CurrentPoint.Position}) [{originalSource}/{originalSource.GetHashCode():X8}");
 					}
+
+					var routedArgs = new PointerRoutedEventArgs(args, originalSource);
+
+					originalSource.OnNativePointerDown(routedArgs);
+				}
+				else if (this.Log().IsEnabled(LogLevel.Trace))
+				{
+					this.Log().Trace($"CoreWindow_PointerPressed ({args.CurrentPoint.Position}) **undispatched**");
 				}
 			}
 
 			private void CoreWindow_PointerMoved(CoreWindow sender, PointerEventArgs args)
 			{
+				var source = FindOriginalSource(args, _overCache, isStale: _isOver);
+				if (source.element is null)
+				{
+					if (this.Log().IsEnabled(LogLevel.Trace))
+					{
+						this.Log().Trace($"CoreWindow_PointerMoved ({args.CurrentPoint.Position}) **undispatched**");
+					}
+
+					return;
+				}
+
 				if (this.Log().IsEnabled(LogLevel.Trace))
 				{
-					this.Log().Trace($"CoreWindow_PointerMoved ({args.CurrentPoint.Position})");
+					this.Log().Trace($"CoreWindow_PointerMoved [{source.element}/{source.element.GetHashCode():X8}");
 				}
 
-				var pointer = new Pointer(args.CurrentPoint.PointerId, PointerDeviceType.Mouse, false, isInRange: true);
+				var routedArgs = new PointerRoutedEventArgs(args, source.element);
 
-				if (UIElement.PointerCapture.TryGet(pointer, out var capture))
+				if (source.staleBranch.HasValue)
 				{
-					foreach (var target in capture.Targets)
+					routedArgs.CanBubbleNatively = true;
+					var (root, stale) = source.staleBranch.Value;
+					do
 					{
-						var pointerArgs = new PointerRoutedEventArgs(args, pointer, target.Element);
+						stale.SetOver(routedArgs, false);
+						stale = stale.GetParent() as UIElement;
+					} while (stale is { } && stale != root);
+					routedArgs.CanBubbleNatively = false;
+				}
 
-						target.Element.OnNativePointerMove(pointerArgs);
+				if (UIElement.PointerCapture.TryGet(routedArgs.Pointer, out var capture))
+				{
+					foreach (var target in capture.Targets.ToArray())
+					{
+						target.Element.OnNativePointerMove(routedArgs);
 					}
 				}
 				else
 				{
-					PropagateEvent(args, e =>
-					{
-						var pointerArgs = new PointerRoutedEventArgs(args, pointer, e) { CanBubbleNatively = true };
-						e.OnNativePointerMove(pointerArgs);
-					});
+					source.element.OnNativePointerMove(routedArgs);
 				}
 			}
 
-			private void PropagateEvent(PointerEventArgs args, Action<UIElement> raiseEvent)
+			// TODO: Use pointer ID for the predicates
+			private static Predicate<UIElement> _isOver = e => e.IsPointerOver;
+			private static Predicate<UIElement> _isPressed = e => e.IsPointerPressed;
+
+			private Dictionary<uint, (Rect validity, ManagedWeakReference orginalSource)> _pressedCache = new Dictionary<uint, (Rect, ManagedWeakReference)>();
+			private Dictionary<uint, (Rect validity, ManagedWeakReference orginalSource)> _overCache = new Dictionary<uint, (Rect, ManagedWeakReference)>();
+
+			private (UIElement? element, (UIElement root, UIElement leaf)? staleBranch) FindOriginalSource(
+				PointerEventArgs args,
+				Dictionary<uint, (Rect validity, ManagedWeakReference orginalSource)> cache,
+				Predicate<UIElement>? isStale = null)
 			{
-				if(Window.Current.RootElement is UIElement root)
+				var pointerId = args.CurrentPoint.PointerId;
+				if (cache.TryGetValue(pointerId, out var cached)
+					&& cached.validity.Contains(args.CurrentPoint.RawPosition)
+					&& cached.orginalSource.Target is UIElement cachedOriginalSource
+					&& cachedOriginalSource.IsLoaded)
 				{
-					PropagageEventRecursive(args, new Point(0, 0), root, Matrix3x2.Identity, raiseEvent);
+					var rootToCachedElement = UIElement.GetTransform(cachedOriginalSource, null);
+					var positionInCachedElementCoordinates = rootToCachedElement.Transform(args.CurrentPoint.Position);
+
+					var (originalSource, staleBranchRoot) = SearchUpAndDownForTopMostElementAt(
+						positionInCachedElementCoordinates,
+						cachedOriginalSource,
+						isStale);
+
+					if (originalSource is {})
+					{
+						UpdateCache(cache, pointerId, (cached.orginalSource, cachedOriginalSource), originalSource);
+						return (originalSource, staleBranchRoot is null ? default : (staleBranchRoot, cachedOriginalSource));
+					}
+
+					// We walked all the tree up from the provided element, but were not able to find any target!
+					// Maybe the cached element has been removed from the tree (but the IsLoaded should have been false :/)
+
+					this.Log().Warn(
+						"Enable to find any acceptable original source by walking up the tree from the cached element, "
+						+ "which is suspicious as the element has not been flag as unloaded."
+						+ "Trying now by looking down from the root.");
 				}
+
+				if (Window.Current.RootElement is UIElement root)
+				{
+					var (originalSource, staleBranchRoot) = SearchDownForTopMostElementAt(args.CurrentPoint.Position, root, isStale);
+					if (staleBranchRoot is null)
+					{
+						UpdateCache(cache, pointerId, default, originalSource);
+						return (originalSource, default);
+					}
+					else
+					{
+						var staleBranchLeaf = SearchDownForStaleLeaf(staleBranchRoot, isStale!);
+						return (originalSource, (staleBranchRoot, staleBranchLeaf));
+					}
+				}
+
+				this.Log().Warn("The root element not set yet, impossible to find the original source.");
+
+				return default;
 			}
 
-			private bool PropagageEventRecursive(PointerEventArgs args, Point root, UIElement element, Matrix3x2 currentTransform, Action<UIElement> raiseEvent)
+			private void UpdateCache(
+				Dictionary<uint, (Rect validity, ManagedWeakReference orginalSource)> cache,
+				uint pointerId,
+				(ManagedWeakReference weak, UIElement instance)? currentEntry,
+				UIElement updated)
 			{
-				bool raised = false;
-				var elementRect = element.LayoutSlotWithMarginsAndAlignments;
-				elementRect.X += root.X;
-				elementRect.Y += root.Y;
-
-				var position = args.CurrentPoint.Position;
-				var pointer = new Pointer(args.CurrentPoint.PointerId, PointerDeviceType.Mouse, false, isInRange: true);
-				var pointerArgs = new PointerRoutedEventArgs(args, pointer, element);
-
-				if (element.RenderTransform != null)
+				if (currentEntry.HasValue)
 				{
-					currentTransform *= element.RenderTransform.MatrixCore;
-					elementRect = currentTransform.Transform(elementRect);
+					if (updated == currentEntry.Value.instance)
+					{
+						return;
+					}
+
+					WeakReferencePool.ReturnWeakReference(this, currentEntry.Value.weak);
 				}
 
-				if (elementRect.Contains(position))
+				cache[pointerId] = (
+					validity: new Rect(new Point(), new Size(double.PositiveInfinity, double.PositiveInfinity)), // TODO
+					orginalSource: WeakReferencePool.RentWeakReference(this, updated)
+				);
+			}
+
+			private static (UIElement? element, UIElement? staleRoot) SearchUpAndDownForTopMostElementAt(
+				Point position,
+				UIElement element,
+				Predicate<UIElement>? isStale = null)
+			{
+				var (foundElement, staleRoot) = SearchDownForTopMostElementAt(position, element, isStale);
+				if (foundElement is { })
 				{
-					foreach (var e in element.GetChildren().Reverse().ToArray())
+					return (foundElement, staleRoot); // Success match
+				}
+
+				double offsetX = 0, offsetY = 0;
+				while (element.TryGetParentUIElementForTransformToVisual(out var parent, ref offsetX, ref offsetY))
+				{
+					position.X += offsetX;
+					position.Y += offsetY;
+
+					if (staleRoot is null)
 					{
-						if(PropagageEventRecursive(args, elementRect.Location, e, currentTransform, raiseEvent))
+						(foundElement, staleRoot) = SearchDownForTopMostElementAt(position, parent, isStale, excludedChild: element);
+					}
+					else
+					{
+						(foundElement, _) = SearchDownForTopMostElementAt(position, element);
+						if (foundElement is null && (isStale?.Invoke(element) ?? false))
 						{
-							return true;
+							staleRoot = element;
 						}
 					}
 
-					var isHitTestVisible =
-						element.GetValue(HitTestVisibilityProperty) is HitTestVisibility hitTestVisibility
-						&& hitTestVisibility == HitTestVisibility.Visible;
-
-					if (isHitTestVisible)
+					if (foundElement is { })
 					{
-						if (!element.IsOver(pointer))
+						return (foundElement, staleRoot);
+					}
+
+					element = parent;
+				}
+
+				return default;
+			}
+
+			private static (UIElement? element, UIElement? staleRoot) SearchDownForTopMostElementAt(
+				Point position,
+				UIElement element,
+				Predicate<UIElement>? isStale = null,
+				UIElement? excludedChild = null)
+			{
+				// If the element is not hit testable, do not even try to validate it nor its children.
+				if (element.IsHitTestVisibleCoalesced)
+				{
+					return (default, isStale?.Invoke(element) ?? false ? element : default);
+				}
+
+				var layoutSlot = element.LayoutSlotWithMarginsAndAlignments;
+				var renderBounds = new Rect(new Point(), layoutSlot.Size);
+				var clippingBounds = renderBounds; // TODO: Get the real clipping rect!
+
+				// First compute the 'location' in the current element coordinate space
+				position.X -= layoutSlot.X;
+				position.Y -= layoutSlot.Y;
+				var renderTransform = element.RenderTransform;
+				if (renderTransform != null)
+				{
+					var parentToElement = renderTransform.MatrixCore;
+					//Matrix3x2.Invert(parentToElement, out var currentToParent);
+
+					position = parentToElement.Transform(position);
+					renderBounds = parentToElement.Transform(renderBounds);
+					clippingBounds = parentToElement.Transform(clippingBounds);
+				}
+				// TODO: IScroller
+
+				// Then try to find nested element, but only if the position is in the clipping bounds!
+				if (clippingBounds.Contains(position))
+				{
+					var staleRoot = default(UIElement?);
+
+					// Validate if any child is an acceptable target
+					var children = excludedChild is null ? element.GetChildren() : element.GetChildren().Except(excludedChild);
+					using var child = children.Reverse().GetEnumerator();
+					while (child.MoveNext())
+					{
+						var childResult = SearchDownForTopMostElementAt(position, child.Current, isStale);
+
+						if (staleRoot is null && childResult.staleRoot is { })
 						{
-							element.OnNativePointerEnter(pointerArgs);
+							Debug.Assert(childResult.staleRoot == child.Current);
+							staleRoot = childResult.staleRoot;
+							isStale = null; // Do not search in other stale children if we found a stale element
 						}
 
-						raiseEvent(element);
-						return true;
-					}
-				}
-				else
-				{
-					bool RecursePointerExited(UIElement e)
-					{
-						if (e.IsOver(pointer))
+						if (childResult.element is { })
 						{
-							foreach(var child in e.GetChildren().Reverse().ToArray())
+							if (staleRoot is null && isStale is { })
 							{
-								if (RecursePointerExited(child))
+								// If we didn't find any stale root in previous children or in the child's sub tree,
+								// we continue to enumerate the children to detect a potential stale root
+
+								while (child.MoveNext())
 								{
-									return true;
+									if (isStale(child.Current))
+									{
+										staleRoot = child.Current;
+										break;
+									}
 								}
 							}
 
-							e.OnNativePointerExited(pointerArgs);
-							return true;
+							return (childResult.element, staleRoot);
 						}
-
-						return false;
 					}
 
-					RecursePointerExited(element);
+					// We didn't find any child at the given position, validate the position is in actual bounds (which might be different than the clipping bounds)
+					if (renderBounds.Contains(position))
+					{
+						return (element, staleRoot);
+					}
 				}
 
-				return raised;
+				// The element is invalid, still validate if it's not stale
+				return (default, isStale?.Invoke(element) ?? false ? element : default);
+			}
+
+			private static UIElement SearchDownForStaleLeaf(UIElement element, Predicate<UIElement> isStale)
+			{
+				foreach (var child in element.GetChildren().Reverse())
+				{
+					if (isStale(child))
+					{
+						SearchDownForStaleLeaf(child, isStale);
+					}
+				}
+
+				return element;
 			}
 		}
 

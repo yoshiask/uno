@@ -26,9 +26,6 @@ namespace Windows.UI.Xaml.Input
 			FrameId = pointerEventArgs.CurrentPoint.FrameId;
 			Pointer = GetPointer(pointerEventArgs);
 			OriginalSource = source;
-
-			// All events bubble in managed mode.
-			CanBubbleNatively = false;
 		}
 
 		public PointerPoint GetCurrentPoint(UIElement relativeTo)
