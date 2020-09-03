@@ -19,11 +19,11 @@ The tutorial walks you through creating a cross platform application with Uno Pl
 
 ## Getting Started
 
-1. Open Visual Studio and click on `Create new project`. 
+1. Open Visual Studio and click on `Create new project`.  
 
     ![](Assets/tutorial01/newproject1.PNG)
 
-2. Search for the `Uno` templates, select the `Cross-Platform App (Uno Platform)` then click `Next`.
+2. Search for the `Uno` templates, select the `Cross-Platform App (Uno Platform)` then click `Next`.  
 
     ![](Assets/tutorial01/newproject2.PNG)
 
@@ -32,36 +32,47 @@ The tutorial walks you through creating a cross platform application with Uno Pl
 4. In your `Shared` project, open up `MainPage.xaml`
 
 5. Add a `StackPanel` around your `TextBlock`
-``` xaml
-<Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-    <StackPanel>
-        <TextBlock Text="Hello World" Margin="20" FontSize="30" />
-    </StackPanel>
-</Grid>
-```
-6. Add a `Slider`
-``` xaml
-<Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-    <StackPanel>
-        <TextBlock Text="Hello World" Margin="20" FontSize="30" />
-        <Slider x:Name="slider"/>
-    </StackPanel>
-</Grid>
-```
-7. Bind the `Text` value of your `TextBlock` to the value of the `Slider`
-``` xaml
-<Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-    <StackPanel>
-        <TextBlock Text="{Binding Value, ElementName=slider}" Margin="20" FontSize="30" />
-        <Slider x:Name="slider"/>
-    </StackPanel>
-</Grid>
-```
-8. Select `UWP` as the Startup Project and `Run`  
-![build-uwp](Assets/build-uwp.JPG)  
+    ``` xaml
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <StackPanel>
+            <TextBlock Text="Hello World" Margin="20" FontSize="30" />
+        </StackPanel>
+    </Grid>
+    ```
 
-Result!  
-![uwp-slider-demo](Assets/uwp-slider-demo.gif)
+6. Add a `Slider`
+    ``` xaml
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <StackPanel>
+            <TextBlock Text="Hello World" Margin="20" FontSize="30" />
+            <Slider x:Name="slider"/>
+        </StackPanel>
+    </Grid>
+    ```
+
+7. Bind the `Text` value of your `TextBlock` to the value of the `Slider`
+    ``` xaml
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <StackPanel>
+            <TextBlock Text="{Binding Value, ElementName=slider}" Margin="20" FontSize="30" />
+            <Slider x:Name="slider"/>
+        </StackPanel>
+    </Grid>
+    ```
+
+8. Select `UWP` as the Startup Project and `Run`  
+
+    ![build-uwp](Assets/build-uwp.JPG)
+
+    Result!  
+    ![uwp-slider-demo](Assets/uwp-slider-demo.gif)
+
+9. Select `WASM` as the Startup Project and `Run`  
+
+    ![build-wasm](Assets/build-wasm.JPG)
+
+    Result!  
+    ![wasm-slider-demo](Assets/wasm-slider-demo.gif)
 
 Next, walk through a the [`BugTracker` sample](getting-started-tutorial-2.md) and build out a full Uno Platform app. 
 <div class="NOTE alert alert-info">

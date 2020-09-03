@@ -332,7 +332,7 @@ The tutorial walks you through creating a cross platform application with Uno Pl
                Margin="10,0"/>
     ```
 
-    > [!IMPORTANT]
+    > [❗IMPORTANT]
     > Take note that we have added a reference to an event handler on the ComboBox. We will add this in the next step in the code behind.
 
 1. Now that our Page is complete we can go back and add the event handlers in our code behind. This will allow us to handle changes and make necessary updates. In the **Solution Explorer**, double-click **MainPage.xaml.cs** to open, then add the following code.
@@ -383,7 +383,7 @@ The tutorial walks you through creating a cross platform application with Uno Pl
         => $"{header} {dateTime:MMM dd, yyyy hh:mm tt}";
     ```
 
-You may need to add missing namespace `usings`, eg the `Windows.UI` namespace for the `Colors` class. Don't worry if `IssueTypeBox` and `IssueTypeIndicator` are marked red - these properties will be created from the Xaml when the project builds. 
+    You may need to add missing namespace `usings`, eg the `Windows.UI` namespace for the `Colors` class. Don't worry if `IssueTypeBox` and `IssueTypeIndicator` are marked red - these properties will be created from the Xaml when the project builds.
 
 1. Build and run the project on each platform. When launching the WASM head, use 'Start without debugging' (`Ctrl+F5`).
 
