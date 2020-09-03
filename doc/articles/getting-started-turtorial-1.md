@@ -1,4 +1,4 @@
-# Create a Single Page App with Uno
+# Create a Single Page App with Uno Platform
 
 [Download the complete sample](https://github.com/nventive/uno.GettingStartedTutorial)
 
@@ -13,7 +13,7 @@ The tutorial walks you through creating a cross platform application with Uno Pl
 <div class="NOTE alert alert-info">
 <h5>Before you start the tutorial</h5>
 
-[If you haven't prepared your dev environment for Uno app development yet, the Setting up the Environment page will guide you through installing all the prerequisites.](get-started.md)
+[If you haven't prepared your dev environment for Uno Platform app development yet, the Setting up the Environment page will guide you through installing all the prerequisites.](get-started.md)
 
 </div>
 
@@ -63,7 +63,7 @@ The tutorial walks you through creating a cross platform application with Uno Pl
 Result!  
 ![uwp-slider-demo](Assets/uwp-slider-demo.gif)
 
-Next, walk through a the [`BugTracker` sample](getting-started-tutorial-2.md) and build out a full Uno app. 
+Next, walk through a the [`BugTracker` sample](getting-started-tutorial-2.md) and build out a full Uno Platform app. 
 <div class="NOTE alert alert-info">
 <h5>Next:</h5>
 
