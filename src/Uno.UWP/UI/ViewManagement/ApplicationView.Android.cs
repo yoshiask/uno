@@ -78,6 +78,7 @@ namespace Windows.UI.ViewManagement
 
 		private void UpdateFullScreenMode(bool isFullscreen)
 		{
+#pragma warning disable 618
 			var activity = ContextHelper.Current as Activity;
 			var uiOptions = (int)activity.Window.DecorView.SystemUiVisibility;
 
@@ -97,6 +98,7 @@ namespace Windows.UI.ViewManagement
 			}
 
 			activity.Window.DecorView.SystemUiVisibility = (StatusBarVisibility)uiOptions;
+#pragma warning restore 618
 		}
 
 

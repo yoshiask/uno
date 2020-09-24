@@ -194,7 +194,9 @@ namespace Uno.UI.Controls
 				Native.Menu.Clear();
 				foreach (var command in Element.PrimaryCommands.Concat(Element.SecondaryCommands).OfType<AppBarButton>())
 				{
+#pragma warning disable 618
 					var menuItem = Native.Menu.Add(0, command.GetHashCode(), Menu.None, null);
+#pragma warning restore 618
 
 					var renderer = command.GetRenderer(() => new AppBarButtonRenderer(command));
 					renderer.Native = menuItem;
