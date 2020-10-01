@@ -1,6 +1,6 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras" ToolsVersion="15.0">
 	<PropertyGroup>
-		<TargetFrameworks>MonoAndroid11.0;MonoAndroid11.0;net461;xamarinios10;netstandard2.0;xamarinmac20</TargetFrameworks>
+		<TargetFrameworks>MonoAndroid10.0;MonoAndroid11.0;net461;xamarinios10;netstandard2.0;xamarinmac20</TargetFrameworks>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<NoWarn>1701;1702;1705;109</NoWarn>
 
@@ -59,7 +59,7 @@
 		but in the obj folder so we don't have rebuild and git ignore issues.
 		-->
 		<ItemGroup>
-			<EmbeddedJar Include="$(IntermediateOutputPath)\unojars\uno.ui-$(TargetFramework).jar" />
+			<EmbeddedJar Include="$(IntermediateOutputPath)unojars\uno.ui-$(TargetFramework).jar" />
 		</ItemGroup>
 	</Target>
 
